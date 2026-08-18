@@ -50,10 +50,11 @@ class _PremiumBottomNavigation extends StatelessWidget {
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,
       ),
-      child: GlassSurface(
-        borderRadius: 24,
-        margin: const EdgeInsets.only(left: 16, right: 16, bottom: 24, top: 0),
-        child: Container(
+      child: Padding(
+        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 24, top: 0),
+        child: GlassSurface(
+          borderRadius: 24,
+          child: Container(
           height: 64,
           padding: const EdgeInsets.symmetric(horizontal: 8),
           child: Row(
