@@ -1,0 +1,728 @@
+// ============================================
+// FreshSave — Prisma Schema
+// ============================================
+
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../node_modules/.prisma/client"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [postgis]
+}
+
+// --------------------------------------------------
+// ENUMS
+// --------------------------------------------------
+
+enum UserRole {
+  CUSTOMER
+  SHOP_OWNER
+  SHOP_STAFF
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum BusinessStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  SUSPENDED
+}
+
+enum StoreStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum StaffRole {
+  MANAGER
+  STAFF
+}
+
+enum StaffStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum CategoryStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum InventoryStatus {
+  ACTIVE
+  INACTIVE
+  OUT_OF_STOCK
+}
+
+enum StockMovementType {
+  PURCHASED
+  SOLD
+  DAMAGED
+  EXPIRED
+  ADJUSTMENT
+  RETURNED
+  OTHER
+  RESERVATION_HELD
+  RESERVATION_RELEASED
+  RESERVATION_COMPLETED
+}
+
+enum OfferStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  PAUSED
+  EXPIRED
+  CANCELLED
+  SOLD_OUT
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  READY
+  COMPLETED
+  CANCELLED
+  EXPIRED
+  REJECTED
+}
+
+enum NotificationType {
+  RESERVATION_CREATED
+  RESERVATION_CONFIRMED
+  RESERVATION_REJECTED
+  RESERVATION_CANCELLED
+  RESERVATION_READY
+  RESERVATION_COMPLETED
+  RESERVATION_EXPIRED
+  OFFER_ACTIVATED
+  OFFER_SOLD_OUT
+  OFFER_EXPIRED
+  INVENTORY_EXPIRING_SOON
+  INVENTORY_CRITICAL
+  INVENTORY_EXPIRED
+}
+
+enum NotificationChannel {
+  IN_APP
+  PUSH
+  EMAIL
+}
+
+enum DeliveryStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+enum DevicePlatform {
+  ANDROID
+  IOS
+  WEB
+}
+
+enum OutboxStatus {
+  PENDING
+  PROCESSED
+  FAILED
+}
+
+enum PredictionType {
+  INVENTORY_RISK
+  DISCOUNT_RECOMMENDATION
+  DEAL_RECOMMENDATION
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum CouponStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
+}
+
+// --------------------------------------------------
+// MODELS
+// --------------------------------------------------
+
+model User {
+  id           String     @id @default(uuid())
+  name         String
+  email        String     @unique
+  phone        String?    @unique
+  password     String?
+  profileImage String?
+  role         UserRole   @default(CUSTOMER)
+  status       UserStatus @default(ACTIVE)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relationships
+  businesses              Business[]
+  staffRoles              StoreStaff[]
+  reservations            Reservation[]
+  addresses               Address[]
+  wishlist                Wishlist?
+  reviews                 Review[]
+  notifications           Notification[]
+  auditLogs               AuditLog[]
+  offersCreated           Offer[]
+  sessions                Session[]
+  inventoryStockMovements InventoryStockMovement[]
+  devices                 UserDevice[]
+  notificationPreference  NotificationPreference?
+
+  @@index([email])
+  @@index([phone])
+  @@index([role])
+}
+
+model Business {
+  id                 String             @id @default(uuid())
+  businessName       String
+  legalName          String?
+  businessType       String?
+  ownerId            String
+  verificationStatus VerificationStatus @default(PENDING)
+  status             BusinessStatus     @default(ACTIVE)
+  contactEmail       String?
+  contactPhone       String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relationships
+  owner  User    @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  stores Store[]
+
+  @@index([ownerId])
+  @@index([status])
+  @@index([verificationStatus])
+}
+
+model Store {
+  id                 String                                 @id @default(uuid())
+  businessId         String
+  name               String
+  description        String?
+  logo               String?
+  coverImage         String?
+  phone              String?
+  email              String?
+  address            String?
+  latitude           Decimal?                               @db.Decimal(10, 8)
+  longitude          Decimal?                               @db.Decimal(11, 8)
+  location           Unsupported("geography(Point, 4326)")?
+  openingHours       Json?
+  status             StoreStatus                            @default(ACTIVE)
+  verificationStatus VerificationStatus                     @default(PENDING)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relationships
+  business     Business      @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  staff        StoreStaff[]
+  inventory    Inventory[]
+  reservations Reservation[]
+  reviews      Review[]
+
+  @@index([businessId])
+  @@index([status])
+  @@index([location], type: Gist)
+}
+
+model StoreStaff {
+  id      String      @id @default(uuid())
+  storeId String
+  userId  String
+  role    StaffRole   @default(STAFF)
+  status  StaffStatus @default(ACTIVE)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relationships
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, userId])
+  @@index([storeId])
+  @@index([userId])
+}
+
+model Category {
+  id          String         @id @default(uuid())
+  name        String
+  slug        String         @unique
+  description String?
+  icon        String?
+  image       String?
+  parentId    String?
+  status      CategoryStatus @default(ACTIVE)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relationships
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children Category[] @relation("CategoryHierarchy")
+  products Product[]
+
+  @@index([parentId])
+  @@index([slug])
+}
+
+model Product {
+  id          String        @id @default(uuid())
+  categoryId  String
+  name        String
+  slug        String        @unique
+  description String?
+  brand       String?
+  sku         String?       @unique
+  barcode     String?       @unique
+  image       String?
+  unit        String?
+  status      ProductStatus @default(ACTIVE)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relationships
+  category         Category          @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  inventory        Inventory[]
+  wishlistItems    WishlistItem[]
+  reviews          Review[]
+  reservationItems ReservationItem[]
+
+  @@index([categoryId])
+  @@index([slug])
+  @@index([sku])
+  @@index([barcode])
+}
+
+model Inventory {
+  id                String          @id @default(uuid())
+  storeId           String
+  productId         String
+  stockQuantity     Int             @default(0)
+  reservedQuantity  Int             @default(0)
+  sellingPrice      Decimal         @db.Decimal(10, 2)
+  originalPrice     Decimal         @db.Decimal(10, 2)
+  expiryDate        DateTime
+  manufacturingDate DateTime?
+  batchNumber       String?
+  status            InventoryStatus @default(ACTIVE)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relationships
+  store            Store                    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  product          Product                  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  stockMovements   InventoryStockMovement[]
+  offers           Offer[]
+  reservationItems ReservationItem[]
+
+  @@index([storeId])
+  @@index([productId])
+  @@index([expiryDate])
+  @@index([status])
+}
+
+model InventoryStockMovement {
+  id               String            @id @default(uuid())
+  inventoryId      String
+  type             StockMovementType
+  quantity         Int
+  previousQuantity Int
+  newQuantity      Int
+  reason           String?
+  actorId          String
+
+  createdAt DateTime @default(now())
+
+  // Relationships
+  inventory Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  actor     User      @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([inventoryId])
+  @@index([createdAt])
+}
+
+model Offer {
+  id                    String       @id @default(uuid())
+  inventoryId           String
+  title                 String?
+  description           String?
+  discountType          DiscountType
+  discountValue         Decimal      @db.Decimal(10, 2)
+  originalPriceSnapshot Decimal      @db.Decimal(10, 2)
+  discountAmount        Decimal      @db.Decimal(10, 2)
+  discountedPrice       Decimal      @db.Decimal(10, 2)
+  startsAt              DateTime
+  endsAt                DateTime
+  status                OfferStatus  @default(ACTIVE)
+  createdById           String
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relationships
+  inventory        Inventory         @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  createdBy        User              @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  reservationItems ReservationItem[]
+
+  @@index([inventoryId])
+  @@index([startsAt, endsAt])
+  @@index([status])
+}
+
+model Reservation {
+  id                 String            @id @default(uuid())
+  customerId         String
+  storeId            String
+  status             ReservationStatus @default(PENDING)
+  reservationCode    String            @unique
+  idempotencyKey     String?           @unique
+  reservedAt         DateTime          @default(now())
+  expiresAt          DateTime
+  confirmedAt        DateTime?
+  readyAt            DateTime?
+  completedAt        DateTime?
+  cancelledAt        DateTime?
+  rejectedAt         DateTime?
+  subtotal           Decimal           @db.Decimal(10, 2)
+  totalDiscount      Decimal           @db.Decimal(10, 2)
+  totalAmount        Decimal           @db.Decimal(10, 2)
+  pickupInfo         Json?
+  notes              String?
+  cancellationReason String?
+  rejectionReason    String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relationships
+  customer User              @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  store    Store             @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  items    ReservationItem[]
+  reviews  Review[]
+
+  @@index([customerId])
+  @@index([storeId])
+  @@index([status])
+  @@index([reservationCode])
+  @@index([createdAt])
+}
+
+model ReservationItem {
+  id                  String  @id @default(uuid())
+  reservationId       String
+  inventoryId         String
+  productRefId        String? // Snapshot reference to product
+  quantity            Int
+  originalUnitPrice   Decimal @db.Decimal(10, 2)
+  discountedUnitPrice Decimal @db.Decimal(10, 2)
+  discountAmount      Decimal @default(0) @db.Decimal(10, 2)
+  subtotal            Decimal @db.Decimal(10, 2)
+  productId           String
+  offerId             String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  inventory   Inventory   @relation(fields: [inventoryId], references: [id], onDelete: Restrict)
+  product     Product     @relation(fields: [productId], references: [id], onDelete: Restrict)
+  offer       Offer?      @relation(fields: [offerId], references: [id], onDelete: SetNull)
+
+  @@index([reservationId])
+  @@index([inventoryId])
+  @@index([productId])
+  @@index([offerId])
+}
+
+model Address {
+  id         String                                 @id @default(uuid())
+  userId     String
+  label      String?
+  address1   String
+  address2   String?
+  city       String
+  state      String
+  postalCode String
+  country    String
+  latitude   Decimal?                               @db.Decimal(10, 8)
+  longitude  Decimal?                               @db.Decimal(11, 8)
+  location   Unsupported("geography(Point, 4326)")?
+  isDefault  Boolean                                @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([location], type: Gist)
+}
+
+model Wishlist {
+  id         String @id @default(uuid())
+  customerId String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  customer User           @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  items    WishlistItem[]
+}
+
+model WishlistItem {
+  id         String @id @default(uuid())
+  wishlistId String
+  productId  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  wishlist Wishlist @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([wishlistId, productId])
+  @@index([productId])
+}
+
+model Review {
+  id            String       @id @default(uuid())
+  customerId    String
+  storeId       String
+  productId     String?
+  reservationId String?
+  rating        Int
+  title         String?
+  comment       String?
+  status        ReviewStatus @default(PENDING)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // Relationships
+  customer    User         @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  store       Store        @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  product     Product?     @relation(fields: [productId], references: [id], onDelete: SetNull)
+  reservation Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+
+  @@index([customerId])
+  @@index([storeId])
+  @@index([productId])
+}
+
+model Notification {
+  id             String              @id @default(uuid())
+  userId         String
+  title          String
+  body           String
+  type           NotificationType
+  channel        NotificationChannel
+  readAt         DateTime?
+  sentAt         DateTime?
+  failedAt       DateTime?
+  deliveryStatus DeliveryStatus      @default(PENDING)
+  data           Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([readAt])
+  @@index([deliveryStatus])
+  @@index([createdAt])
+}
+
+model UserDevice {
+  id          String         @id @default(uuid())
+  userId      String
+  deviceToken String
+  platform    DevicePlatform
+  appVersion  String?
+  isActive    Boolean        @default(true)
+  lastSeenAt  DateTime       @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, deviceToken])
+  @@index([userId])
+  @@index([deviceToken])
+  @@index([isActive])
+}
+
+model NotificationPreference {
+  id           String  @id @default(uuid())
+  userId       String  @unique
+  pushEnabled  Boolean @default(true)
+  emailEnabled Boolean @default(true)
+  inAppEnabled Boolean @default(true)
+
+  reservationUpdates Boolean @default(true)
+  offerAlerts        Boolean @default(true)
+  inventoryAlerts    Boolean @default(true)
+  marketingAlerts    Boolean @default(false) // Opt-in
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model OutboxEvent {
+  id            String       @id @default(uuid())
+  eventType     String
+  aggregateType String
+  aggregateId   String
+  payload       Json
+  status        OutboxStatus @default(PENDING)
+  attempts      Int          @default(0)
+  availableAt   DateTime     @default(now())
+  processedAt   DateTime?
+  errorReason   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, availableAt])
+  @@index([createdAt])
+}
+
+model AIPrediction {
+  id                   String         @id @default(uuid())
+  predictionType       PredictionType
+  entityType           String
+  entityId             String
+  modelVersion         String
+  inputFeatureSnapshot Json
+  output               Json
+  confidence           Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([entityType, entityId])
+  @@index([predictionType])
+  @@index([createdAt])
+  @@index([modelVersion])
+}
+
+model Coupon {
+  id            String       @id @default(uuid())
+  code          String       @unique
+  description   String?
+  discountType  DiscountType
+  discountValue Decimal      @db.Decimal(10, 2)
+  minOrderValue Decimal?     @db.Decimal(10, 2)
+  maxDiscount   Decimal?     @db.Decimal(10, 2)
+  startDate     DateTime
+  endDate       DateTime
+  usageLimit    Int?
+  perUserLimit  Int?
+  status        CouponStatus @default(ACTIVE)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([code])
+  @@index([status])
+}
+
+model AuditLog {
+  id           String  @id @default(uuid())
+  actorId      String?
+  action       String
+  entityType   String
+  entityId     String
+  previousData Json?
+  newData      Json?
+  ipAddress    String?
+  userAgent    String?
+
+  createdAt DateTime @default(now())
+
+  // Relationships
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([actorId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  refreshToken String
+  expiresAt    DateTime
+  isRevoked    Boolean  @default(false)
+  deviceInfo   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}

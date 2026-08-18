@@ -1,0 +1,108 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_typography.dart';
+import '../../../../core/widgets/domain/store_card.dart';
+import '../../../../core/widgets/feedback/app_skeleton.dart';
+import '../providers/home_providers.dart';
+
+class NearbyStoresSection extends ConsumerWidget {
+  const NearbyStoresSection({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final storesAsync = ref.watch(nearbyStoresProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Nearby Stores', style: AppTypography.title),
+              TextButton(
+                onPressed: () => context.push('/stores/nearby'),
+                child: Text(
+                  'See All',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        storesAsync.when(
+          data: (stores) {
+            if (stores.isEmpty) return const SizedBox.shrink();
+
+            // Limit to 5 on home screen
+            final displayStores = stores.take(5).toList();
+
+            return SizedBox(
+              height: 220,
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                scrollDirection: Axis.horizontal,
+                itemCount: displayStores.length,
+                separatorBuilder: (context, index) =>
+                    const SizedBox(width: AppSpacing.md),
+                itemBuilder: (context, index) {
+                  final store = displayStores[index];
+                  return SizedBox(
+                    width: 260,
+                    child: StoreCard(
+                      storeName: store.name,
+                      imageUrl: store.logoUrl,
+                      distance: store.distance != null
+                          ? '${store.distance!.toStringAsFixed(1)} km'
+                          : 'Nearby',
+                      rating: store.rating,
+                      onTap: () => context.push('/store/${store.id}'),
+                    ),
+                  );
+                },
+              ),
+            );
+          },
+          loading: () => SizedBox(
+            height: 220,
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              scrollDirection: Axis.horizontal,
+              itemCount: 3,
+              separatorBuilder: (context, index) =>
+                  const SizedBox(width: AppSpacing.md),
+              itemBuilder: (context, index) => const AppSkeleton(
+                width: 260,
+                height: 220,
+                borderRadius: 16,
+              ),
+            ),
+          ),
+          error: (error, stack) => Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, color: AppColors.error),
+                  const SizedBox(height: 8),
+                  Text('Failed to load stores', style: AppTypography.bodySmall),
+                  TextButton(
+                    onPressed: () => ref.invalidate(nearbyStoresProvider),
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
