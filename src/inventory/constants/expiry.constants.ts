@@ -1,0 +1,14 @@
+export const EXPIRY_THRESHOLDS_DAYS = {
+  FRESH: 7,
+  EXPIRING_SOON: 7,
+  URGENT: 3,
+  CRITICAL: 1, // 24 hours
+};
+
+export enum ExpiryStatus {
+  FRESH = 'FRESH',
+  EXPIRING_SOON = 'EXPIRING_SOON',
+  URGENT = 'URGENT',
+  CRITICAL = 'CRITICAL',
+  EXPIRED = 'EXPIRED',
+}

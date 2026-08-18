@@ -1,0 +1,55 @@
+# ============================================
+# FreshSave — Docker Compose (Development)
+# ============================================
+# Usage: docker compose up -d
+
+services:
+  # ── PostgreSQL with PostGIS ───────────────────────────
+  postgres:
+    image: postgis/postgis:16-3.4-alpine
+    container_name: freshsave-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: freshsave
+      POSTGRES_PASSWORD: freshsave_secret
+      POSTGRES_DB: freshsave_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U freshsave -d freshsave_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - freshsave-network
+
+  # ── Redis ─────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: freshsave-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - freshsave-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  freshsave-network:
+    driver: bridge
