@@ -13,32 +13,31 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   private client: Redis;
 
   constructor(private readonly configService: ConfigService) {
-    const host = this.configService.get<string>('redis.host', 'localhost');
-    const port = this.configService.get<number>('redis.port', 6379);
-    const password = this.configService.get<string>('redis.password');
-    const db = this.configService.get<number>('redis.db', 0);
+    const url = this.configService.get<string>('redis.url');
 
-    this.client = new Redis({
-      host,
-      port,
-      password: password || undefined,
-      db,
-      maxRetriesPerRequest: 3,
-      retryStrategy: (times: number) => {
-        if (times > 3) {
-          this.logger.error(
-            `Redis connection failed after ${times} attempts. Giving up.`,
-          );
-          return null; // Stop retrying
-        }
-        const delay = Math.min(times * 200, 2000);
-        this.logger.warn(
-          `Redis connection attempt ${times} failed. Retrying in ${delay}ms...`,
-        );
-        return delay;
-      },
-      lazyConnect: true,
-    });
+    if (url) {
+      this.client = new Redis(url, {
+        maxRetriesPerRequest: 3,
+        retryStrategy: this.getRetryStrategy(),
+        lazyConnect: true,
+        family: 0, // Helps with IPv4/IPv6 fallback for upstash
+      });
+    } else {
+      const host = this.configService.get<string>('redis.host', 'localhost');
+      const port = this.configService.get<number>('redis.port', 6379);
+      const password = this.configService.get<string>('redis.password');
+      const db = this.configService.get<number>('redis.db', 0);
+
+      this.client = new Redis({
+        host,
+        port,
+        password: password || undefined,
+        db,
+        maxRetriesPerRequest: 3,
+        retryStrategy: this.getRetryStrategy(),
+        lazyConnect: true,
+      });
+    }
 
     this.client.on('error', (err: Error) => {
       this.logger.error(`Redis client error: ${err.message}`);
@@ -52,6 +51,24 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
       this.logger.warn('Redis connection closed');
     });
   }
+
+  private getRetryStrategy() {
+    return (times: number) => {
+      if (times > 3) {
+        this.logger.error(
+          `Redis connection failed after ${times} attempts. Giving up.`,
+        );
+        return null; // Stop retrying
+      }
+      const delay = Math.min(times * 200, 2000);
+      this.logger.warn(
+        `Redis connection attempt ${times} failed. Retrying in ${delay}ms...`,
+      );
+      return delay;
+    };
+  }
+
+
 
   async onModuleInit(): Promise<void> {
     this.logger.log('Connecting to Redis...');
