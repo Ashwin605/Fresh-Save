@@ -74,6 +74,10 @@ class EnvironmentVariables {
   @IsOptional()
   REDIS_DB?: number;
 
+  @IsString()
+  @IsOptional()
+  REDIS_URL?: string;
+
   // ---------- Logging ----------
   @IsString()
   @IsOptional()
