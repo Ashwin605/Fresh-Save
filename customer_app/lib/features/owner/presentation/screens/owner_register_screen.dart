@@ -7,6 +7,7 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../core/widgets/feedback/app_snackbar.dart';
 import '../../../auth/presentation/providers/auth_state_provider.dart';
+import '../../../auth/presentation/providers/auth_controller.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 
@@ -119,30 +120,8 @@ class _OwnerRegisterScreenState extends ConsumerState<OwnerRegisterScreen> {
 
       if (!mounted) return;
       if (result) {
-        if (!mounted) return;
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => AlertDialog(
-            title: const Row(
-              children: [
-                Icon(Icons.check_circle, color: AppColors.success),
-                SizedBox(width: 8),
-                Text('Success'),
-              ],
-            ),
-            content: const Text('Business registered successfully! You can now log in to your account.'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context); // Close dialog
-                  context.go('/owner/login'); // Navigate to login
-                },
-                child: const Text('Go to Login'),
-              ),
-            ],
-          ),
-        );
+        // Automatically log in after successful registration
+        ref.read(authControllerProvider.notifier).login(_email, _password);
       } else {
         // Read the error from state
         final errorMessage = ref.read(authStateProvider).error ?? 'Registration failed';

@@ -155,8 +155,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       // Customer routing isolation
-      if (state.matchedLocation.startsWith('/owner')) {
-        return '/home';
+      if (isAuthRoute || state.matchedLocation.startsWith('/owner')) {
+        return hasCompletedOnboarding ? '/home' : '/onboarding/welcome';
       }
 
       // Authenticated users (customers)
