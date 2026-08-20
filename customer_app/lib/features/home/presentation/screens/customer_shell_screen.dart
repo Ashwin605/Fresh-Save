@@ -92,7 +92,7 @@ class _PremiumBottomNavigation extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 }
 

@@ -105,7 +105,7 @@ final dioProvider = Provider<Dio>((ref) {
     BaseOptions(
       baseUrl: const bool.hasEnvironment('API_URL') 
           ? const String.fromEnvironment('API_URL') 
-          : 'https://immune-url-engagement-cat.trycloudflare.com/api/v1',
+          : 'https://fresh-save-api.onrender.com/api/v1',
       connectTimeout: const Duration(seconds: 60),
       receiveTimeout: const Duration(seconds: 60),
       headers: {
