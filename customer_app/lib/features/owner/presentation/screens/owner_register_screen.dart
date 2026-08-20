@@ -21,23 +21,28 @@ class OwnerRegisterScreen extends ConsumerStatefulWidget {
 class _OwnerRegisterScreenState extends ConsumerState<OwnerRegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   
-  String _ownerName = '';
-  String _email = '';
-  String _phone = '';
-  String _password = '';
-  String _businessName = '';
-  String _storeName = '';
-  String _storeAddress = '';
+  final _ownerNameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _businessNameController = TextEditingController();
+  final _storeNameController = TextEditingController();
+  final _addressController = TextEditingController();
   
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _isDetectingLocation = false;
   double? _latitude;
   double? _longitude;
-  final _addressController = TextEditingController();
 
   @override
   void dispose() {
+    _ownerNameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _passwordController.dispose();
+    _businessNameController.dispose();
+    _storeNameController.dispose();
     _addressController.dispose();
     super.dispose();
   }
@@ -100,20 +105,28 @@ class _OwnerRegisterScreenState extends ConsumerState<OwnerRegisterScreen> {
 
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    _formKey.currentState!.save();
-
+    
+    FocusScope.of(context).unfocus();
     setState(() => _isLoading = true);
+
+    final ownerName = _ownerNameController.text.trim();
+    final email = _emailController.text.trim();
+    final phone = _phoneController.text.trim();
+    final password = _passwordController.text;
+    final businessName = _businessNameController.text.trim();
+    final storeName = _storeNameController.text.trim();
+    final address = _addressController.text.trim();
 
     try {
       final authNotifier = ref.read(authStateProvider.notifier);
       final result = await authNotifier.registerBusiness(
-        ownerName: _ownerName,
-        email: _email,
-        password: _password,
-        phone: _phone,
-        businessName: _businessName,
-        storeName: _storeName,
-        storeAddress: _addressController.text, // Use the controller
+        ownerName: ownerName,
+        email: email,
+        password: password,
+        phone: phone.isNotEmpty ? phone : null,
+        businessName: businessName,
+        storeName: storeName,
+        storeAddress: address,
         latitude: _latitude,
         longitude: _longitude,
       );
@@ -121,7 +134,7 @@ class _OwnerRegisterScreenState extends ConsumerState<OwnerRegisterScreen> {
       if (!mounted) return;
       if (result) {
         // Automatically log in after successful registration
-        ref.read(authControllerProvider.notifier).login(_email, _password);
+        ref.read(authControllerProvider.notifier).login(email, password);
       } else {
         // Read the error from state
         final errorMessage = ref.read(authStateProvider).error ?? 'Registration failed';
@@ -137,6 +150,18 @@ class _OwnerRegisterScreenState extends ConsumerState<OwnerRegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AsyncValue<void>>(authControllerProvider, (prev, next) {
+      next.whenOrNull(
+        error: (error, _) {
+          AppSnackbar.show(
+            context,
+            message: error.toString(),
+            variant: SnackbarVariant.error,
+          );
+        },
+      );
+    });
+
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -192,34 +217,35 @@ class _OwnerRegisterScreenState extends ConsumerState<OwnerRegisterScreen> {
                           Text('Owner Details', style: AppTypography.headline),
                           const SizedBox(height: AppSpacing.md),
                           TextFormField(
+                            controller: _ownerNameController,
                             decoration: const InputDecoration(
                               labelText: 'Full Name',
                               prefixIcon: Icon(Icons.person_outline),
                             ),
                             validator: (v) => v!.isEmpty ? 'Required' : null,
-                            onSaved: (v) => _ownerName = v!,
                           ),
                           const SizedBox(height: AppSpacing.md),
                           TextFormField(
+                            controller: _emailController,
                             decoration: const InputDecoration(
                               labelText: 'Email Address',
                               prefixIcon: Icon(Icons.email_outlined),
                             ),
                             keyboardType: TextInputType.emailAddress,
                             validator: (v) => v!.isEmpty || !v.contains('@') ? 'Valid email required' : null,
-                            onSaved: (v) => _email = v!,
                           ),
                           const SizedBox(height: AppSpacing.md),
                           TextFormField(
+                            controller: _phoneController,
                             decoration: const InputDecoration(
                               labelText: 'Phone Number (Optional)',
                               prefixIcon: Icon(Icons.phone_outlined),
                             ),
                             keyboardType: TextInputType.phone,
-                            onSaved: (v) => _phone = v ?? '',
                           ),
                           const SizedBox(height: AppSpacing.md),
                           TextFormField(
+                            controller: _passwordController,
                             decoration: InputDecoration(
                               labelText: 'Password',
                               prefixIcon: const Icon(Icons.lock_outline),
@@ -230,7 +256,6 @@ class _OwnerRegisterScreenState extends ConsumerState<OwnerRegisterScreen> {
                             ),
                             obscureText: _obscurePassword,
                             validator: (v) => v!.length < 8 ? 'Password must be at least 8 characters' : null,
-                            onSaved: (v) => _password = v!.trim(),
                           ),
                           
                           const SizedBox(height: AppSpacing.xl),
@@ -239,21 +264,21 @@ class _OwnerRegisterScreenState extends ConsumerState<OwnerRegisterScreen> {
                           Text('Business Details', style: AppTypography.headline),
                           const SizedBox(height: AppSpacing.md),
                           TextFormField(
+                            controller: _businessNameController,
                             decoration: const InputDecoration(
                               labelText: 'Business Name',
                               prefixIcon: Icon(Icons.business),
                             ),
                             validator: (v) => v!.isEmpty ? 'Required' : null,
-                            onSaved: (v) => _businessName = v!,
                           ),
                           const SizedBox(height: AppSpacing.md),
                           TextFormField(
+                            controller: _storeNameController,
                             decoration: const InputDecoration(
                               labelText: 'Store Name (e.g. Main St Branch)',
                               prefixIcon: Icon(Icons.storefront),
                             ),
                             validator: (v) => v!.isEmpty ? 'Required' : null,
-                            onSaved: (v) => _storeName = v!,
                           ),
                           const SizedBox(height: AppSpacing.md),
                           TextFormField(
