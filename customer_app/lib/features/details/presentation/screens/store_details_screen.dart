@@ -350,7 +350,7 @@ class _StoreDetailsScreenState extends ConsumerState<StoreDetailsScreen> {
     if (store == null) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
+        children: [
           AppSkeleton(width: 200, height: 32, borderRadius: AppRadius.sm),
           SizedBox(height: AppSpacing.sm),
           AppSkeleton(width: 120, height: 16, borderRadius: AppRadius.sm),

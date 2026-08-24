@@ -7,7 +7,6 @@ import '../../../../app/theme/app_typography.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_animations.dart';
-import '../../../../core/widgets/buttons/app_button.dart';
 import '../../../../core/widgets/app_network_image.dart';
 import '../../../../core/widgets/domain/offer_card.dart';
 import '../../../../core/widgets/domain/store_card.dart';

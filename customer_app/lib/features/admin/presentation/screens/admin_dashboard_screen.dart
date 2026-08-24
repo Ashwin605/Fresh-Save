@@ -285,7 +285,7 @@ class _MockChartSection extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               crossAxisAlignment: CrossAxisAlignment.end,
-              children: const [
+              children: [
                 _ChartBar(height: 0, label: 'Mon'),
                 _ChartBar(height: 0, label: 'Tue'),
                 _ChartBar(height: 0, label: 'Wed'),

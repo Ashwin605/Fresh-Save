@@ -5,10 +5,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
-import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_animations.dart';
 import '../../../../core/widgets/buttons/app_button.dart';
-import '../../../../core/widgets/app_network_image.dart';
 import '../../../../core/widgets/feedback/app_skeleton.dart';
 import '../../../../core/widgets/feedback/empty_state_view.dart';
 import '../../../../core/widgets/domain/product_card.dart';
@@ -111,7 +109,7 @@ class _CategoryDiscoveryScreenState
           childAspectRatio: 0.7,
         ),
         itemCount: 6,
-        itemBuilder: (_, __) => const AppSkeleton(
+        itemBuilder: (_, _) => const AppSkeleton(
           width: double.infinity,
           height: 240,
           borderRadius: 16,

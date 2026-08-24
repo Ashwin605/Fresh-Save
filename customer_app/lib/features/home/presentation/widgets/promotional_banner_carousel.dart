@@ -214,7 +214,7 @@ class _PromotionalBannerCarouselState
           borderRadius: AppRadius.lg,
         ),
       ),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 }

@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../../app/theme/app_colors.dart';
 import '../../../../../app/theme/app_spacing.dart';
-import '../../../../../core/widgets/inputs/app_text_field.dart';
 import '../../../../../core/widgets/buttons/app_button.dart';
 import '../../../../../core/widgets/feedback/app_snackbar.dart';
 import '../../domain/models/owner_product_models.dart';
@@ -12,7 +11,6 @@ import '../providers/category_list_provider.dart';
 import '../providers/owner_product_list_provider.dart';
 import '../../data/repositories/inventory_repository_provider.dart';
 import '../providers/owner_state_provider.dart';
-import '../widgets/inventory/add_category_dialog.dart';
 import '../widgets/inventory/add_product_dialog.dart';
 import '../providers/inventory_list_provider.dart';
 import '../../../../../core/network/result.dart';
@@ -138,7 +136,7 @@ class _OwnerAddInventoryScreenState extends ConsumerState<OwnerAddInventoryScree
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<OwnerProductCategory>(
-                      value: _selectedCategory,
+                      initialValue: _selectedCategory,
                       decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 12)),
                       hint: const Text('Choose Main Category'),
                       items: categoryState.categories
@@ -168,7 +166,7 @@ class _OwnerAddInventoryScreenState extends ConsumerState<OwnerAddInventoryScree
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<OwnerProductCategory>(
-                      value: _selectedSubcategory,
+                      initialValue: _selectedSubcategory,
                       decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 12)),
                       hint: const Text('Choose Subcategory'),
                       items: categoryState.categories
@@ -202,7 +200,7 @@ class _OwnerAddInventoryScreenState extends ConsumerState<OwnerAddInventoryScree
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<OwnerProduct>(
-                      value: _selectedProduct,
+                      initialValue: _selectedProduct,
                       decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 12)),
                       hint: const Text('Choose Product'),
                       items: data.data.items.map((p) => DropdownMenuItem(value: p, child: Text(p.name))).toList(),

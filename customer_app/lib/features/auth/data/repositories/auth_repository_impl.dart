@@ -80,8 +80,8 @@ class AuthRepositoryImpl implements AuthRepository {
         'businessName': businessName,
         'storeName': storeName,
         'storeAddress': storeAddress,
-        if (latitude != null) 'latitude': latitude,
-        if (longitude != null) 'longitude': longitude,
+        'latitude': ?latitude,
+        'longitude': ?longitude,
       };
       if (phone != null && phone.isNotEmpty) {
         data['phone'] = phone;

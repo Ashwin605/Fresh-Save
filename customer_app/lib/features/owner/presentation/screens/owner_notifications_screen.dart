@@ -87,7 +87,7 @@ class _OwnerNotificationScreenState
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Notifications', style: AppTypography.title),
+        title: Text(),
         backgroundColor: AppColors.surface,
         elevation: 0,
         actions: [
@@ -117,7 +117,7 @@ class _OwnerNotificationScreenState
                   if (filteredList.isEmpty) {
                     return ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
-                      children: const [
+                      children: [
                         SizedBox(height: 100),
                         Center(
                           child: Text(

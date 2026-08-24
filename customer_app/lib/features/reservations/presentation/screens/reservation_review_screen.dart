@@ -12,8 +12,6 @@ import '../../../../app/theme/app_animations.dart';
 import '../../../../core/widgets/app_network_image.dart';
 import '../../../../core/widgets/buttons/app_button.dart';
 import '../../../../core/widgets/app_error_view.dart';
-import '../../../../core/widgets/glass_surface.dart';
-import '../../../../core/widgets/layout/app_card.dart';
 import '../../../../core/widgets/layout/interactive_container.dart';
 import '../../../../core/network/result.dart';
 import '../../../details/domain/models/details_models.dart';

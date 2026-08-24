@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../../../../app/theme/app_colors.dart';
 import '../../../../../../app/theme/app_spacing.dart';
 import '../../../../../../app/theme/app_typography.dart';
-import '../../../../../../app/theme/app_typography.dart';
 import '../../../../../../core/widgets/layout/app_card.dart';
 import '../../../domain/models/inventory_models.dart';
 

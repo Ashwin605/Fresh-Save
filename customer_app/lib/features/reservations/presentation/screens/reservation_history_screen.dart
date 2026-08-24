@@ -27,7 +27,7 @@ class ReservationHistoryScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        title: const Text('My Reservations', style: AppTypography.headline),
+        title: Text(),
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
           child: InteractiveContainer(
