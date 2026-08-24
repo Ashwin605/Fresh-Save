@@ -11,6 +11,7 @@ import '../providers/owner_state_provider.dart';
 import '../../domain/models/analytics_models.dart';
 import '../widgets/analytics/analytics_kpi_card.dart';
 import '../widgets/analytics/analytics_insight_card.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class OwnerAnalyticsScreen extends ConsumerWidget {
   const OwnerAnalyticsScreen({super.key});
@@ -58,7 +59,7 @@ class OwnerAnalyticsScreen extends ConsumerWidget {
                   _buildKpiSummary(analyticsState.data!.kpiSummary),
                   _buildPerformanceChartPlaceholder(context),
                   _buildInsights(analyticsState.data!.insights, context),
-                ]),
+                ].animate(interval: 50.ms).fade(duration: 300.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad)),
               )
             else
               const SliverFillRemaining(

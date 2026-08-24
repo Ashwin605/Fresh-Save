@@ -5,6 +5,7 @@ import '../../../../../app/theme/app_colors.dart';
 import '../../../../../app/theme/app_spacing.dart';
 import '../providers/inventory_list_provider.dart';
 import '../widgets/inventory/inventory_card.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class OwnerInventoryScreen extends ConsumerStatefulWidget {
   const OwnerInventoryScreen({super.key});
@@ -164,7 +165,7 @@ class _OwnerInventoryScreenState extends ConsumerState<OwnerInventoryScreen> {
               'owner_inventory_detail',
               pathParameters: {'id': item.id},
             ),
-          ),
+          ).animate().fade(duration: 300.ms, delay: (index * 50).ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad),
         );
       },
     );

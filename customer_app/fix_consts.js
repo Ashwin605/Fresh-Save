@@ -1,4 +1,4 @@
-const fs = require('fs');
+﻿const fs = require('fs');
 const path = require('path');
 
 function walkDir(dir, callback) {
@@ -13,8 +13,8 @@ walkDir('lib', function(filePath) {
     if (filePath.endsWith('.dart')) {
         let content = fs.readFileSync(filePath, 'utf8');
         let newContent = content
-            .replace(/const\s+Text\(\s*([^)]+style:\s*AppTypography\.[a-zA-Z]+)/g, 'Text(')
-            .replace(/const\s+Text\(\n([^\)]+style:\s*AppTypography\.[a-zA-Z]+)/g, 'Text(\n')
+            .replace(/const\s+Text\(\s*([^)]+style:\s*AppTypography\.[a-zA-Z]+)/g, 'Text($1')
+            .replace(/const\s+Text\(\n([^\)]+style:\s*AppTypography\.[a-zA-Z]+)/g, 'Text(\n$1')
             .replace(/const\s+AppBarTheme\(/g, 'AppBarTheme(')
             .replace(/const\s+TextTheme\(/g, 'TextTheme(')
             .replace(/children:\s*const\s*\[/g, 'children: [');

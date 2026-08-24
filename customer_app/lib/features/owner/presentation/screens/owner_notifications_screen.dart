@@ -87,7 +87,7 @@ class _OwnerNotificationScreenState
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(),
+        title: Text('Notifications', style: AppTypography.title),
         backgroundColor: AppColors.surface,
         elevation: 0,
         actions: [

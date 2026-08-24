@@ -9,6 +9,7 @@ import '../../../../../core/widgets/feedback/empty_state_view.dart';
 import '../../../../../core/widgets/app_error_view.dart';
 import '../providers/owner_offer_list_provider.dart';
 import '../widgets/offers/offer_management_card.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class OwnerOfferListScreen extends ConsumerWidget {
   const OwnerOfferListScreen({super.key});
@@ -39,7 +40,7 @@ class OwnerOfferListScreen extends ConsumerWidget {
                     ),
                     itemCount: offers.length,
                     itemBuilder: (context, index) {
-                      return OfferManagementCard(offer: offers[index]);
+                      return OfferManagementCard(offer: offers[index]).animate().fade(duration: 300.ms, delay: (index * 50).ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad);
                     },
                   );
                 },

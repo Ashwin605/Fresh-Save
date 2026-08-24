@@ -15,7 +15,8 @@ class NotificationPreferencesScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(,
+        title: Text('Notification Preferences',
+          style: AppTypography.title,
         ),
         backgroundColor: AppColors.background,
         elevation: 0,
