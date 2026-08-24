@@ -6,6 +6,8 @@ import '../../../../app/theme/app_typography.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../core/widgets/layout/app_card.dart';
+import '../../../../core/widgets/layout/interactive_container.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/owner_state_provider.dart';
 
 import '../../../notifications/presentation/providers/notification_providers.dart';
@@ -130,91 +132,103 @@ class OwnerDashboardScreen extends ConsumerWidget {
 
   Widget _buildDashboardContent(BuildContext context, OwnerState state) {
     if (state.dashboardMetrics != null) {
+      final items = [
+        _buildMetricCard(
+          'Active Offers',
+          state.dashboardMetrics!.activeOffers.toString(),
+        ),
+        _buildMetricCard(
+          'Pending',
+          state.dashboardMetrics!.pendingReservations.toString(),
+        ),
+        _buildMetricCard(
+          "Today's Pickups",
+          state.dashboardMetrics!.todayPickups.toString(),
+        ),
+      ];
+
       return ListView(
         padding: const EdgeInsets.all(AppSpacing.md),
         children: [
-          _buildMetricCard(
-            'Active Offers',
-            state.dashboardMetrics!.activeOffers.toString(),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _buildMetricCard(
-            'Pending Reservations',
-            state.dashboardMetrics!.pendingReservations.toString(),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _buildMetricCard(
-            "Today's Pickups",
-            state.dashboardMetrics!.todayPickups.toString(),
-          ),
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisSpacing: AppSpacing.md,
+            mainAxisSpacing: AppSpacing.md,
+            childAspectRatio: 1.5,
+            children: items,
+          ).animate().fade(duration: 300.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad),
         ],
       );
     }
 
     // Show welcome dashboard with quick actions when metrics aren't loaded
+    final items = [
+      Container(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [AppColors.primary, Color(0xFF2E7D32)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Welcome, ${state.business?.name ?? 'Shop Owner'}!',
+              style: AppTypography.headline.copyWith(color: Colors.white),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              state.activeStore != null
+                  ? 'Managing: ${state.activeStore!.name}'
+                  : 'Set up your store to get started',
+              style: AppTypography.body.copyWith(
+                color: Colors.white70,
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: AppSpacing.xl),
+      Text('Quick Actions', style: AppTypography.title),
+      const SizedBox(height: AppSpacing.md),
+      _buildQuickActionCard(
+        icon: Icons.inventory_2_outlined,
+        title: 'Manage Inventory',
+        subtitle: 'Add and update your product stock',
+        onTap: () => context.push('/owner/inventory'),
+      ),
+      const SizedBox(height: AppSpacing.sm),
+      _buildQuickActionCard(
+        icon: Icons.local_offer_outlined,
+        title: 'Create Offers',
+        subtitle: 'Publish deals for customers',
+        onTap: () => context.push('/owner/offers'),
+      ),
+      const SizedBox(height: AppSpacing.sm),
+      _buildQuickActionCard(
+        icon: Icons.receipt_long_outlined,
+        title: 'View Reservations',
+        subtitle: 'Track customer pickups',
+        onTap: () => context.push('/owner/reservations'),
+      ),
+      const SizedBox(height: AppSpacing.sm),
+      _buildQuickActionCard(
+        icon: Icons.analytics_outlined,
+        title: 'Analytics',
+        subtitle: 'View store performance',
+        onTap: () => context.push('/owner/analytics'),
+      ),
+    ];
+
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.md),
-      children: [
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AppColors.primary, Color(0xFF2E7D32)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(AppRadius.lg),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Welcome, ${state.business?.name ?? 'Shop Owner'}!',
-                style: AppTypography.headline.copyWith(color: Colors.white),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                state.activeStore != null
-                    ? 'Managing: ${state.activeStore!.name}'
-                    : 'Set up your store to get started',
-                style: AppTypography.body.copyWith(
-                  color: Colors.white70,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xl),
-        Text('Quick Actions', style: AppTypography.title),
-        const SizedBox(height: AppSpacing.md),
-        _buildQuickActionCard(
-          icon: Icons.inventory_2_outlined,
-          title: 'Manage Inventory',
-          subtitle: 'Add and update your product stock',
-          onTap: () => context.push('/owner/inventory'),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _buildQuickActionCard(
-          icon: Icons.local_offer_outlined,
-          title: 'Create Offers',
-          subtitle: 'Publish deals for customers',
-          onTap: () => context.push('/owner/offers'),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _buildQuickActionCard(
-          icon: Icons.receipt_long_outlined,
-          title: 'View Reservations',
-          subtitle: 'Track customer pickups',
-          onTap: () => context.push('/owner/reservations'),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _buildQuickActionCard(
-          icon: Icons.analytics_outlined,
-          title: 'Analytics',
-          subtitle: 'View store performance',
-          onTap: () => context.push('/owner/analytics'),
-        ),
-      ],
+      children: items.animate(interval: 50.ms).fade(duration: 300.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad),
     );
   }
 
@@ -224,22 +238,38 @@ class OwnerDashboardScreen extends ConsumerWidget {
     required String subtitle,
     required VoidCallback onTap,
   }) {
-    return AppCard(
-      variant: AppCardVariant.outlined,
-      padding: EdgeInsets.zero,
+    return InteractiveContainer(
       onTap: onTap,
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(AppRadius.sm),
-          ),
-          child: Icon(icon, color: AppColors.primary),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: AppColors.border),
         ),
-        title: Text(title, style: AppTypography.body.copyWith(fontWeight: FontWeight.w600)),
-        subtitle: Text(subtitle, style: AppTypography.label.copyWith(color: AppColors.textSecondary)),
-        trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+              ),
+              child: Icon(icon, color: AppColors.primary),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: AppTypography.body.copyWith(fontWeight: FontWeight.w600)),
+                  Text(subtitle, style: AppTypography.label.copyWith(color: AppColors.textSecondary)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+          ],
+        ),
       ),
     );
   }

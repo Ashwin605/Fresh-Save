@@ -27,7 +27,7 @@ class ReservationDetailScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(),
+        title: Text('Reservation Details', style: AppTypography.title),
         backgroundColor: AppColors.background,
         elevation: 0,
         centerTitle: true,
@@ -135,7 +135,7 @@ class ReservationDetailScreen extends ConsumerWidget {
                       ),
                       child: const Icon(Icons.storefront_outlined, color: AppColors.primary),
                     ),
-                    title: Text(),
+                    title: Text('Partner Store', style: AppTypography.body),
                     subtitle: Text('Store ID: ${reservation.storeId.substring(0, 8)}...', style: AppTypography.bodySmall),
                   ),
                 ).animate().fade(duration: AppAnimations.medium, delay: 150.ms).slideY(begin: 0.1, end: 0),
@@ -171,7 +171,7 @@ class ReservationDetailScreen extends ConsumerWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(),
+                          Text('Total', style: AppTypography.headline),
                           Text('\$${reservation.totalAmount.toStringAsFixed(2)}', style: AppTypography.headline.copyWith(color: AppColors.primary)),
                         ],
                       ),

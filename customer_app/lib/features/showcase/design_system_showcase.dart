@@ -109,7 +109,7 @@ class DesignSystemShowcase extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(),
+              Text('Elevated Card', style: AppTypography.title),
               const SizedBox(height: AppSpacing.md),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,

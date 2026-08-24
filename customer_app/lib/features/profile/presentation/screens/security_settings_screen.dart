@@ -76,7 +76,7 @@ class _SecuritySettingsScreenState
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(),
+        title: Text('Security', style: AppTypography.title),
         backgroundColor: AppColors.background,
         elevation: 0,
         centerTitle: true,

@@ -6,6 +6,7 @@ import '../../../../core/widgets/app_error_view.dart';
 import '../../domain/models/owner_reservation_models.dart';
 import '../providers/owner_reservation_list_provider.dart';
 import '../widgets/reservations/owner_reservation_card.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class OwnerReservationsScreen extends ConsumerStatefulWidget {
   const OwnerReservationsScreen({super.key});
@@ -199,7 +200,7 @@ class _OwnerReservationsScreenState
               onTap: () {
                 context.push('/owner/reservations/${reservation.id}');
               },
-            );
+            ).animate().fade(duration: 300.ms, delay: (index * 50).ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad);
           },
         ),
       ),

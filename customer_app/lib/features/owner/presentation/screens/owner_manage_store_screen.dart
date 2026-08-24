@@ -12,6 +12,7 @@ import '../widgets/profile/business_info_section.dart';
 import '../widgets/profile/store_details_section.dart';
 import '../widgets/profile/store_location_section.dart';
 import '../widgets/profile/store_hours_section.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class OwnerManageStoreScreen extends ConsumerWidget {
   const OwnerManageStoreScreen({super.key});
@@ -73,7 +74,7 @@ class OwnerManageStoreScreen extends ConsumerWidget {
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
-          title: Text(),
+          title: Text('Manage Store', style: AppTypography.title),
           backgroundColor: AppColors.surface,
           elevation: 0,
           leading: IconButton(
@@ -115,15 +116,15 @@ class OwnerManageStoreScreen extends ConsumerWidget {
                       padding: const EdgeInsets.all(AppSpacing.lg),
                       children: [
                         StoreIdentitySection(),
-                        SizedBox(height: AppSpacing.xl),
+                        const SizedBox(height: AppSpacing.xl),
                         BusinessInfoSection(),
-                        SizedBox(height: AppSpacing.xl),
+                        const SizedBox(height: AppSpacing.xl),
                         StoreDetailsSection(),
-                        SizedBox(height: AppSpacing.xl),
+                        const SizedBox(height: AppSpacing.xl),
                         StoreLocationSection(),
-                        SizedBox(height: AppSpacing.xl),
+                        const SizedBox(height: AppSpacing.xl),
                         StoreHoursSection(),
-                      ],
+                      ].animate(interval: 50.ms).fade(duration: 300.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad),
                     ),
                   ),
                   if (manageState.isEditMode)

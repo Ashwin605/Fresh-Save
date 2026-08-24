@@ -31,7 +31,7 @@ class ProfileScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(),
+        title: Text('Profile', style: AppTypography.headline),
         backgroundColor: AppColors.background,
         elevation: 0,
         centerTitle: true,
@@ -276,8 +276,9 @@ class ProfileScreen extends ConsumerWidget {
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
-        title: Text(),
-        content: Text(,
+        title: Text('Log Out', style: AppTypography.headline),
+        content: Text('Are you sure you want to log out of FreshSave?',
+          style: AppTypography.body,
         ),
         actions: [
           TextButton(

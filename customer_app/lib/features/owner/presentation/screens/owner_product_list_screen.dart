@@ -6,6 +6,7 @@ import '../../../../../app/theme/app_typography.dart';
 import '../../../../../core/widgets/inputs/app_text_field.dart';
 import '../providers/owner_product_list_provider.dart';
 import '../widgets/products/product_management_card.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class OwnerProductListScreen extends ConsumerStatefulWidget {
   const OwnerProductListScreen({super.key});
@@ -51,7 +52,7 @@ class _OwnerProductListScreenState
                     ),
                     itemCount: products.length,
                     itemBuilder: (context, index) {
-                      return ProductManagementCard(product: products[index]);
+                      return ProductManagementCard(product: products[index]).animate().fade(duration: 300.ms, delay: (index * 50).ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutQuad);
                     },
                   );
                 },
