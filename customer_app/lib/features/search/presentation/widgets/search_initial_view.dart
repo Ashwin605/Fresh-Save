@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_radius.dart';
+import '../../../../app/theme/app_animations.dart';
 import '../../../../core/widgets/chips_badges/app_chip.dart';
+import '../../../../core/widgets/layout/interactive_container.dart';
 import '../../../home/presentation/providers/home_providers.dart';
 import '../providers/search_provider.dart';
 
@@ -29,35 +32,41 @@ class SearchInitialView extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Recent Searches', style: AppTypography.title),
-                TextButton(
-                  onPressed: () => ref
+                InteractiveContainer(
+                  onTap: () => ref
                       .read(searchProvider.notifier)
                       .clearAllRecentSearches(),
                   child: Text(
                     'Clear All',
                     style: AppTypography.bodySmall.copyWith(
                       color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
               ],
             ),
-          ),
+          ).animate().fade(duration: AppAnimations.medium).slideY(begin: 0.1, end: 0),
+          const SizedBox(height: AppSpacing.sm),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: Row(
-              children: recentSearches.map((query) {
+              children: recentSearches.asMap().entries.map((entry) {
                 return Padding(
                   padding: const EdgeInsets.only(right: AppSpacing.sm),
                   child: AppChip(
-                    label: query,
+                    label: entry.value,
                     isSelected: false,
                     onTap: () {
-                      ref.read(searchProvider.notifier).executeSearch(query);
+                      ref.read(searchProvider.notifier).executeSearch(entry.value);
                     },
                   ),
-                );
+                ).animate().fade(
+                  duration: AppAnimations.medium,
+                  delay: Duration(milliseconds: 100 + (entry.key * 50)),
+                ).slideX(begin: 0.1, end: 0);
               }).toList(),
             ),
           ),
@@ -67,7 +76,7 @@ class SearchInitialView extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: Text('Browse Categories', style: AppTypography.title),
-        ),
+        ).animate().fade(duration: AppAnimations.medium, delay: 200.ms).slideY(begin: 0.1, end: 0),
         const SizedBox(height: AppSpacing.md),
         ref
             .watch(categoriesProvider)
@@ -82,62 +91,62 @@ class SearchInitialView extends ConsumerWidget {
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     childAspectRatio: 2.5,
-                    crossAxisSpacing: AppSpacing.sm,
-                    mainAxisSpacing: AppSpacing.sm,
+                    crossAxisSpacing: AppSpacing.md,
+                    mainAxisSpacing: AppSpacing.md,
                   ),
                   itemCount: categories.length,
                   itemBuilder: (context, index) {
                     final cat = categories[index];
-                    return Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => context.push('/category/${cat.id}'),
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                        child: Ink(
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(AppRadius.md),
-                            border: Border.all(color: AppColors.border),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.02),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
+                    return InteractiveContainer(
+                      onTap: () => context.push('/category/${cat.id}'),
+                      scaleDown: 0.95,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(AppRadius.md),
+                          border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                        ),
+                        child: Row(
+                          children: [
+                            if (cat.icon != null) ...[
+                              Text(
+                                cat.icon!,
+                                style: const TextStyle(fontSize: 20),
                               ),
+                              const SizedBox(width: AppSpacing.sm),
                             ],
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.md,
-                          ),
-                          child: Row(
-                            children: [
-                              if (cat.icon != null) ...[
-                                Text(
-                                  cat.icon!,
-                                  style: const TextStyle(fontSize: 20),
+                            Expanded(
+                              child: Text(
+                                cat.name,
+                                style: AppTypography.bodySmall.copyWith(
+                                  fontWeight: FontWeight.w600,
                                 ),
-                                const SizedBox(width: AppSpacing.sm),
-                              ],
-                              Expanded(
-                                child: Text(
-                                  cat.name,
-                                  style: AppTypography.bodySmall.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              const Icon(
-                                Icons.chevron_right,
-                                size: 16,
-                                color: AppColors.textDisabled,
-                              ),
-                            ],
-                          ),
+                            ),
+                            const Icon(
+                              Icons.chevron_right_rounded,
+                              size: 16,
+                              color: AppColors.primary,
+                            ),
+                          ],
                         ),
                       ),
-                    );
+                    ).animate().fade(
+                      duration: AppAnimations.medium,
+                      delay: Duration(milliseconds: 300 + (index * 50)),
+                    ).slideY(begin: 0.1, end: 0);
                   },
                 );
               },

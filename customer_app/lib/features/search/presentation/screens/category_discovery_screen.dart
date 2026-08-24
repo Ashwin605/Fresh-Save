@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../app/theme/app_radius.dart';
+import '../../../../app/theme/app_animations.dart';
 import '../../../../core/widgets/buttons/app_button.dart';
 import '../../../../core/widgets/app_network_image.dart';
 import '../../../../core/widgets/feedback/app_skeleton.dart';
 import '../../../../core/widgets/feedback/empty_state_view.dart';
 import '../../../../core/widgets/domain/product_card.dart';
+import '../../../../core/widgets/layout/interactive_container.dart';
 import '../providers/category_products_provider.dart';
 import '../../../home/presentation/providers/home_providers.dart';
 import '../../../home/domain/models/home_models.dart';
@@ -79,8 +82,10 @@ class _CategoryDiscoveryScreenState
         backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
+        scrolledUnderElevation: 4,
+        shadowColor: AppColors.primary.withValues(alpha: 0.1),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Text('Products', style: AppTypography.title),
@@ -129,7 +134,7 @@ class _CategoryDiscoveryScreenState
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.md),
-            AppButton(
+            AppButton.primary(
               label: 'Retry',
               onPressed: () => notifier.fetchInitial(widget.categoryId),
             ),
@@ -147,34 +152,38 @@ class _CategoryDiscoveryScreenState
 
     return CustomScrollView(
       controller: _scrollController,
-      physics: const AlwaysScrollableScrollPhysics(),
+      physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
       slivers: [
         // Subcategories Bar
         if (hasSubcategories)
           SliverToBoxAdapter(
             child: Container(
-              height: 56,
+              height: 60,
               decoration: const BoxDecoration(
                 color: AppColors.surface,
                 border: Border(bottom: BorderSide(color: AppColors.border)),
               ),
               child: ListView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 8),
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 10),
                 children: [
                   _buildSubcategoryChip(
                     id: widget.categoryId,
                     name: 'All ${mainCategory.name}',
                     isSelected: _selectedCategoryId == widget.categoryId,
-                  ),
-                  ...mainCategory.children.map((sub) => Padding(
+                  ).animate().fade(duration: AppAnimations.medium).slideX(begin: -0.2, end: 0),
+                  ...mainCategory.children.asMap().entries.map((entry) => Padding(
                         padding: const EdgeInsets.only(left: AppSpacing.sm),
                         child: _buildSubcategoryChip(
-                          id: sub.id,
-                          name: sub.name,
-                          isSelected: _selectedCategoryId == sub.id,
+                          id: entry.value.id,
+                          name: entry.value.name,
+                          isSelected: _selectedCategoryId == entry.value.id,
                         ),
-                      )),
+                      ).animate().fade(
+                        duration: AppAnimations.medium,
+                        delay: Duration(milliseconds: 100 + (entry.key * 50)),
+                      ).slideX(begin: -0.2, end: 0)),
                 ],
               ),
             ),
@@ -190,18 +199,18 @@ class _CategoryDiscoveryScreenState
             ),
             child: Row(
               children: [
-                _buildFilterChip('Sort', Icons.sort),
+                _buildFilterChip('Sort', Icons.sort_rounded),
                 const SizedBox(width: AppSpacing.sm),
-                _buildFilterChip('Price', Icons.attach_money),
+                _buildFilterChip('Price', Icons.attach_money_rounded),
                 const SizedBox(width: AppSpacing.sm),
                 _buildFilterChip('Offers', Icons.local_offer_outlined),
               ],
-            ),
+            ).animate().fade(duration: AppAnimations.medium, delay: 200.ms),
           ),
         ),
         
         if (state.products.isEmpty)
-          SliverFillRemaining(
+          const SliverFillRemaining(
             hasScrollBody: false,
             child: EmptyStateView(
               icon: Icons.category_outlined,
@@ -228,7 +237,10 @@ class _CategoryDiscoveryScreenState
                     brand: product.brand,
                     imageUrl: product.image,
                     onTap: () => context.push('/product/${product.id}'),
-                  );
+                  ).animate().fade(
+                    duration: AppAnimations.medium,
+                    delay: Duration(milliseconds: (index % 6) * 50),
+                  ).slideY(begin: 0.1, end: 0);
                 },
                 childCount: state.products.length,
               ),
@@ -247,20 +259,24 @@ class _CategoryDiscoveryScreenState
   }
 
   Widget _buildFilterChip(String label, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: AppColors.textPrimary),
-          const SizedBox(width: 4),
-          Text(label, style: AppTypography.label.copyWith(color: AppColors.textPrimary)),
-        ],
+    return InteractiveContainer(
+      onTap: () {},
+      scaleDown: 0.9,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceVariant,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: AppColors.textPrimary),
+            const SizedBox(width: 6),
+            Text(label, style: AppTypography.label.copyWith(color: AppColors.textPrimary)),
+          ],
+        ),
       ),
     );
   }
@@ -270,8 +286,9 @@ class _CategoryDiscoveryScreenState
     required String name,
     required bool isSelected,
   }) {
-    return GestureDetector(
+    return InteractiveContainer(
       onTap: () => _onSubcategorySelected(id),
+      scaleDown: 0.95,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
@@ -280,13 +297,22 @@ class _CategoryDiscoveryScreenState
           border: Border.all(
             color: isSelected ? AppColors.primary : AppColors.border,
           ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  )
+                ]
+              : null,
         ),
         child: Center(
           child: Text(
             name,
             style: AppTypography.label.copyWith(
               color: isSelected ? Colors.white : AppColors.textPrimary,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
             ),
           ),
         ),

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
-import '../../../../app/theme/app_radius.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_animations.dart';
+import '../../../../core/widgets/layout/interactive_container.dart';
 
 class SearchEntryBar extends StatelessWidget {
   const SearchEntryBar({super.key});
@@ -15,8 +17,9 @@ class SearchEntryBar extends StatelessWidget {
         horizontal: AppSpacing.md,
         vertical: AppSpacing.sm,
       ),
-      child: GestureDetector(
+      child: InteractiveContainer(
         onTap: () => context.push('/search'),
+        scaleDown: 0.98,
         child: Hero(
           tag: 'search_bar_hero',
           child: Material(
@@ -32,7 +35,7 @@ class SearchEntryBar extends StatelessWidget {
                 border: Border.all(color: AppColors.border, width: 0.5),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: AppColors.primary.withValues(alpha: 0.05),
                     blurRadius: 20,
                     offset: const Offset(0, 4),
                   ),
@@ -64,6 +67,6 @@ class SearchEntryBar extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ).animate().fade(duration: AppAnimations.medium, delay: 350.ms).slideY(begin: 0.2, end: 0);
   }
 }

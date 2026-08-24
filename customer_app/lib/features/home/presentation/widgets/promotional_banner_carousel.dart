@@ -1,12 +1,14 @@
 import 'dart:async';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../app/theme/app_radius.dart';
+import '../../../../app/theme/app_animations.dart';
+import '../../../../core/widgets/layout/interactive_container.dart';
 import '../../../../core/widgets/feedback/app_skeleton.dart';
 import '../../../../core/widgets/app_network_image.dart';
 import '../../../../core/widgets/chips_badges/discount_badge.dart';
@@ -41,8 +43,8 @@ class _PromotionalBannerCarouselState
         final nextPage = (_currentPage + 1) % _bannerCount;
         _pageController.animateToPage(
           nextPage,
-          duration: const Duration(milliseconds: 600),
-          curve: Curves.easeInOutCubic,
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.fastLinearToSlowEaseIn,
         );
       }
     });
@@ -75,6 +77,7 @@ class _PromotionalBannerCarouselState
                 onPanEnd: (_) => _isUserInteracting = false,
                 child: PageView.builder(
                   controller: _pageController,
+                  physics: const BouncingScrollPhysics(),
                   onPageChanged: (index) {
                     setState(() {
                       _currentPage = index;
@@ -85,16 +88,17 @@ class _PromotionalBannerCarouselState
                     final deal = banners[index];
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                      child: GestureDetector(
+                      child: InteractiveContainer(
                         onTap: () => context.push('/offer/${deal.id}'),
+                        scaleDown: 0.98,
                         child: Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(AppRadius.lg),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.05),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
+                                color: Colors.black.withValues(alpha: 0.08),
+                                blurRadius: 24,
+                                offset: const Offset(0, 8),
                               ),
                             ],
                           ),
@@ -119,9 +123,10 @@ class _PromotionalBannerCarouselState
                                       begin: Alignment.topCenter,
                                       end: Alignment.bottomCenter,
                                       colors: [
-                                        Colors.black.withValues(alpha: 0.1),
-                                        Colors.black.withValues(alpha: 0.7),
+                                        Colors.black.withValues(alpha: 0.05),
+                                        Colors.black.withValues(alpha: 0.8),
                                       ],
+                                      stops: const [0.4, 1.0],
                                     ),
                                   ),
                                 ),
@@ -143,21 +148,23 @@ class _PromotionalBannerCarouselState
                                     children: [
                                       Text(
                                         deal.productName,
-                                        style: AppTypography.title.copyWith(color: Colors.white),
+                                        style: AppTypography.title.copyWith(color: Colors.white, fontSize: 20),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                      const SizedBox(height: 4),
+                                      const SizedBox(height: 6),
                                       Row(
                                         children: [
+                                          Icon(Icons.storefront_rounded, size: 14, color: Colors.white.withValues(alpha: 0.8)),
+                                          const SizedBox(width: 4),
                                           Text(
                                             deal.storeName,
-                                            style: AppTypography.bodySmall.copyWith(color: Colors.white70),
+                                            style: AppTypography.bodySmall.copyWith(color: Colors.white.withValues(alpha: 0.8)),
                                           ),
                                           const Spacer(),
                                           Text(
                                             '₹${deal.discountedPrice.toStringAsFixed(2)}',
-                                            style: AppTypography.title.copyWith(color: Colors.white),
+                                            style: AppTypography.title.copyWith(color: AppColors.primaryLight),
                                           ),
                                         ],
                                       ),
@@ -182,6 +189,7 @@ class _PromotionalBannerCarouselState
                   banners.length,
                   (index) => AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic,
                     margin: const EdgeInsets.symmetric(horizontal: 4),
                     width: _currentPage == index ? 24 : 8,
                     height: 8,
@@ -196,7 +204,7 @@ class _PromotionalBannerCarouselState
               ),
             ]
           ],
-        );
+        ).animate().fade(duration: AppAnimations.medium, delay: 500.ms).slideY(begin: 0.1, end: 0);
       },
       loading: () => const Padding(
         padding: EdgeInsets.all(AppSpacing.md),

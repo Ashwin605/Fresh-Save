@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_animations.dart';
+import '../../../../core/widgets/buttons/app_button.dart';
+import '../../../../core/widgets/layout/interactive_container.dart';
 import '../providers/security_provider.dart';
 
 class SecuritySettingsScreen extends ConsumerStatefulWidget {
@@ -74,15 +79,25 @@ class _SecuritySettingsScreenState
         title: const Text('Security', style: AppTypography.title),
         backgroundColor: AppColors.background,
         elevation: 0,
+        centerTitle: true,
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: InteractiveContainer(
+            onTap: () => context.pop(),
+            scaleDown: 0.9,
+            child: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary, size: 20),
+          ),
+        ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        physics: const BouncingScrollPhysics(),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildSectionTitle('Change Password'),
+              _buildSectionTitle('Change Password').animate().fade(duration: AppAnimations.medium).slideY(begin: 0.1, end: 0),
               const SizedBox(height: AppSpacing.sm),
               _buildPasswordField(
                 controller: _currentPasswordController,
@@ -96,7 +111,7 @@ class _SecuritySettingsScreenState
                   }
                   return null;
                 },
-              ),
+              ).animate().fade(duration: AppAnimations.medium, delay: 100.ms).slideY(begin: 0.1, end: 0),
               const SizedBox(height: AppSpacing.md),
               _buildPasswordField(
                 controller: _newPasswordController,
@@ -113,7 +128,7 @@ class _SecuritySettingsScreenState
                   }
                   return null;
                 },
-              ),
+              ).animate().fade(duration: AppAnimations.medium, delay: 150.ms).slideY(begin: 0.1, end: 0),
               const SizedBox(height: AppSpacing.md),
               _buildPasswordField(
                 controller: _confirmPasswordController,
@@ -127,30 +142,14 @@ class _SecuritySettingsScreenState
                   }
                   return null;
                 },
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.surface,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-                onPressed: securityState.isUpdating ? null : _submit,
-                child: securityState.isUpdating
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          color: AppColors.surface,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Text('Update Password', style: AppTypography.body),
-              ),
+              ).animate().fade(duration: AppAnimations.medium, delay: 200.ms).slideY(begin: 0.1, end: 0),
+              const SizedBox(height: AppSpacing.xxl),
+              AppButton(
+                label: 'Update Password',
+                variant: AppButtonVariant.primary,
+                isLoading: securityState.isUpdating,
+                onPressed: _submit,
+              ).animate().fade(duration: AppAnimations.medium, delay: 250.ms).slideY(begin: 0.1, end: 0),
             ],
           ),
         ),
@@ -169,6 +168,7 @@ class _SecuritySettingsScreenState
         style: AppTypography.label.copyWith(
           color: AppColors.textSecondary,
           letterSpacing: 1.2,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
@@ -192,15 +192,15 @@ class _SecuritySettingsScreenState
         fillColor: AppColors.surface,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.textDisabled),
+          borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.textDisabled),
+          borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primary),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -208,7 +208,7 @@ class _SecuritySettingsScreenState
         ),
         suffixIcon: IconButton(
           icon: Icon(
-            obscureText ? Icons.visibility_off : Icons.visibility,
+            obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
             color: AppColors.textSecondary,
           ),
           onPressed: onToggleVisibility,

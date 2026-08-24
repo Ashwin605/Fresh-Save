@@ -2,16 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_radius.dart';
+import '../../../../app/theme/app_animations.dart';
 import '../../../../core/widgets/app_network_image.dart';
 import '../../../../core/widgets/buttons/app_button.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/glass_surface.dart';
 import '../../../../core/widgets/layout/app_card.dart';
+import '../../../../core/widgets/layout/interactive_container.dart';
 import '../../../../core/network/result.dart';
 import '../../../details/domain/models/details_models.dart';
 import '../../../details/presentation/providers/details_providers.dart';
@@ -101,6 +104,14 @@ class _ReservationReviewScreenState
         backgroundColor: AppColors.surface,
         elevation: 0,
         centerTitle: true,
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: InteractiveContainer(
+            onTap: () => context.pop(),
+            scaleDown: 0.9,
+            child: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary, size: 20),
+          ),
+        ),
       ),
       body: offerAsync.when(
         loading: () => const Center(
@@ -133,15 +144,15 @@ class _ReservationReviewScreenState
             padding: const EdgeInsets.all(AppSpacing.lg),
             physics: const BouncingScrollPhysics(),
             children: [
-              _buildProductSummary(deal),
+              _buildProductSummary(deal).animate().fade(duration: AppAnimations.medium).slideY(begin: 0.1, end: 0),
               const SizedBox(height: AppSpacing.xl),
-              _buildQuantitySelector(maxQuantity),
+              _buildQuantitySelector(maxQuantity).animate().fade(duration: AppAnimations.medium, delay: 100.ms).slideY(begin: 0.1, end: 0),
               const SizedBox(height: AppSpacing.xl),
-              _buildPriceSummary(deal, total),
+              _buildPriceSummary(deal, total).animate().fade(duration: AppAnimations.medium, delay: 200.ms).slideY(begin: 0.1, end: 0),
               const SizedBox(height: AppSpacing.xl),
-              _buildStoreSummary(deal),
+              _buildStoreSummary(deal).animate().fade(duration: AppAnimations.medium, delay: 300.ms).slideY(begin: 0.1, end: 0),
               const SizedBox(height: AppSpacing.xl),
-              _buildRules(),
+              _buildRules().animate().fade(duration: AppAnimations.medium, delay: 400.ms).slideY(begin: 0.1, end: 0),
             ],
           ),
         ),
@@ -151,9 +162,20 @@ class _ReservationReviewScreenState
   }
 
   Widget _buildProductSummary(DealDetail deal) {
-    return AppCard(
-      variant: AppCardVariant.outlined,
+    return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Row(
         children: [
           Container(
@@ -184,6 +206,7 @@ class _ReservationReviewScreenState
                   deal.offer.title ?? 'Discounted Item',
                   style: AppTypography.bodySmall.copyWith(
                     color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -195,52 +218,97 @@ class _ReservationReviewScreenState
   }
 
   Widget _buildQuantitySelector(int maxQuantity) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text('Quantity', style: AppTypography.title),
-        Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.remove_circle_outline),
-              color: _quantity > 1
-                  ? AppColors.textPrimary
-                  : AppColors.textDisabled,
-              onPressed: _quantity > 1 ? _decrementQuantity : null,
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.shopping_bag_outlined, color: AppColors.textSecondary, size: 20),
+              const SizedBox(width: AppSpacing.sm),
+              Text('Quantity', style: AppTypography.title),
+            ],
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.surfaceVariant.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(AppRadius.sm),
             ),
-            SizedBox(
-              width: 40,
-              child: Text(
-                '$_quantity',
-                textAlign: TextAlign.center,
-                style: AppTypography.headline,
-              ),
+            child: Row(
+              children: [
+                InteractiveContainer(
+                  onTap: _quantity > 1 ? _decrementQuantity : () {},
+                  scaleDown: 0.9,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Icon(
+                      Icons.remove,
+                      color: _quantity > 1
+                          ? AppColors.textPrimary
+                          : AppColors.textDisabled,
+                      size: 20,
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: 32,
+                  child: Text(
+                    '$_quantity',
+                    textAlign: TextAlign.center,
+                    style: AppTypography.title,
+                  ),
+                ),
+                InteractiveContainer(
+                  onTap: _quantity < maxQuantity
+                      ? () => _incrementQuantity(maxQuantity)
+                      : () {},
+                  scaleDown: 0.9,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Icon(
+                      Icons.add,
+                      color: _quantity < maxQuantity
+                          ? AppColors.textPrimary
+                          : AppColors.textDisabled,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            IconButton(
-              icon: const Icon(Icons.add_circle_outline),
-              color: _quantity < maxQuantity
-                  ? AppColors.textPrimary
-                  : AppColors.textDisabled,
-              onPressed: _quantity < maxQuantity
-                  ? () => _incrementQuantity(maxQuantity)
-                  : null,
-            ),
-          ],
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildPriceSummary(DealDetail deal, double total) {
-    return AppCard(
-      variant: AppCardVariant.outlined,
+    return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Unit Price', style: AppTypography.body),
+              Text('Unit Price', style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
               Text(
                 '₹${deal.offer.discountedPrice.toStringAsFixed(2)}',
                 style: AppTypography.body,
@@ -248,7 +316,7 @@ class _ReservationReviewScreenState
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          const Divider(),
+          Divider(color: AppColors.border.withValues(alpha: 0.5)),
           const SizedBox(height: AppSpacing.sm),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -256,14 +324,29 @@ class _ReservationReviewScreenState
               Text('Total Price', style: AppTypography.title),
               Text(
                 '₹${total.toStringAsFixed(2)}',
-                style: AppTypography.title.copyWith(color: AppColors.primary),
+                style: AppTypography.title.copyWith(color: AppColors.primary, fontSize: 20),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            'Payment is collected at the store.',
-            style: AppTypography.label.copyWith(color: AppColors.textSecondary),
+          const SizedBox(height: AppSpacing.md),
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            decoration: BoxDecoration(
+              color: AppColors.info.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline, color: AppColors.info, size: 16),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: Text(
+                    'Payment is collected at the store.',
+                    style: AppTypography.label.copyWith(color: AppColors.info),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -276,23 +359,35 @@ class _ReservationReviewScreenState
       children: [
         Text('Pickup Information', style: AppTypography.title),
         const SizedBox(height: AppSpacing.md),
-        AppCard(
-          variant: AppCardVariant.outlined,
+        Container(
           padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+            border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+          ),
           child: Row(
             children: [
-              const Icon(Icons.storefront, color: AppColors.primary),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.storefront, color: AppColors.primary),
+              ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(deal.store.name, style: AppTypography.body),
+                    Text(deal.store.name, style: AppTypography.body.copyWith(fontWeight: FontWeight.w600)),
                     if (deal.store.address != null)
                       Text(
                         deal.store.address!,
                         style: AppTypography.bodySmall.copyWith(
                           color: AppColors.textSecondary,
+                          height: 1.4,
                         ),
                       ),
                   ],
@@ -312,11 +407,11 @@ class _ReservationReviewScreenState
         Text('Reservation Rules', style: AppTypography.title),
         const SizedBox(height: AppSpacing.sm),
         _buildRuleItem(
-          Icons.timer,
+          Icons.timer_outlined,
           'Hold Time: Reserved items are typically held for a limited time.',
         ),
         _buildRuleItem(
-          Icons.cancel,
+          Icons.cancel_outlined,
           'Cancellation: Please cancel if you cannot make it to the store.',
         ),
       ],
@@ -346,10 +441,14 @@ class _ReservationReviewScreenState
   }
 
   Widget _buildStickyCTA(DealDetail deal, double total) {
-    return GlassSurface(
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface.withValues(alpha: 0.9),
+        border: Border(top: BorderSide(color: AppColors.border.withValues(alpha: 0.5))),
+      ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
           child: AppButton(
             label: _isSubmitting ? 'Confirming...' : 'Confirm Reservation',
             variant: AppButtonVariant.primary,
@@ -358,6 +457,6 @@ class _ReservationReviewScreenState
           ),
         ),
       ),
-    );
+    ).animate().slideY(begin: 1.0, end: 0, duration: AppAnimations.medium, curve: Curves.easeOutCubic);
   }
 }

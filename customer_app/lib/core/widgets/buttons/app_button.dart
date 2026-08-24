@@ -107,44 +107,58 @@ class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Widget buttonContent = AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      height: 56, // Slightly taller for better touch target (premium feel)
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      decoration: BoxDecoration(
+        color: _backgroundColor,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: _border,
+        boxShadow: variant == AppButtonVariant.primary && onPressed != null
+            ? [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.25),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                )
+              ]
+            : [],
+      ),
+      child: Center(
+        child: isLoading
+            ? SizedBox(
+                height: 24,
+                width: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  valueColor: AlwaysStoppedAnimation<Color>(_textColor),
+                ),
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (icon != null) ...[
+                    Icon(icon, color: _textColor, size: 22),
+                    const SizedBox(width: 8),
+                  ],
+                  Text(
+                    label,
+                    style: AppTypography.title.copyWith(
+                      color: _textColor,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ],
+              ),
+      ),
+    );
+
     return InteractiveContainer(
       onTap: isLoading ? null : onPressed,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        height: 52,
-        decoration: BoxDecoration(
-          color: _backgroundColor,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          border: _border,
-        ),
-        child: Center(
-          child: isLoading
-              ? SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(_textColor),
-                  ),
-                )
-              : Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (icon != null) ...[
-                      Icon(icon, color: _textColor, size: 20),
-                      const SizedBox(width: 8),
-                    ],
-                    Text(
-                      label,
-                      style: AppTypography.label.copyWith(
-                        color: _textColor,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
-                ),
-        ),
-      ),
+      child: buttonContent,
     );
   }
 }
