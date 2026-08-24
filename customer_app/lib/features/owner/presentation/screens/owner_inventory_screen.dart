@@ -128,7 +128,7 @@ class _OwnerInventoryScreenState extends ConsumerState<OwnerInventoryScreen> {
 
     if (state.items.isEmpty) {
       return ListView(
-        children: const [
+        children: [
           SizedBox(height: 100),
           Center(
             child: Text(

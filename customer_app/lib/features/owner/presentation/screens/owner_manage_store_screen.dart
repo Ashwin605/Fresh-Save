@@ -73,7 +73,7 @@ class OwnerManageStoreScreen extends ConsumerWidget {
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
-          title: const Text('Manage Store', style: AppTypography.title),
+          title: Text(),
           backgroundColor: AppColors.surface,
           elevation: 0,
           leading: IconButton(
@@ -113,7 +113,7 @@ class OwnerManageStoreScreen extends ConsumerWidget {
                   Expanded(
                     child: ListView(
                       padding: const EdgeInsets.all(AppSpacing.lg),
-                      children: const [
+                      children: [
                         StoreIdentitySection(),
                         SizedBox(height: AppSpacing.xl),
                         BusinessInfoSection(),
