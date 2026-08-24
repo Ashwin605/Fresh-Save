@@ -135,6 +135,9 @@ class AdminDashboardScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
 class _AnimatedKpiCard extends StatelessWidget {
   final String title;
   final String value;
