@@ -4,7 +4,7 @@ import '../../../app/theme/app_radius.dart';
 import '../../../app/theme/app_typography.dart';
 import '../layout/interactive_container.dart';
 
-enum AppButtonVariant { primary, secondary, destructive, glass }
+enum AppButtonVariant { primary, secondary, destructive, glass, text }
 
 class AppButton extends StatelessWidget {
   final String label;
@@ -54,6 +54,14 @@ class AppButton extends StatelessWidget {
     this.icon,
   }) : variant = AppButtonVariant.glass;
 
+  const AppButton.text({
+    super.key,
+    required this.label,
+    this.onPressed,
+    this.isLoading = false,
+    this.icon,
+  }) : variant = AppButtonVariant.text;
+
   Color get _backgroundColor {
     if (onPressed == null) return AppColors.surfaceVariant;
     switch (variant) {
@@ -65,6 +73,8 @@ class AppButton extends StatelessWidget {
         return AppColors.error.withValues(alpha: 0.1);
       case AppButtonVariant.glass:
         return AppColors.glassFill;
+      case AppButtonVariant.text:
+        return Colors.transparent;
     }
   }
 
@@ -78,6 +88,7 @@ class AppButton extends StatelessWidget {
       case AppButtonVariant.destructive:
         return AppColors.error;
       case AppButtonVariant.glass:
+      case AppButtonVariant.text:
         return AppColors.primary;
     }
   }
@@ -103,7 +114,7 @@ class AppButton extends StatelessWidget {
         height: 52,
         decoration: BoxDecoration(
           color: _backgroundColor,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           border: _border,
         ),
         child: Center(

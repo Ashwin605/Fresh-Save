@@ -37,3 +37,23 @@ class AuthTokens {
     );
   }
 }
+
+/// Combined response from the login API.
+/// The backend already returns both `user` and tokens in one response,
+/// so we parse them together to avoid a redundant /auth/me call.
+class LoginResponse {
+  final User user;
+  final AuthTokens tokens;
+
+  const LoginResponse({required this.user, required this.tokens});
+
+  factory LoginResponse.fromJson(Map<String, dynamic> json) {
+    return LoginResponse(
+      user: User.fromJson(json['user'] as Map<String, dynamic>),
+      tokens: AuthTokens(
+        accessToken: json['accessToken'] as String,
+        refreshToken: json['refreshToken'] as String,
+      ),
+    );
+  }
+}

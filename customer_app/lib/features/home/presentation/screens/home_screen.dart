@@ -4,13 +4,11 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../widgets/home_header.dart';
 import '../widgets/search_entry_bar.dart';
-import '../widgets/featured_deal_section.dart';
 import '../widgets/categories_section.dart';
-import '../widgets/nearby_deals_section.dart';
+import '../widgets/promotional_banner_carousel.dart';
+import '../widgets/product_catalogue_section.dart';
 import '../widgets/nearby_stores_section.dart';
 import '../providers/home_providers.dart';
-import '../../../recommendations/presentation/widgets/ai_recommendations_section.dart';
-import '../../../recommendations/presentation/providers/recommendation_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -24,13 +22,15 @@ class HomeScreen extends ConsumerWidget {
         backgroundColor: AppColors.surface,
         onRefresh: () async {
           ref.invalidate(categoriesProvider);
-          ref.invalidate(featuredDealProvider);
-          ref.invalidate(nearbyDealsProvider);
+          ref.invalidate(promotionalBannersProvider);
           ref.invalidate(nearbyStoresProvider);
-          ref.invalidate(recommendationProvider);
-          // Wait for at least one critical provider to resolve for smoother UX
+          ref.invalidate(nearbyDealsProvider); // Used for catalogue
+          // Wait for critical providers
           try {
-            await ref.read(nearbyDealsProvider.future);
+            await Future.wait([
+              ref.read(promotionalBannersProvider.future),
+              ref.read(nearbyStoresProvider.future),
+            ]);
           } catch (_) {}
         },
         child: CustomScrollView(
@@ -46,15 +46,13 @@ class HomeScreen extends ConsumerWidget {
                   const SizedBox(height: AppSpacing.md),
                   const SearchEntryBar(),
                   const SizedBox(height: AppSpacing.lg),
-                  const AiRecommendationsSection(),
-                  const SizedBox(height: AppSpacing.lg),
-                  const FeaturedDealSection(),
-                  const SizedBox(height: AppSpacing.lg),
                   const CategoriesSection(),
-                  const SizedBox(height: AppSpacing.xl),
-                  const NearbyDealsSection(),
+                  const SizedBox(height: AppSpacing.lg),
+                  const PromotionalBannerCarousel(),
                   const SizedBox(height: AppSpacing.xl),
                   const NearbyStoresSection(),
+                  const SizedBox(height: AppSpacing.xl),
+                  const ProductCatalogueSection(),
                   const SizedBox(height: 100), // Bottom padding for shell navigation
                 ],
               ),

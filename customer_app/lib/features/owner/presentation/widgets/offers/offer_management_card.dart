@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../app/theme/app_colors.dart';
 import '../../../../../app/theme/app_spacing.dart';
 import '../../../../../app/theme/app_typography.dart';
+import '../../../../../core/widgets/layout/app_card.dart';
 import '../../../domain/models/owner_offer_models.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -21,31 +22,15 @@ class OfferManagementCard extends StatelessWidget {
     final isSoldOut = offer.status == OfferStatus.soldOut;
     final isPaused = offer.status == OfferStatus.paused;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.surfaceVariant),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.textPrimary.withAlpha(5),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            context.push('/owner/offers/${offer.id}');
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: AppCard(
+        variant: AppCardVariant.outlined,
+        padding: const EdgeInsets.all(AppSpacing.md),
+        onTap: () {
+          context.push('/owner/offers/${offer.id}');
+        },
+        child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -171,8 +156,6 @@ class OfferManagementCard extends StatelessWidget {
               ],
             ),
           ),
-        ),
-      ),
     );
   }
 

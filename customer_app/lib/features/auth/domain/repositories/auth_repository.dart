@@ -2,7 +2,7 @@ import '../../../../core/network/result.dart';
 import '../models/auth_models.dart';
 
 abstract class AuthRepository {
-  Future<Result<AuthTokens>> login({
+  Future<Result<LoginResponse>> login({
     required String email,
     required String password,
   });

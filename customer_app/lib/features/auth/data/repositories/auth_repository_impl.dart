@@ -20,7 +20,7 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({required this.dio, required this.tokenStorage});
 
   @override
-  Future<Result<AuthTokens>> login({
+  Future<Result<LoginResponse>> login({
     required String email,
     required String password,
   }) async {
@@ -29,12 +29,12 @@ class AuthRepositoryImpl implements AuthRepository {
         '/auth/login',
         data: {'email': email, 'password': password},
       );
-      final tokens = AuthTokens.fromJson(response.data as Map<String, dynamic>);
+      final loginResponse = LoginResponse.fromJson(response.data as Map<String, dynamic>);
       await tokenStorage.saveTokens(
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
+        accessToken: loginResponse.tokens.accessToken,
+        refreshToken: loginResponse.tokens.refreshToken,
       );
-      return Result.success(tokens);
+      return Result.success(loginResponse);
     } catch (e) {
       return Result.failure(ApiErrorHandler.handle(e));
     }

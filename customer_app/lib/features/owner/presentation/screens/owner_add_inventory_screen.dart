@@ -28,6 +28,7 @@ class _OwnerAddInventoryScreenState extends ConsumerState<OwnerAddInventoryScree
   final _formKey = GlobalKey<FormState>();
   
   OwnerProductCategory? _selectedCategory;
+  OwnerProductCategory? _selectedSubcategory;
   OwnerProduct? _selectedProduct;
   
   final _stockQuantityController = TextEditingController();
@@ -129,7 +130,7 @@ class _OwnerAddInventoryScreenState extends ConsumerState<OwnerAddInventoryScree
           padding: const EdgeInsets.all(AppSpacing.md),
           children: [
             // Category Selection
-            _buildSectionTitle('1. Select Category'),
+            _buildSectionTitle('1. Select Main Category'),
             if (categoryState.isLoading)
               const CircularProgressIndicator()
             else
@@ -139,11 +140,15 @@ class _OwnerAddInventoryScreenState extends ConsumerState<OwnerAddInventoryScree
                     child: DropdownButtonFormField<OwnerProductCategory>(
                       value: _selectedCategory,
                       decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 12)),
-                      hint: const Text('Choose Category'),
-                      items: categoryState.categories.map((c) => DropdownMenuItem(value: c, child: Text(c.name))).toList(),
+                      hint: const Text('Choose Main Category'),
+                      items: categoryState.categories
+                          .where((c) => c.parentId == null)
+                          .map((c) => DropdownMenuItem(value: c, child: Text(c.name)))
+                          .toList(),
                       onChanged: (val) {
                         setState(() {
                           _selectedCategory = val;
+                          _selectedSubcategory = null;
                           _selectedProduct = null;
                         });
                         if (val != null) {
@@ -152,23 +157,44 @@ class _OwnerAddInventoryScreenState extends ConsumerState<OwnerAddInventoryScree
                       },
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.add_circle, color: AppColors.primary),
-                    onPressed: () async {
-                      final newCategory = await showDialog<OwnerProductCategory>(context: context, builder: (_) => const AddCategoryDialog());
-                      if (newCategory != null) {
-                        setState(() => _selectedCategory = newCategory);
-                        ref.read(ownerProductListFilterProvider.notifier).updateFilter('categoryId', newCategory.id);
-                      }
-                    },
-                  )
                 ],
               ),
             
             const SizedBox(height: AppSpacing.lg),
 
+            if (_selectedCategory != null) ...[
+              _buildSectionTitle('2. Select Subcategory (Optional)'),
+              Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<OwnerProductCategory>(
+                      value: _selectedSubcategory,
+                      decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 12)),
+                      hint: const Text('Choose Subcategory'),
+                      items: categoryState.categories
+                          .where((c) => c.parentId == _selectedCategory?.id)
+                          .map((c) => DropdownMenuItem(value: c, child: Text(c.name)))
+                          .toList(),
+                      onChanged: (val) {
+                        setState(() {
+                          _selectedSubcategory = val;
+                          _selectedProduct = null;
+                        });
+                        if (val != null) {
+                          ref.read(ownerProductListFilterProvider.notifier).updateFilter('categoryId', val.id);
+                        } else {
+                          ref.read(ownerProductListFilterProvider.notifier).updateFilter('categoryId', _selectedCategory!.id);
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+            ],
+
             // Product Selection
-            _buildSectionTitle('2. Select Product'),
+            _buildSectionTitle(_selectedCategory != null ? '3. Select Product' : '2. Select Product'),
             productState.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (err, _) => Text('Error: $err', style: const TextStyle(color: AppColors.error)),
@@ -186,9 +212,10 @@ class _OwnerAddInventoryScreenState extends ConsumerState<OwnerAddInventoryScree
                   IconButton(
                     icon: const Icon(Icons.add_circle, color: AppColors.primary),
                     onPressed: _selectedCategory == null ? null : () async {
-                      final newProduct = await showDialog<OwnerProduct>(context: context, builder: (_) => AddProductDialog(category: _selectedCategory!));
+                      final targetCategory = _selectedSubcategory ?? _selectedCategory!;
+                      final newProduct = await showDialog<OwnerProduct>(context: context, builder: (_) => AddProductDialog(category: targetCategory));
                       if (newProduct != null) {
-                        setState(() => _selectedProduct = newProduct);
+                         setState(() => _selectedProduct = newProduct);
                       }
                     },
                   )
@@ -198,7 +225,7 @@ class _OwnerAddInventoryScreenState extends ConsumerState<OwnerAddInventoryScree
             if (_selectedCategory == null)
               const Padding(
                 padding: EdgeInsets.only(top: 8),
-                child: Text('Please select a category first', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                child: Text('Please select a main category first', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
               ),
 
             const SizedBox(height: AppSpacing.xl),

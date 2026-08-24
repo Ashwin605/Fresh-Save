@@ -91,20 +91,22 @@ class OwnerNotifier extends Notifier<OwnerState> {
   }
 
   Future<void> _loadStores(String businessId) async {
-    print('_loadStores: starting for $businessId');
+    print('[AUTH] _loadStores: starting for $businessId');
     final repo = ref.read(ownerRepositoryProvider);
     final storesResult = await repo.getBusinessStores(businessId);
 
     switch (storesResult) {
       case Success(:final data):
-        print('_loadStores: Success, found ${data.length} stores');
+        print('[AUTH] _loadStores: Success, found ${data.length} stores');
         if (data.isNotEmpty) {
           state = state.copyWith(
             stores: data,
             activeStore: data.first,
             contextState: OwnerContextState.hasStore,
           );
-          await loadDashboardMetrics(data.first.id);
+          // Load dashboard metrics AFTER navigation — don't block it
+          // ignore: unawaited_futures
+          loadDashboardMetrics(data.first.id);
         } else {
           state = state.copyWith(
             contextState: OwnerContextState.noStore,

@@ -16,12 +16,16 @@ class HomeHeader extends ConsumerWidget {
     final authState = ref.watch(authStateProvider);
     final user = authState.user;
     final unreadCountAsync = ref.watch(unreadCountProvider);
+    final hour = DateTime.now().hour;
+    final String greeting = hour < 12
+        ? 'Good morning'
+        : hour < 17
+            ? 'Good afternoon'
+            : 'Good evening';
 
     return SliverAppBar(
       floating: true,
-      backgroundColor: AppColors.background.withAlpha(
-        240,
-      ), // Subtle glass effect
+      backgroundColor: AppColors.background.withAlpha(240),
       elevation: 0,
       toolbarHeight: 70,
       title: Column(
@@ -30,7 +34,7 @@ class HomeHeader extends ConsumerWidget {
           Row(
             children: [
               Text(
-                'Good morning',
+                '$greeting,',
                 style: AppTypography.label.copyWith(
                   color: AppColors.textSecondary,
                   letterSpacing: 0.5,
@@ -38,7 +42,7 @@ class HomeHeader extends ConsumerWidget {
               ),
               if (user != null)
                 Text(
-                  ', ${user.name.split(' ').first}',
+                  ' ${user.name.split(' ').first}',
                   style: AppTypography.label.copyWith(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.w700,

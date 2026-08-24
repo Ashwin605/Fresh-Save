@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../../../../app/theme/app_colors.dart';
 import '../../../../../../app/theme/app_spacing.dart';
 import '../../../../../../app/theme/app_typography.dart';
+import '../../../../../../app/theme/app_typography.dart';
+import '../../../../../../core/widgets/layout/app_card.dart';
 import '../../../domain/models/inventory_models.dart';
 
 class InventoryCard extends StatelessWidget {
@@ -15,26 +17,13 @@ class InventoryCard extends StatelessWidget {
     final bool isLowStock = item.stockQuantity <= 10;
     final bool isExpired = item.expiryStatus == 'EXPIRED';
 
-    return InkWell(
+    return AppCard(
+      variant: AppCardVariant.elevated,
+      padding: const EdgeInsets.all(AppSpacing.md),
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppSpacing.md),
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSpacing.md),
-          border: Border.all(color: AppColors.surfaceVariant),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -116,8 +105,7 @@ class InventoryCard extends StatelessWidget {
                 ),
               ],
             ),
-          ],
-        ),
+        ],
       ),
     );
   }

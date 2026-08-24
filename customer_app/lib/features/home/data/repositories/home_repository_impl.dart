@@ -19,6 +19,11 @@ abstract class HomeRepository {
     required double lat,
     required double lng,
   });
+  Future<Result<List<Product>>> getNearbyProducts({
+    required double lat,
+    required double lng,
+    int limit = 20,
+  });
 }
 
 class HomeRepositoryImpl implements HomeRepository {
@@ -39,13 +44,7 @@ class HomeRepositoryImpl implements HomeRepository {
           .map((e) => Category.fromJson(e as Map<String, dynamic>))
           .toList();
 
-      // Flatten: include both parent and child categories
-      final flattened = <Category>[];
-      for (final cat in topLevel) {
-        flattened.addAll(cat.flattened);
-      }
-
-      return Result.success(flattened);
+      return Result.success(topLevel);
     } catch (e) {
       return Result.failure(ApiErrorHandler.handle(e));
     }
@@ -118,6 +117,31 @@ class HomeRepositoryImpl implements HomeRepository {
           .map((e) => Store.fromJson(e as Map<String, dynamic>))
           .toList();
       return Result.success(stores);
+    } catch (e) {
+      return Result.failure(ApiErrorHandler.handle(e));
+    }
+  }
+
+  @override
+  Future<Result<List<Product>>> getNearbyProducts({
+    required double lat,
+    required double lng,
+    int limit = 20,
+  }) async {
+    try {
+      final response = await _dio.get(
+        '/discovery/products',
+        queryParameters: {'latitude': lat, 'longitude': lng, 'limit': limit},
+      );
+
+      final inner = response.data['data'] as Map<String, dynamic>?;
+      final items = inner?['items'] as List?;
+      if (items == null || items.isEmpty) return const Result.success([]);
+
+      final products = items
+          .map((e) => Product.fromJson(e as Map<String, dynamic>))
+          .toList();
+      return Result.success(products);
     } catch (e) {
       return Result.failure(ApiErrorHandler.handle(e));
     }

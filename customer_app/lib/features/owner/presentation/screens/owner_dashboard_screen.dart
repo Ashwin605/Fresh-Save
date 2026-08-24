@@ -5,6 +5,7 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_radius.dart';
+import '../../../../core/widgets/layout/app_card.dart';
 import '../providers/owner_state_provider.dart';
 
 import '../../../notifications/presentation/providers/notification_providers.dart';
@@ -223,13 +224,10 @@ class OwnerDashboardScreen extends ConsumerWidget {
     required String subtitle,
     required VoidCallback onTap,
   }) {
-    return Card(
-      color: AppColors.surface,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        side: BorderSide(color: AppColors.surfaceVariant),
-      ),
+    return AppCard(
+      variant: AppCardVariant.outlined,
+      padding: EdgeInsets.zero,
+      onTap: onTap,
       child: ListTile(
         leading: Container(
           padding: const EdgeInsets.all(10),
@@ -242,25 +240,14 @@ class OwnerDashboardScreen extends ConsumerWidget {
         title: Text(title, style: AppTypography.body.copyWith(fontWeight: FontWeight.w600)),
         subtitle: Text(subtitle, style: AppTypography.label.copyWith(color: AppColors.textSecondary)),
         trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
-        onTap: onTap,
       ),
     );
   }
 
   Widget _buildMetricCard(String title, String value) {
-    return Container(
+    return AppCard(
+      variant: AppCardVariant.elevated,
       padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
