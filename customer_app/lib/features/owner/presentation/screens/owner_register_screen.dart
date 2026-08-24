@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../app/theme/app_colors.dart';
-import '../../../../app/theme/app_typography.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_typography.dart';
+import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_radius.dart';
+import '../../../../app/theme/app_animations.dart';
+import '../../../../core/widgets/inputs/app_text_field.dart';
+import '../../../../core/widgets/buttons/app_button.dart';
 import '../../../../core/widgets/feedback/app_snackbar.dart';
 import '../../../auth/presentation/providers/auth_state_provider.dart';
 import '../../../auth/presentation/providers/auth_controller.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
 
 class OwnerRegisterScreen extends ConsumerStatefulWidget {
   const OwnerRegisterScreen({super.key});
@@ -19,8 +23,6 @@ class OwnerRegisterScreen extends ConsumerStatefulWidget {
 }
 
 class _OwnerRegisterScreenState extends ConsumerState<OwnerRegisterScreen> {
-  final _formKey = GlobalKey<FormState>();
-  
   final _ownerNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -34,6 +36,33 @@ class _OwnerRegisterScreenState extends ConsumerState<OwnerRegisterScreen> {
   bool _isDetectingLocation = false;
   double? _latitude;
   double? _longitude;
+
+  int _completedSteps = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _ownerNameController.addListener(_updateProgress);
+    _emailController.addListener(_updateProgress);
+    _passwordController.addListener(_updateProgress);
+    _businessNameController.addListener(_updateProgress);
+    _storeNameController.addListener(_updateProgress);
+  }
+
+  void _updateProgress() {
+    int steps = 0;
+    if (_ownerNameController.text.trim().isNotEmpty) steps++;
+    if (_emailController.text.trim().isNotEmpty) steps++;
+    if (_passwordController.text.length >= 8) steps++;
+    if (_businessNameController.text.trim().isNotEmpty) steps++;
+    if (_storeNameController.text.trim().isNotEmpty) steps++;
+    
+    // Normalize to 0-3 for the progress bar display
+    int normalizedSteps = (steps / 5 * 3).floor();
+    if (normalizedSteps != _completedSteps) {
+      setState(() => _completedSteps = normalizedSteps);
+    }
+  }
 
   @override
   void dispose() {
@@ -50,7 +79,6 @@ class _OwnerRegisterScreenState extends ConsumerState<OwnerRegisterScreen> {
   Future<void> _detectLocation() async {
     setState(() => _isDetectingLocation = true);
     try {
-      // Check permissions
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
@@ -63,12 +91,10 @@ class _OwnerRegisterScreenState extends ConsumerState<OwnerRegisterScreen> {
         throw Exception('Location permissions are permanently denied');
       }
 
-      // Get location
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
 
-      // Convert coordinates to address
       final geocoding = Geocoding();
       final placemarks = await geocoding.placemarkFromCoordinates(
         position.latitude,
@@ -104,11 +130,8 @@ class _OwnerRegisterScreenState extends ConsumerState<OwnerRegisterScreen> {
   }
 
   void _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    
     FocusScope.of(context).unfocus();
-    setState(() => _isLoading = true);
-
+    
     final ownerName = _ownerNameController.text.trim();
     final email = _emailController.text.trim();
     final phone = _phoneController.text.trim();
@@ -116,6 +139,26 @@ class _OwnerRegisterScreenState extends ConsumerState<OwnerRegisterScreen> {
     final businessName = _businessNameController.text.trim();
     final storeName = _storeNameController.text.trim();
     final address = _addressController.text.trim();
+
+    if (ownerName.isEmpty || email.isEmpty || password.isEmpty || businessName.isEmpty || storeName.isEmpty || address.isEmpty) {
+      AppSnackbar.show(
+        context,
+        message: 'Please fill in all required fields.',
+        variant: SnackbarVariant.error,
+      );
+      return;
+    }
+
+    if (password.length < 8) {
+      AppSnackbar.show(
+        context,
+        message: 'Password must be at least 8 characters.',
+        variant: SnackbarVariant.error,
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
 
     try {
       final authNotifier = ref.read(authStateProvider.notifier);
@@ -133,10 +176,8 @@ class _OwnerRegisterScreenState extends ConsumerState<OwnerRegisterScreen> {
 
       if (!mounted) return;
       if (result) {
-        // Automatically log in after successful registration
         ref.read(authControllerProvider.notifier).login(email, password);
       } else {
-        // Read the error from state
         final errorMessage = ref.read(authStateProvider).error ?? 'Registration failed';
         AppSnackbar.show(context, message: errorMessage, variant: SnackbarVariant.error);
       }
@@ -150,6 +191,8 @@ class _OwnerRegisterScreenState extends ConsumerState<OwnerRegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+
     ref.listen<AsyncValue<void>>(authControllerProvider, (prev, next) {
       next.whenOrNull(
         error: (error, _) {
@@ -163,127 +206,199 @@ class _OwnerRegisterScreenState extends ConsumerState<OwnerRegisterScreen> {
     });
 
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            Align(
-              alignment: Alignment.topLeft,
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => context.pop(),
+      backgroundColor: AppColors.background,
+      body: Stack(
+        children: [
+          // Dynamic Background Texture
+          Positioned(
+            top: -50,
+            left: -80,
+            child: Container(
+              width: 350,
+              height: 350,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppColors.primary.withValues(alpha: 0.10),
+                    AppColors.background.withValues(alpha: 0.0),
+                  ],
                 ),
               ),
-            ),
-            Expanded(
-              child: Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppSpacing.xl),
-                  child: Container(
-                    padding: const EdgeInsets.all(AppSpacing.xl),
-                    constraints: const BoxConstraints(maxWidth: 600),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(AppRadius.lg),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.05),
-                          blurRadius: 24,
-                          offset: const Offset(0, 12),
+            ).animate(
+              onPlay: (controller) => controller.repeat(reverse: true),
+            ).scaleXY(end: 1.1, duration: const Duration(seconds: 4), curve: Curves.easeInOutSine),
+          ),
+          Positioned(
+            bottom: 100,
+            right: -100,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppColors.secondary.withValues(alpha: 0.15),
+                    AppColors.background.withValues(alpha: 0.0),
+                  ],
+                ),
+              ),
+            ).animate(
+              onPlay: (controller) => controller.repeat(reverse: true),
+            ).scaleXY(begin: 1.05, end: 0.95, duration: const Duration(seconds: 5), curve: Curves.easeInOutSine),
+          ),
+
+          SafeArea(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: screenSize.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: AppSpacing.md),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: IconButton(
+                          onPressed: () => context.pop(),
+                          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary),
+                          padding: EdgeInsets.zero,
+                          alignment: Alignment.centerLeft,
                         ),
-                      ],
-                    ),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Register Business Account',
-                            style: AppTypography.display,
-                            textAlign: TextAlign.center,
+                      ).animate().fade(duration: AppAnimations.medium),
+                      const SizedBox(height: AppSpacing.md),
+                      
+                      // Logo
+                      Center(
+                        child: Container(
+                          width: 72,
+                          height: 72,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [AppColors.textPrimary, AppColors.textSecondary],
+                            ),
+                            borderRadius: BorderRadius.circular(22),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.textPrimary.withValues(alpha: 0.3),
+                                blurRadius: 20,
+                                offset: const Offset(0, 6),
+                                spreadRadius: -4,
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: AppSpacing.sm),
-                          Text(
-                            'Join FreshSave to reduce food waste and reach more customers.',
-                            style: AppTypography.body.copyWith(color: AppColors.textSecondary),
-                            textAlign: TextAlign.center,
+                          child: const Center(
+                            child: Icon(Icons.storefront_rounded, color: Colors.white, size: 34),
                           ),
-                          const SizedBox(height: AppSpacing.xxl),
-                          
-                          // Owner Details
-                          Text('Owner Details', style: AppTypography.headline),
-                          const SizedBox(height: AppSpacing.md),
-                          TextFormField(
-                            controller: _ownerNameController,
-                            decoration: const InputDecoration(
+                        ),
+                      ).animate().fade(duration: AppAnimations.medium).slideY(begin: -0.2, end: 0),
+                      
+                      const SizedBox(height: AppSpacing.lg),
+                      
+                      // Header Texts
+                      Text(
+                        'Register Business',
+                        textAlign: TextAlign.center,
+                        style: AppTypography.display.copyWith(fontSize: 30),
+                      ).animate().fade(duration: AppAnimations.medium, delay: 100.ms).slideY(begin: 0.2, end: 0),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        'Join FreshSave to reach more customers',
+                        textAlign: TextAlign.center,
+                        style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+                      ).animate().fade(duration: AppAnimations.medium, delay: 200.ms).slideY(begin: 0.2, end: 0),
+                      
+                      const SizedBox(height: AppSpacing.xl),
+                      
+                      // Progress Indicator
+                      _buildProgressIndicator().animate().fade(duration: AppAnimations.medium, delay: 300.ms),
+                      
+                      const SizedBox(height: AppSpacing.lg),
+                      
+                      // Form Card
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.xl),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(AppRadius.xl),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.04),
+                              blurRadius: 24,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text('Owner Details', style: AppTypography.headline),
+                            const SizedBox(height: AppSpacing.lg),
+                            
+                            AppTextField(
+                              controller: _ownerNameController,
                               labelText: 'Full Name',
-                              prefixIcon: Icon(Icons.person_outline),
-                            ),
-                            validator: (v) => v!.isEmpty ? 'Required' : null,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          TextFormField(
-                            controller: _emailController,
-                            decoration: const InputDecoration(
+                              prefixIcon: const Icon(Icons.person_outline_rounded),
+                            ).animate().fade(duration: AppAnimations.medium, delay: 350.ms).slideY(begin: 0.2, end: 0),
+                            const SizedBox(height: AppSpacing.md),
+                            
+                            AppTextField(
+                              controller: _emailController,
                               labelText: 'Email Address',
-                              prefixIcon: Icon(Icons.email_outlined),
-                            ),
-                            keyboardType: TextInputType.emailAddress,
-                            validator: (v) => v!.isEmpty || !v.contains('@') ? 'Valid email required' : null,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          TextFormField(
-                            controller: _phoneController,
-                            decoration: const InputDecoration(
+                              keyboardType: TextInputType.emailAddress,
+                              prefixIcon: const Icon(Icons.email_outlined),
+                            ).animate().fade(duration: AppAnimations.medium, delay: 400.ms).slideY(begin: 0.2, end: 0),
+                            const SizedBox(height: AppSpacing.md),
+                            
+                            AppTextField(
+                              controller: _phoneController,
                               labelText: 'Phone Number (Optional)',
-                              prefixIcon: Icon(Icons.phone_outlined),
-                            ),
-                            keyboardType: TextInputType.phone,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          TextFormField(
-                            controller: _passwordController,
-                            decoration: InputDecoration(
+                              keyboardType: TextInputType.phone,
+                              prefixIcon: const Icon(Icons.phone_outlined),
+                            ).animate().fade(duration: AppAnimations.medium, delay: 450.ms).slideY(begin: 0.2, end: 0),
+                            const SizedBox(height: AppSpacing.md),
+
+                            AppTextField(
+                              controller: _passwordController,
                               labelText: 'Password',
+                              obscureText: _obscurePassword,
                               prefixIcon: const Icon(Icons.lock_outline),
                               suffixIcon: IconButton(
-                                icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
+                                icon: Icon(
+                                  _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                  color: AppColors.textSecondary,
+                                ),
                                 onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                               ),
-                            ),
-                            obscureText: _obscurePassword,
-                            validator: (v) => v!.length < 8 ? 'Password must be at least 8 characters' : null,
-                          ),
-                          
-                          const SizedBox(height: AppSpacing.xl),
-                          
-                          // Business & Store Details
-                          Text('Business Details', style: AppTypography.headline),
-                          const SizedBox(height: AppSpacing.md),
-                          TextFormField(
-                            controller: _businessNameController,
-                            decoration: const InputDecoration(
+                            ).animate().fade(duration: AppAnimations.medium, delay: 500.ms).slideY(begin: 0.2, end: 0),
+                            const SizedBox(height: AppSpacing.xxl),
+                            
+                            Text('Business Details', style: AppTypography.headline).animate().fade(duration: AppAnimations.medium, delay: 550.ms).slideY(begin: 0.2, end: 0),
+                            const SizedBox(height: AppSpacing.lg),
+                            
+                            AppTextField(
+                              controller: _businessNameController,
                               labelText: 'Business Name',
-                              prefixIcon: Icon(Icons.business),
-                            ),
-                            validator: (v) => v!.isEmpty ? 'Required' : null,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          TextFormField(
-                            controller: _storeNameController,
-                            decoration: const InputDecoration(
+                              prefixIcon: const Icon(Icons.business),
+                            ).animate().fade(duration: AppAnimations.medium, delay: 600.ms).slideY(begin: 0.2, end: 0),
+                            const SizedBox(height: AppSpacing.md),
+                            
+                            AppTextField(
+                              controller: _storeNameController,
                               labelText: 'Store Name (e.g. Main St Branch)',
-                              prefixIcon: Icon(Icons.storefront),
-                            ),
-                            validator: (v) => v!.isEmpty ? 'Required' : null,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          TextFormField(
-                            controller: _addressController,
-                            decoration: InputDecoration(
+                              prefixIcon: const Icon(Icons.storefront),
+                            ).animate().fade(duration: AppAnimations.medium, delay: 650.ms).slideY(begin: 0.2, end: 0),
+                            const SizedBox(height: AppSpacing.md),
+                            
+                            AppTextField(
+                              controller: _addressController,
                               labelText: 'Store Address',
                               prefixIcon: const Icon(Icons.location_on_outlined),
                               suffixIcon: IconButton(
@@ -297,36 +412,102 @@ class _OwnerRegisterScreenState extends ConsumerState<OwnerRegisterScreen> {
                                 onPressed: _isDetectingLocation ? null : _detectLocation,
                                 tooltip: 'Detect Live Location',
                               ),
-                            ),
-                            validator: (v) => v!.isEmpty ? 'Required' : null,
+                            ).animate().fade(duration: AppAnimations.medium, delay: 700.ms).slideY(begin: 0.2, end: 0),
+                            const SizedBox(height: AppSpacing.xxl),
+                            
+                            SizedBox(
+                              width: double.infinity,
+                              child: AppButton.primary(
+                                label: 'Register Business',
+                                isLoading: _isLoading,
+                                onPressed: _submit,
+                              ),
+                            ).animate().fade(duration: AppAnimations.medium, delay: 750.ms).scaleXY(begin: 0.9, end: 1.0),
+                          ],
+                        ),
+                      ).animate().fade(duration: AppAnimations.medium, delay: 300.ms).slideY(begin: 0.1, end: 0),
+                      
+                      const Spacer(),
+                      const SizedBox(height: AppSpacing.xl),
+                      
+                      // Footer
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Already registered? ',
+                            style: AppTypography.body.copyWith(color: AppColors.textSecondary),
                           ),
-                          
-                          const SizedBox(height: AppSpacing.xxl),
-                          ElevatedButton(
-                            onPressed: _isLoading ? null : _submit,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                          GestureDetector(
+                            onTap: () => context.pop(),
+                            child: Text(
+                              'Log In',
+                              style: AppTypography.body.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                            child: _isLoading
-                                ? const SizedBox(
-                                    height: 24,
-                                    width: 24,
-                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                                  )
-                                : const Text('Register Business', style: TextStyle(color: Colors.white)),
                           ),
                         ],
-                      ),
-                    ),
+                      ).animate().fade(duration: AppAnimations.medium, delay: 800.ms),
+                      const SizedBox(height: AppSpacing.xl),
+                    ],
                   ),
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressIndicator() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(child: _buildProgressDot(0)),
+            const SizedBox(width: 8),
+            Expanded(child: _buildProgressDot(1)),
+            const SizedBox(width: 8),
+            Expanded(child: _buildProgressDot(2)),
           ],
         ),
+        const SizedBox(height: 12),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 350),
+          child: Text(
+            _completedSteps == 0
+                ? 'Fill in your details to get started'
+                : _completedSteps == 1
+                    ? 'Almost there...'
+                    : _completedSteps == 2
+                        ? 'Just one more step!'
+                        : 'Ready to go! 🎉',
+            key: ValueKey(_completedSteps),
+            style: AppTypography.label.copyWith(
+              color: _completedSteps == 3
+                  ? AppColors.success
+                  : AppColors.textSecondary,
+              fontSize: 13,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProgressDot(int index) {
+    final isActive = _completedSteps > index;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeOutCubic,
+      height: 4,
+      decoration: BoxDecoration(
+        color: isActive ? AppColors.primary : AppColors.border.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(2),
       ),
     );
   }
 }
-

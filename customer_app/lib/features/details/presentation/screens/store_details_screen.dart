@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_radius.dart';
+import '../../../../app/theme/app_animations.dart';
 import '../../../../core/widgets/glass_surface.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/feedback/app_skeleton.dart';
 import '../../../../core/widgets/feedback/empty_state_view.dart';
 import '../../../../core/widgets/chips_badges/distance_badge.dart';
 import '../../../../core/widgets/domain/offer_card.dart';
+import '../../../../core/widgets/layout/interactive_container.dart';
 import '../../domain/models/store_details_models.dart';
 import '../../domain/models/details_models.dart';
 import '../../data/repositories/store_details_repository_impl.dart';
@@ -173,9 +176,9 @@ class _StoreDetailsScreenState extends ConsumerState<StoreDetailsScreen> {
                       _buildStoreIdentity(
                         _state.storeMetadata,
                         _state.storeDistance,
-                      ),
+                      ).animate().fade(duration: AppAnimations.medium).slideY(begin: 0.2, end: 0),
                       const SizedBox(height: AppSpacing.xxl),
-                      Text('FreshSave Deals', style: AppTypography.title),
+                      Text('FreshSave Deals', style: AppTypography.title).animate().fade(duration: AppAnimations.medium, delay: 100.ms).slideY(begin: 0.2, end: 0),
                       const SizedBox(height: AppSpacing.md),
                     ],
                   ),
@@ -191,7 +194,7 @@ class _StoreDetailsScreenState extends ConsumerState<StoreDetailsScreen> {
                       title: 'No deals right now',
                       description: 'This store hasn\'t posted any fresh deals currently.',
                     ),
-                  ),
+                  ).animate().fade(duration: AppAnimations.medium).slideY(begin: 0.1, end: 0),
                 )
               else
                 SliverPadding(
@@ -233,7 +236,10 @@ class _StoreDetailsScreenState extends ConsumerState<StoreDetailsScreen> {
                               '/offer/${_state.offers[index].id}',
                             ),
                           ),
-                        );
+                        ).animate().fade(
+                          duration: AppAnimations.medium,
+                          delay: Duration(milliseconds: (index % 10) * 50),
+                        ).slideY(begin: 0.1, end: 0);
                       },
                       childCount:
                           _state.offers.length +
@@ -252,7 +258,7 @@ class _StoreDetailsScreenState extends ConsumerState<StoreDetailsScreen> {
 
   Widget _buildSliverAppBar(BuildContext context, DealStore? store) {
     return SliverAppBar(
-      expandedHeight: 250,
+      expandedHeight: 280,
       pinned: true,
       backgroundColor: AppColors.surface,
       leadingWidth: 64,
@@ -261,13 +267,13 @@ class _StoreDetailsScreenState extends ConsumerState<StoreDetailsScreen> {
           margin: const EdgeInsets.only(left: 16.0),
           width: 40,
           height: 40,
-          child: GlassSurface(
-            borderRadius: 20.0,
-            padding: EdgeInsets.zero,
-            child: IconButton(
+          child: InteractiveContainer(
+            onTap: () => context.pop(),
+            scaleDown: 0.9,
+            child: const GlassSurface(
+              borderRadius: 20.0,
               padding: EdgeInsets.zero,
-              icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary, size: 20),
-              onPressed: () => context.pop(),
+              child: Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary, size: 20),
             ),
           ),
         ),
@@ -278,40 +284,64 @@ class _StoreDetailsScreenState extends ConsumerState<StoreDetailsScreen> {
             margin: const EdgeInsets.only(right: 16.0),
             width: 40,
             height: 40,
-            child: GlassSurface(
-              borderRadius: 20.0,
-              padding: EdgeInsets.zero,
-              child: IconButton(
+            child: InteractiveContainer(
+              onTap: () {}, // Future step: Share
+              scaleDown: 0.9,
+              child: const GlassSurface(
+                borderRadius: 20.0,
                 padding: EdgeInsets.zero,
-                icon: const Icon(
+                child: Icon(
                   Icons.share_outlined,
                   color: AppColors.textPrimary,
                   size: 20,
                 ),
-                onPressed: () {}, // Future step: Share
               ),
             ),
           ),
         ),
       ],
       flexibleSpace: FlexibleSpaceBar(
-        background: store != null && store.logo != null
-            ? Container(
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
+            store != null && store.logo != null
+                ? Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: NetworkImage(store.logo!),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  )
+                : Container(
+                    color: AppColors.surfaceVariant,
+                    child: const Icon(
+                      Icons.storefront,
+                      size: 64,
+                      color: AppColors.textDisabled,
+                    ),
+                  ),
+            // Bottom gradient
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 120,
+              child: Container(
                 decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: NetworkImage(store.logo!),
-                    fit: BoxFit.cover,
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      AppColors.background.withValues(alpha: 0.0),
+                      AppColors.background,
+                    ],
                   ),
                 ),
-              )
-            : Container(
-                color: AppColors.surfaceVariant,
-                child: const Icon(
-                  Icons.storefront,
-                  size: 64,
-                  color: AppColors.textDisabled,
-                ),
               ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -344,18 +374,20 @@ class _StoreDetailsScreenState extends ConsumerState<StoreDetailsScreen> {
         ),
         const SizedBox(height: AppSpacing.sm),
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Icon(
               Icons.location_on_outlined,
-              size: 16,
+              size: 20,
               color: AppColors.textSecondary,
             ),
             const SizedBox(width: AppSpacing.xs),
             Expanded(
               child: Text(
                 store.address ?? store.city ?? 'Address unavailable',
-                style: AppTypography.bodySmall.copyWith(
+                style: AppTypography.body.copyWith(
                   color: AppColors.textSecondary,
+                  height: 1.4,
                 ),
               ),
             ),

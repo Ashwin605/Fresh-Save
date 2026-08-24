@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_radius.dart';
+import '../../../../app/theme/app_animations.dart';
 import '../../../../core/widgets/buttons/app_button.dart';
 import '../../../../core/widgets/app_error_view.dart';
-import '../../../../core/widgets/glass_surface.dart';
 import '../../domain/models/reservation_models.dart';
 import '../providers/reservation_providers.dart';
 
@@ -49,11 +50,11 @@ class ReservationConfirmationScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(AppSpacing.lg),
               physics: const BouncingScrollPhysics(),
               children: [
-                _buildSuccessHeader(reservation),
+                _buildSuccessHeader(reservation).animate().fade(duration: AppAnimations.medium).scale(begin: const Offset(0.9, 0.9), end: const Offset(1, 1), curve: Curves.easeOutBack),
                 const SizedBox(height: AppSpacing.xxl),
-                _buildReservationDetails(reservation),
+                _buildReservationDetails(reservation).animate().fade(duration: AppAnimations.medium, delay: 100.ms).slideY(begin: 0.1, end: 0),
                 const SizedBox(height: AppSpacing.xl),
-                _buildPickupInstructions(reservation),
+                _buildPickupInstructions(reservation).animate().fade(duration: AppAnimations.medium, delay: 200.ms).slideY(begin: 0.1, end: 0),
               ],
             ),
           ),
@@ -68,18 +69,19 @@ class ReservationConfirmationScreen extends ConsumerWidget {
       children: [
         const SizedBox(height: AppSpacing.xxl),
         Container(
-          width: 80,
-          height: 80,
+          width: 88,
+          height: 88,
           decoration: BoxDecoration(
             color: AppColors.success.withValues(alpha: 0.1),
             shape: BoxShape.circle,
+            border: Border.all(color: AppColors.success.withValues(alpha: 0.3), width: 4),
           ),
           child: const Icon(
-            Icons.check_circle,
+            Icons.check_circle_rounded,
             size: 48,
             color: AppColors.success,
           ),
-        ),
+        ).animate(onPlay: (controller) => controller.repeat(reverse: true)).shimmer(duration: 2.seconds, color: AppColors.success.withValues(alpha: 0.3)),
         const SizedBox(height: AppSpacing.lg),
         Text('Reservation Confirmed', style: AppTypography.headline),
         const SizedBox(height: AppSpacing.xs),
@@ -98,7 +100,14 @@ class ReservationConfirmationScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: AppColors.surfaceVariant),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -108,7 +117,9 @@ class ReservationConfirmationScreen extends ConsumerWidget {
             reservation.reservationCode,
             isPrimary: true,
           ),
-          const Divider(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.md),
+          Divider(color: AppColors.border.withValues(alpha: 0.5)),
+          const SizedBox(height: AppSpacing.md),
           _buildDetailRow(
             'Total Amount',
             '₹${reservation.totalAmount.toStringAsFixed(2)}',
@@ -138,7 +149,7 @@ class ReservationConfirmationScreen extends ConsumerWidget {
         Text(
           value,
           style: isPrimary
-              ? AppTypography.title.copyWith(color: AppColors.primary)
+              ? AppTypography.title.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700, fontSize: 20)
               : AppTypography.title,
         ),
       ],
@@ -152,22 +163,25 @@ class ReservationConfirmationScreen extends ConsumerWidget {
         Text('Next Steps', style: AppTypography.title),
         const SizedBox(height: AppSpacing.md),
         _buildInstructionStep(
-          icon: Icons.storefront,
+          icon: Icons.storefront_outlined,
           title: 'Visit the store',
           description:
               'Head to the store before your reservation hold expires.',
+          delay: 200,
         ),
         _buildInstructionStep(
-          icon: Icons.qr_code,
+          icon: Icons.qr_code_outlined,
           title: 'Show your code',
           description:
               'Present reference ${reservation.reservationCode} at the counter.',
+          delay: 300,
         ),
         _buildInstructionStep(
-          icon: Icons.payments,
+          icon: Icons.payments_outlined,
           title: 'Pay and collect',
           description:
               'Pay ₹${reservation.totalAmount.toStringAsFixed(2)} directly at the store.',
+          delay: 400,
         ),
       ],
     );
@@ -177,43 +191,57 @@ class ReservationConfirmationScreen extends ConsumerWidget {
     required IconData icon,
     required String title,
     required String description,
+    required int delay,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceVariant,
-              borderRadius: BorderRadius.circular(AppRadius.sm),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 24, color: AppColors.primary),
             ),
-            child: Icon(icon, size: 24, color: AppColors.textPrimary),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: AppTypography.body),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  description,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: AppTypography.body.copyWith(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    description,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                      height: 1.4,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    );
+    ).animate().fade(duration: AppAnimations.medium, delay: delay.ms).slideX(begin: 0.1, end: 0);
   }
 
   Widget _buildActionButtons(BuildContext context, Reservation reservation) {
-    return GlassSurface(
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface.withValues(alpha: 0.9),
+        border: Border(top: BorderSide(color: AppColors.border.withValues(alpha: 0.5))),
+      ),
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -223,7 +251,6 @@ class ReservationConfirmationScreen extends ConsumerWidget {
                 label: 'View Reservation',
                 variant: AppButtonVariant.primary,
                 onPressed: () {
-                  // STEP 12.12 Route placeholder
                   context.push('/reservation/${reservation.id}');
                 },
               ),
@@ -237,6 +264,6 @@ class ReservationConfirmationScreen extends ConsumerWidget {
           ),
         ),
       ),
-    );
+    ).animate().slideY(begin: 1.0, end: 0, duration: AppAnimations.medium, curve: Curves.easeOutCubic);
   }
 }

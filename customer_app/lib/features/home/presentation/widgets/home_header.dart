@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../app/theme/app_animations.dart';
+import '../../../../core/widgets/layout/interactive_container.dart';
 import '../../../auth/presentation/providers/auth_state_provider.dart';
 import '../../../location/presentation/widgets/location_status_chip.dart';
 import '../../../notifications/presentation/providers/notification_providers.dart';
@@ -25,9 +28,11 @@ class HomeHeader extends ConsumerWidget {
 
     return SliverAppBar(
       floating: true,
-      backgroundColor: AppColors.background.withAlpha(240),
+      backgroundColor: AppColors.background.withValues(alpha: 0.95),
       elevation: 0,
-      toolbarHeight: 70,
+      scrolledUnderElevation: 4,
+      shadowColor: AppColors.primary.withValues(alpha: 0.1),
+      toolbarHeight: 72,
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -50,10 +55,11 @@ class HomeHeader extends ConsumerWidget {
                   ),
                 ),
             ],
-          ),
+          ).animate().fade(duration: AppAnimations.medium).slideY(begin: 0.2, end: 0),
           const SizedBox(height: 4),
-          GestureDetector(
+          InteractiveContainer(
             onTap: () => context.push('/location-selector'),
+            scaleDown: 0.95,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -63,7 +69,7 @@ class HomeHeader extends ConsumerWidget {
                   size: 18,
                 ),
                 const SizedBox(width: 6),
-                const Expanded(
+                const Flexible(
                   child: LocationStatusChip(),
                 ),
                 const SizedBox(width: 4),
@@ -74,63 +80,95 @@ class HomeHeader extends ConsumerWidget {
                 ),
               ],
             ),
-          ),
+          ).animate().fade(duration: AppAnimations.medium, delay: 100.ms).slideY(begin: 0.2, end: 0),
         ],
       ),
       actions: [
-        Stack(
-          alignment: Alignment.center,
-          children: [
-            IconButton(
-              icon: const Icon(
-                Icons.notifications_none,
-                color: AppColors.textPrimary,
-              ),
-              onPressed: () => context.push('/notifications'),
-            ),
-            if (!unreadCountAsync.isLoading &&
-                unreadCountAsync.hasValue &&
-                unreadCountAsync.value! > 0)
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: AppColors.error,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    unreadCountAsync.value! > 99
-                        ? '99+'
-                        : unreadCountAsync.value!.toString(),
-                    style: AppTypography.label.copyWith(
-                      color: AppColors.surface,
-                      fontSize: 10,
-                    ),
-                  ),
+        InteractiveContainer(
+          onTap: () => context.push('/notifications'),
+          scaleDown: 0.9,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.surface,
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: const Icon(
+                  Icons.notifications_none_rounded,
+                  color: AppColors.textPrimary,
+                  size: 20,
                 ),
               ),
-          ],
-        ),
+              if (!unreadCountAsync.isLoading &&
+                  unreadCountAsync.hasValue &&
+                  unreadCountAsync.value! > 0)
+                Positioned(
+                  right: -2,
+                  top: -2,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: AppColors.error,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.background, width: 2),
+                    ),
+                    child: Text(
+                      unreadCountAsync.value! > 99
+                          ? '99+'
+                          : unreadCountAsync.value!.toString(),
+                      style: AppTypography.label.copyWith(
+                        color: AppColors.surface,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ).animate().scale(curve: AppAnimations.bounceCurve),
+                ),
+            ],
+          ),
+        ).animate().fade(duration: AppAnimations.medium, delay: 200.ms).scaleXY(begin: 0.8, end: 1.0),
         const SizedBox(width: AppSpacing.sm),
-        GestureDetector(
+        InteractiveContainer(
           onTap: () => context.push('/profile'),
+          scaleDown: 0.9,
           child: Hero(
             tag: 'profile_avatar',
-            child: CircleAvatar(
-              radius: 18,
-              backgroundColor: AppColors.surfaceVariant,
-              child: Text(
-                user?.name.isNotEmpty == true ? user!.name[0].toUpperCase() : 'U',
-                style: AppTypography.title.copyWith(
-                  color: AppColors.primary,
-                  fontSize: 16,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  colors: [AppColors.primary, AppColors.primaryLight],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  user?.name.isNotEmpty == true ? user!.name[0].toUpperCase() : 'U',
+                  style: AppTypography.title.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                  ),
                 ),
               ),
             ),
           ),
-        ),
+        ).animate().fade(duration: AppAnimations.medium, delay: 300.ms).scaleXY(begin: 0.8, end: 1.0),
         const SizedBox(width: AppSpacing.md),
       ],
     );

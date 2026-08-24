@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../app/theme/app_animations.dart';
+import '../../../../core/widgets/layout/interactive_container.dart';
 import '../../../../core/widgets/domain/product_card.dart';
 import '../../../../core/widgets/feedback/app_skeleton.dart';
 import '../providers/home_providers.dart';
@@ -24,18 +27,20 @@ class ProductCatalogueSection extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Product Catalogue', style: AppTypography.title),
-              TextButton(
-                onPressed: () => context.push('/products/nearby'),
+              InteractiveContainer(
+                onTap: () => context.push('/products/nearby'),
                 child: Text(
                   'See All',
                   style: AppTypography.bodySmall.copyWith(
                     color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
             ],
           ),
-        ),
+        ).animate().fade(duration: AppAnimations.medium, delay: 700.ms).slideY(begin: 0.2, end: 0),
+        const SizedBox(height: AppSpacing.sm),
         dealsAsync.when(
           data: (deals) {
             if (deals.isEmpty) {
@@ -56,8 +61,6 @@ class ProductCatalogueSection extends ConsumerWidget {
               );
             }
 
-            // Exclude deals that are in the promotional banner (top 5) to avoid duplication
-            // But since deals list might be short, let's just show them all for now or skip the first 5
             final catalogDeals = deals.skip(5).toList();
             final displayDeals = catalogDeals.isNotEmpty ? catalogDeals : deals;
 
@@ -77,7 +80,7 @@ class ProductCatalogueSection extends ConsumerWidget {
                 return ProductCard(
                   id: deal.id,
                   name: deal.productName,
-                  brand: null, // Deals don't have brand directly yet, could add it
+                  brand: null, 
                   storeName: deal.storeName,
                   imageUrl: deal.imageUrl,
                   originalPrice: deal.originalPrice,
@@ -85,12 +88,14 @@ class ProductCatalogueSection extends ConsumerWidget {
                   offerBadge: '${deal.discountPercent.toStringAsFixed(0)}% OFF',
                   onTap: () => context.push('/offer/${deal.id}'),
                   onAdd: () {
-                    // TODO: Implement cart integration
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Added ${deal.productName} to cart')),
                     );
                   },
-                );
+                ).animate().fade(
+                  duration: AppAnimations.medium,
+                  delay: Duration(milliseconds: 750 + (index * 50)),
+                ).slideY(begin: 0.1, end: 0);
               },
             );
           },

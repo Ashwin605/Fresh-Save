@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../app/theme/app_radius.dart';
+import '../../../../app/theme/app_animations.dart';
 import '../../../../core/widgets/buttons/app_button.dart';
+import '../../../../core/widgets/layout/interactive_container.dart';
 
 import '../providers/reservation_providers.dart';
 
@@ -26,9 +30,14 @@ class ReservationDetailScreen extends ConsumerWidget {
         title: const Text('Reservation Details', style: AppTypography.title),
         backgroundColor: AppColors.background,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => context.pop(),
+        centerTitle: true,
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: InteractiveContainer(
+            onTap: () => context.pop(),
+            scaleDown: 0.9,
+            child: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary, size: 20),
+          ),
         ),
       ),
       body: reservationAsync.when(
@@ -48,6 +57,7 @@ class ReservationDetailScreen extends ConsumerWidget {
         data: (reservation) {
           return SingleChildScrollView(
             padding: const EdgeInsets.all(AppSpacing.xl),
+            physics: const BouncingScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -57,18 +67,25 @@ class ReservationDetailScreen extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: AppColors.surface,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.surfaceVariant),
+                    border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
                   child: Column(
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.sm,
+                          horizontal: AppSpacing.md,
                           vertical: AppSpacing.xs,
                         ),
                         decoration: BoxDecoration(
                           color: AppColors.primaryLight.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
                         ),
                         child: Text(
                           reservation.status.name.toUpperCase(),
@@ -93,61 +110,82 @@ class ReservationDetailScreen extends ConsumerWidget {
                         ),
                     ],
                   ),
-                ),
+                ).animate().fade(duration: AppAnimations.medium).slideY(begin: 0.1, end: 0),
                 
                 const SizedBox(height: AppSpacing.xl),
                 
                 // Store details fallback
-                Text('Store Details', style: AppTypography.title),
+                Text('Store Details', style: AppTypography.title).animate().fade(duration: AppAnimations.medium, delay: 100.ms).slideY(begin: 0.1, end: 0),
                 const SizedBox(height: AppSpacing.md),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceVariant,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.store, color: AppColors.textSecondary),
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
                   ),
-                  title: const Text('Partner Store', style: AppTypography.body),
-                  subtitle: Text('Store ID: ${reservation.storeId.substring(0, 8)}...', style: AppTypography.bodySmall),
-                ),
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.storefront_outlined, color: AppColors.primary),
+                    ),
+                    title: const Text('Partner Store', style: AppTypography.body),
+                    subtitle: Text('Store ID: ${reservation.storeId.substring(0, 8)}...', style: AppTypography.bodySmall),
+                  ),
+                ).animate().fade(duration: AppAnimations.medium, delay: 150.ms).slideY(begin: 0.1, end: 0),
                 
                 const SizedBox(height: AppSpacing.xl),
                 
                 // Order details
-                Text('Order Summary', style: AppTypography.title),
+                Text('Order Summary', style: AppTypography.title).animate().fade(duration: AppAnimations.medium, delay: 200.ms).slideY(begin: 0.1, end: 0),
                 const SizedBox(height: AppSpacing.md),
-                ...reservation.items.map((item) => Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                      child: Row(
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                  ),
+                  child: Column(
+                    children: [
+                      ...reservation.items.map((item) => Padding(
+                            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('Item x${item.quantity}', style: AppTypography.body),
+                                Text('\$${item.subtotal.toStringAsFixed(2)}', style: AppTypography.body.copyWith(fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                          )),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                        child: Divider(color: AppColors.border.withValues(alpha: 0.5)),
+                      ),
+                      Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Item x${item.quantity}', style: AppTypography.body),
-                          Text('\$${item.subtotal.toStringAsFixed(2)}', style: AppTypography.body.copyWith(fontWeight: FontWeight.w600)),
+                          const Text('Total', style: AppTypography.headline),
+                          Text('\$${reservation.totalAmount.toStringAsFixed(2)}', style: AppTypography.headline.copyWith(color: AppColors.primary)),
                         ],
                       ),
-                    )),
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
-                  child: Divider(),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Total', style: AppTypography.headline),
-                    Text('\$${reservation.totalAmount.toStringAsFixed(2)}', style: AppTypography.headline),
-                  ],
-                ),
+                    ],
+                  ),
+                ).animate().fade(duration: AppAnimations.medium, delay: 250.ms).slideY(begin: 0.1, end: 0),
 
                 const SizedBox(height: AppSpacing.xxl),
                 
-                AppButton.primary(
+                AppButton(
                   label: 'Get Directions',
+                  variant: AppButtonVariant.primary,
                   onPressed: () {},
-                ),
+                ).animate().fade(duration: AppAnimations.medium, delay: 350.ms).slideY(begin: 0.1, end: 0),
               ],
             ),
           );

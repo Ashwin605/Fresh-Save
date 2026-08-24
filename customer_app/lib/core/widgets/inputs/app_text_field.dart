@@ -33,51 +33,67 @@ class AppTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      obscureText: obscureText,
-      keyboardType: keyboardType,
-      onChanged: onChanged,
-      onSubmitted: onSubmitted,
-      maxLines: obscureText ? 1 : maxLines,
-      style: AppTypography.body,
-      decoration: InputDecoration(
-        labelText: labelText,
-        hintText: hintText,
-        errorText: errorText,
-        prefixIcon: prefixIcon,
-        suffixIcon: suffixIcon,
-        labelStyle: AppTypography.bodySmall,
-        hintStyle: AppTypography.bodySmall.copyWith(
-          color: AppColors.textDisabled,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (labelText != null) ...[
+          Text(
+            labelText!,
+            style: AppTypography.label.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+        TextField(
+          controller: controller,
+          obscureText: obscureText,
+          keyboardType: keyboardType,
+          onChanged: onChanged,
+          onSubmitted: onSubmitted,
+          maxLines: obscureText ? 1 : maxLines,
+          style: AppTypography.body.copyWith(
+            fontWeight: FontWeight.w500,
+          ),
+          decoration: InputDecoration(
+            hintText: hintText,
+            errorText: errorText,
+            prefixIcon: prefixIcon,
+            suffixIcon: suffixIcon,
+            hintStyle: AppTypography.body.copyWith(
+              color: AppColors.textDisabled,
+            ),
+            filled: true,
+            fillColor: AppColors.inputBackground,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 18, // Taller touch target
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+              borderSide: const BorderSide(color: Colors.transparent, width: 0),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+              borderSide: const BorderSide(color: Colors.transparent, width: 0),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2.0),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+              borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+              borderSide: const BorderSide(color: AppColors.error, width: 2.0),
+            ),
+          ),
         ),
-        filled: true,
-        fillColor: AppColors.surface,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 16,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.border, width: 1.0),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.border, width: 1.0),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.error, width: 1.5),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.error, width: 1.5),
-        ),
-      ),
+      ],
     );
   }
 }
