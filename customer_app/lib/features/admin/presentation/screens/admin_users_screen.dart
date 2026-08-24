@@ -9,6 +9,7 @@ import '../../../../core/widgets/layout/admin_data_table.dart';
 import '../providers/admin_users_provider.dart';
 import '../../data/admin_repository.dart';
 import '../../../../core/widgets/feedback/app_snackbar.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class AdminUsersScreen extends ConsumerStatefulWidget {
   const AdminUsersScreen({super.key});
@@ -119,7 +120,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
                         ],
                       );
                     }).toList(),
-                  );
+                  ).animate().fade(duration: 400.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutCubic);
                 },
               ),
             ),

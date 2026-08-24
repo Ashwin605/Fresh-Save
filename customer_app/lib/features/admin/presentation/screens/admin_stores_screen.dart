@@ -9,6 +9,7 @@ import '../../../../core/widgets/layout/admin_data_table.dart';
 import '../providers/admin_stores_provider.dart';
 import '../../data/admin_repository.dart';
 import '../../../../core/widgets/feedback/app_snackbar.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class AdminStoresScreen extends ConsumerStatefulWidget {
   const AdminStoresScreen({super.key});
@@ -195,7 +196,7 @@ class _AdminStoresScreenState extends ConsumerState<AdminStoresScreen> {
                         ],
                       );
                     }).toList(),
-                  );
+                  ).animate().fade(duration: 400.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutCubic);
                 },
               ),
             ),

@@ -6,6 +6,7 @@ import '../../../../app/theme/app_typography.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/widgets/glass_surface.dart';
 import '../providers/admin_audit_logs_provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class AdminAuditLogsScreen extends ConsumerStatefulWidget {
   const AdminAuditLogsScreen({super.key});
@@ -126,7 +127,7 @@ class _AdminAuditLogsScreenState extends ConsumerState<AdminAuditLogsScreen> {
                           ),
                         ),
                     ],
-                  );
+                  ).animate().fade(duration: 400.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutCubic);
                 },
               ),
             ),
