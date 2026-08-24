@@ -6,6 +6,7 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/widgets/layout/app_card.dart';
 import '../../../../core/widgets/glass_surface.dart';
 import '../providers/admin_dashboard_provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class AdminDashboardScreen extends ConsumerWidget {
   const AdminDashboardScreen({super.key});
@@ -134,10 +135,7 @@ class AdminDashboardScreen extends ConsumerWidget {
         ),
       ),
     );
-  }
-}
-
-class _AnimatedKpiCard extends StatefulWidget {
+class _AnimatedKpiCard extends StatelessWidget {
   final String title;
   final String value;
   final String trend;
@@ -157,108 +155,67 @@ class _AnimatedKpiCard extends StatefulWidget {
   });
 
   @override
-  State<_AnimatedKpiCard> createState() => _AnimatedKpiCardState();
-}
-
-class _AnimatedKpiCardState extends State<_AnimatedKpiCard> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
-    _slideAnimation = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
-
-    Future.delayed(Duration(milliseconds: widget.delay), () {
-      if (mounted) _controller.forward();
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: SlideTransition(
-        position: _slideAnimation,
-        child: SizedBox(
-          width: widget.width,
-          child: AppCard(
-            variant: AppCardVariant.elevated,
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
+    return SizedBox(
+      width: width,
+      child: AppCard(
+        variant: AppCardVariant.elevated,
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        widget.title,
-                        style: AppTypography.body.copyWith(
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: AppTypography.body.copyWith(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
                     ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: widget.color.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(widget.icon, color: widget.color, size: 20),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  widget.value,
-                  style: AppTypography.display.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.bold,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xs),
-                Row(
-                  children: [
-                    Icon(Icons.trending_up, color: AppColors.success, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      widget.trend,
-                      style: AppTypography.label.copyWith(
-                        color: AppColors.success,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+                const SizedBox(width: AppSpacing.sm),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, color: color, size: 20),
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              value,
+              style: AppTypography.display.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Row(
+              children: [
+                Icon(Icons.trending_up, color: AppColors.success, size: 16),
+                const SizedBox(width: 4),
+                Text(
+                  trend,
+                  style: AppTypography.label.copyWith(
+                    color: AppColors.success,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
-    );
+    ).animate(delay: delay.ms).fade(duration: 600.ms).slideY(begin: 0.2, end: 0, curve: Curves.easeOutCubic);
   }
 }
 
@@ -298,7 +255,7 @@ class _MockChartSection extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ).animate().fade(duration: 600.ms, delay: 400.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutCubic);
   }
 }
 
