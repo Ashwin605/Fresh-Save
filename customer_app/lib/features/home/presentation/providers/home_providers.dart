@@ -64,6 +64,31 @@ final nearbyDealsProvider = FutureProvider<List<Deal>>((ref) async {
   return [];
 });
 
+// --- Promotional Banners ---
+final promotionalBannersProvider = FutureProvider<List<Deal>>((ref) async {
+  final locationState = ref.watch(locationProvider);
+
+  if (locationState.status != LocationStatus.available ||
+      locationState.location == null) {
+    return [];
+  }
+
+  final repo = ref.watch(homeRepositoryProvider);
+  // Get a few deals to act as banners
+  final result = await repo.getNearbyDeals(
+    lat: locationState.location!.latitude,
+    lng: locationState.location!.longitude,
+    limit: 5,
+  );
+
+  if (result is Success<List<Deal>>) {
+    return result.data;
+  } else if (result is Failure<List<Deal>>) {
+    throw result.error;
+  }
+  return [];
+});
+
 // --- Nearby Stores ---
 final nearbyStoresProvider = FutureProvider<List<Store>>((ref) async {
   final locationState = ref.watch(locationProvider);

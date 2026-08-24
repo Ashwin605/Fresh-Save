@@ -11,6 +11,7 @@ import '../../../../core/widgets/app_network_image.dart';
 import '../../../../core/widgets/buttons/app_button.dart';
 import '../../../../core/widgets/app_error_view.dart';
 import '../../../../core/widgets/glass_surface.dart';
+import '../../../../core/widgets/layout/app_card.dart';
 import '../../../../core/network/result.dart';
 import '../../../details/domain/models/details_models.dart';
 import '../../../details/presentation/providers/details_providers.dart';
@@ -150,13 +151,9 @@ class _ReservationReviewScreenState
   }
 
   Widget _buildProductSummary(DealDetail deal) {
-    return Container(
+    return AppCard(
+      variant: AppCardVariant.outlined,
       padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: AppColors.surfaceVariant),
-      ),
       child: Row(
         children: [
           Container(
@@ -235,13 +232,9 @@ class _ReservationReviewScreenState
   }
 
   Widget _buildPriceSummary(DealDetail deal, double total) {
-    return Container(
+    return AppCard(
+      variant: AppCardVariant.outlined,
       padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: AppColors.surfaceVariant),
-      ),
       child: Column(
         children: [
           Row(
@@ -283,13 +276,9 @@ class _ReservationReviewScreenState
       children: [
         Text('Pickup Information', style: AppTypography.title),
         const SizedBox(height: AppSpacing.md),
-        Container(
+        AppCard(
+          variant: AppCardVariant.outlined,
           padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(color: AppColors.surfaceVariant),
-          ),
           child: Row(
             children: [
               const Icon(Icons.storefront, color: AppColors.primary),

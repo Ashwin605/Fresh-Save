@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../core/widgets/layout/app_card.dart';
 import '../../../auth/presentation/providers/auth_state_provider.dart';
 import '../../../auth/domain/models/auth_models.dart';
 
@@ -43,45 +44,70 @@ class ProfileScreen extends ConsumerWidget {
                   _buildProfileHeader(user),
                   const SizedBox(height: AppSpacing.xl),
                   _buildSectionHeader('FreshSave Activity'),
-                  _buildSettingsTile(
-                    icon: Icons.history,
-                    title: 'My Reservations',
-                    onTap: () => context.push('/reservation/history'),
+                  AppCard(
+                    variant: AppCardVariant.outlined,
+                    padding: EdgeInsets.zero,
+                    child: Column(
+                      children: [
+                        _buildSettingsTile(
+                          icon: Icons.history,
+                          title: 'My Reservations',
+                          onTap: () => context.push('/reservation/history'),
+                        ),
+                        const Divider(height: 1, indent: 56),
+                        _buildSettingsTile(
+                          icon: Icons.notifications_none,
+                          title: 'Notifications',
+                          onTap: () => context.push('/notifications'),
+                        ),
+                      ],
+                    ),
                   ),
-                  _buildSettingsTile(
-                    icon: Icons.notifications_none,
-                    title: 'Notifications',
-                    onTap: () => context.push('/notifications'),
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
                   _buildSectionHeader('Preferences'),
-                  _buildSettingsTile(
-                    icon: Icons.location_on_outlined,
-                    title: 'Location Preferences',
-                    subtitle: 'Manage search radius and location',
-                    onTap: () => context.push('/location-selector'),
+                  AppCard(
+                    variant: AppCardVariant.outlined,
+                    padding: EdgeInsets.zero,
+                    child: Column(
+                      children: [
+                        _buildSettingsTile(
+                          icon: Icons.location_on_outlined,
+                          title: 'Location Preferences',
+                          subtitle: 'Manage search radius and location',
+                          onTap: () => context.push('/location-selector'),
+                        ),
+                        const Divider(height: 1, indent: 56),
+                        _buildSettingsTile(
+                          icon: Icons.notifications_active_outlined,
+                          title: 'Notification Preferences',
+                          subtitle: 'Manage alerts and emails',
+                          onTap: () => context.push('/profile/notifications'),
+                        ),
+                      ],
+                    ),
                   ),
-                  _buildSettingsTile(
-                    icon: Icons.notifications_active_outlined,
-                    title: 'Notification Preferences',
-                    subtitle: 'Manage alerts and emails',
-                    onTap: () => context.push('/profile/notifications'),
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
                   _buildSectionHeader('Account & Security'),
-                  _buildSettingsTile(
-                    icon: Icons.lock_outline,
-                    title: 'Change Password',
-                    onTap: () => context.push('/profile/security'),
+                  AppCard(
+                    variant: AppCardVariant.outlined,
+                    padding: EdgeInsets.zero,
+                    child: Column(
+                      children: [
+                        _buildSettingsTile(
+                          icon: Icons.lock_outline,
+                          title: 'Change Password',
+                          onTap: () => context.push('/profile/security'),
+                        ),
+                        const Divider(height: 1, indent: 56),
+                        _buildSettingsTile(
+                          icon: Icons.logout,
+                          title: 'Log Out',
+                          textColor: AppColors.error,
+                          iconColor: AppColors.error,
+                          onTap: () => _showLogoutDialog(context, ref),
+                        ),
+                      ],
+                    ),
                   ),
-                  _buildSettingsTile(
-                    icon: Icons.logout,
-                    title: 'Log Out',
-                    textColor: AppColors.error,
-                    iconColor: AppColors.error,
-                    onTap: () => _showLogoutDialog(context, ref),
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
+                  const SizedBox(height: 120), // Bottom padding for shell navigation
                 ],
               ),
             ),
@@ -123,15 +149,17 @@ class ProfileScreen extends ConsumerWidget {
   Widget _buildSectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.only(
-        bottom: AppSpacing.md,
+        bottom: AppSpacing.sm,
         left: AppSpacing.xs,
+        top: AppSpacing.md,
       ),
       child: Align(
         alignment: Alignment.centerLeft,
         child: Text(
-          title,
-          style: AppTypography.bodySmall.copyWith(
+          title.toUpperCase(),
+          style: AppTypography.label.copyWith(
             color: AppColors.textSecondary,
+            letterSpacing: 1.2,
           ),
         ),
       ),
@@ -179,7 +207,6 @@ class ProfileScreen extends ConsumerWidget {
         color: AppColors.textSecondary,
         size: 20,
       ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       onTap: onTap,
     );
   }

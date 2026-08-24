@@ -8,6 +8,8 @@ import '../../../../app/theme/app_typography.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../core/widgets/app_error_view.dart';
+import '../../../../core/widgets/feedback/empty_state_view.dart';
+import '../../../../core/widgets/layout/app_card.dart';
 import '../../domain/models/reservation_models.dart';
 import '../providers/reservation_providers.dart';
 
@@ -63,56 +65,13 @@ class ReservationHistoryScreen extends ConsumerWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xxl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceVariant,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.receipt_long_outlined,
-                size: 40,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text('No reservations yet', style: AppTypography.headline),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              'Your reservation history will appear here once you book items from a store.',
-              style: AppTypography.body.copyWith(
-                color: AppColors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.xl,
-                  vertical: AppSpacing.md,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.md),
-                ),
-              ),
-              onPressed: () => context.go('/home'),
-              child: const Text(
-                'Explore Deals',
-                style: TextStyle(color: AppColors.onPrimary),
-              ),
-            ),
-          ],
-        ),
-      ),
+    return EmptyStateView(
+      icon: Icons.receipt_long_outlined,
+      title: 'No reservations yet',
+      description:
+          'Your reservation history will appear here once you book items from a store.',
+      actionLabel: 'Explore Deals',
+      onAction: () => context.go('/home'),
     );
   }
 }
@@ -124,83 +83,76 @@ class _ReservationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return AppCard(
+      variant: AppCardVariant.outlined,
+      padding: const EdgeInsets.all(AppSpacing.md),
       onTap: () => context.push('/reservation/${reservation.id}'),
-      borderRadius: BorderRadius.circular(AppRadius.md),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header row: code + status badge
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  reservation.reservationCode,
-                  style: AppTypography.title.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header row: code + status badge
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                reservation.reservationCode,
+                style: AppTypography.title.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
                 ),
-                _StatusBadge(status: reservation.status),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
+              ),
+              _StatusBadge(status: reservation.status),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
 
-            // Item count + amount
+          // Item count + amount
+          Row(
+            children: [
+              const Icon(
+                Icons.shopping_bag_outlined,
+                size: 14,
+                color: AppColors.textSecondary,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '${reservation.items.length} item${reservation.items.length == 1 ? '' : 's'}',
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '₹${reservation.totalAmount.toStringAsFixed(2)}',
+                style: AppTypography.body.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+
+          // Date
+          if (reservation.createdAt != null) ...[
+            const SizedBox(height: AppSpacing.xs),
             Row(
               children: [
                 const Icon(
-                  Icons.shopping_bag_outlined,
-                  size: 14,
+                  Icons.calendar_today_outlined,
+                  size: 13,
                   color: AppColors.textSecondary,
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  '${reservation.items.length} item${reservation.items.length == 1 ? '' : 's'}',
+                  DateFormat('d MMM yyyy, h:mm a')
+                      .format(reservation.createdAt!.toLocal()),
                   style: AppTypography.bodySmall.copyWith(
                     color: AppColors.textSecondary,
                   ),
                 ),
-                const Spacer(),
-                Text(
-                  '₹${reservation.totalAmount.toStringAsFixed(2)}',
-                  style: AppTypography.body.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
               ],
             ),
-
-            // Date
-            if (reservation.createdAt != null) ...[
-              const SizedBox(height: AppSpacing.xs),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.calendar_today_outlined,
-                    size: 13,
-                    color: AppColors.textSecondary,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    DateFormat('d MMM yyyy, h:mm a')
-                        .format(reservation.createdAt!.toLocal()),
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ],
           ],
-        ),
+        ],
       ),
     );
   }

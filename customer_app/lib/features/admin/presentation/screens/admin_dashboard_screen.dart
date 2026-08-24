@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../core/widgets/layout/app_card.dart';
 import '../../../../core/widgets/glass_surface.dart';
 import '../providers/admin_dashboard_provider.dart';
 
@@ -196,21 +197,11 @@ class _AnimatedKpiCardState extends State<_AnimatedKpiCard> with SingleTickerPro
       opacity: _fadeAnimation,
       child: SlideTransition(
         position: _slideAnimation,
-          child: Container(
-            width: widget.width,
+        child: SizedBox(
+          width: widget.width,
+          child: AppCard(
+            variant: AppCardVariant.elevated,
             padding: const EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.textPrimary.withValues(alpha: 0.03),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-              border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
-            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -266,6 +257,7 @@ class _AnimatedKpiCardState extends State<_AnimatedKpiCard> with SingleTickerPro
             ),
           ),
         ),
+      ),
     );
   }
 }

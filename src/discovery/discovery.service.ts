@@ -101,6 +101,9 @@ export class DiscoveryService {
       brand,
       sortBy = 'newest',
       sortOrder = 'desc',
+      latitude,
+      longitude,
+      radius,
     } = query;
     const skip = (page - 1) * limit;
 
@@ -158,6 +161,45 @@ export class DiscoveryService {
 
     if (brand) {
       where.brand = { equals: brand, mode: 'insensitive' };
+    }
+
+    if (latitude !== undefined && longitude !== undefined) {
+      const radiusKm = radius ?? this.defaultRadius;
+      const radiusMeters = radiusKm * 1000;
+      
+      const stores = await this.prisma.$queryRawUnsafe<{ id: string }[]>(`
+        SELECT s."id" FROM "Store" s
+        INNER JOIN "Business" b ON s."businessId" = b."id"
+        WHERE s."location" IS NOT NULL
+        AND ST_DWithin(
+          s."location",
+          ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
+          $3
+        )
+        AND s."status" = 'ACTIVE'
+        AND s."verificationStatus" = 'VERIFIED'
+        AND s."deletedAt" IS NULL
+        AND b."status" = 'ACTIVE'
+        AND b."verificationStatus" = 'VERIFIED'
+        AND b."deletedAt" IS NULL
+      `, longitude, latitude, radiusMeters);
+
+      const storeIds = stores.map((s) => s.id);
+      
+      // If no nearby stores, return empty result immediately
+      if (storeIds.length === 0) {
+        return createPaginatedResponse([], 0, page, limit);
+      }
+
+      where.inventory = {
+        some: {
+          storeId: { in: storeIds },
+          status: 'ACTIVE',
+          deletedAt: null,
+          expiryDate: { gt: new Date() },
+          stockQuantity: { gt: 0 } // ensure it's in stock
+        }
+      };
     }
 
     // Safe sort field mapping

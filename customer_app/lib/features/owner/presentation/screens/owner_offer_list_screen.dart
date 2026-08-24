@@ -5,6 +5,8 @@ import '../../../../../app/theme/app_colors.dart';
 import '../../../../../app/theme/app_spacing.dart';
 import '../../../../../app/theme/app_typography.dart';
 import '../../domain/models/owner_offer_models.dart';
+import '../../../../../core/widgets/feedback/empty_state_view.dart';
+import '../../../../../core/widgets/app_error_view.dart';
 import '../providers/owner_offer_list_provider.dart';
 import '../widgets/offers/offer_management_card.dart';
 
@@ -44,39 +46,9 @@ class OwnerOfferListScreen extends ConsumerWidget {
                 loading: () => const Center(
                   child: CircularProgressIndicator(color: AppColors.primary),
                 ),
-                error: (error, stack) => Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.error_outline,
-                          size: 48,
-                          color: AppColors.error,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        Text(
-                          'Failed to load offers',
-                          style: AppTypography.title,
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(
-                          error.toString(),
-                          textAlign: TextAlign.center,
-                          style: AppTypography.body.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        ElevatedButton(
-                          onPressed: () =>
-                              ref.invalidate(ownerOfferListProvider),
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    ),
-                  ),
+                error: (error, stack) => AppErrorView(
+                  message: 'Failed to load offers\n$error',
+                  onRetry: () => ref.invalidate(ownerOfferListProvider),
                 ),
               ),
             ),
@@ -167,30 +139,10 @@ class OwnerOfferListScreen extends ConsumerWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.local_offer_outlined,
-              size: 64,
-              color: AppColors.textDisabled.withAlpha(100),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text('No offers found', style: AppTypography.headline),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              'Create a new offer to expose surplus inventory to customers.',
-              textAlign: TextAlign.center,
-              style: AppTypography.body.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-      ),
+    return const EmptyStateView(
+      icon: Icons.local_offer_outlined,
+      title: 'No offers found',
+      description: 'Create a new offer to expose surplus inventory to customers.',
     );
   }
 }

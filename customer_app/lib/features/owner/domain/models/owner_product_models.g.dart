@@ -12,6 +12,7 @@ _OwnerProductCategory _$OwnerProductCategoryFromJson(
   id: json['id'] as String,
   name: json['name'] as String,
   slug: json['slug'] as String,
+  parentId: json['parentId'] as String?,
 );
 
 Map<String, dynamic> _$OwnerProductCategoryToJson(
@@ -20,6 +21,7 @@ Map<String, dynamic> _$OwnerProductCategoryToJson(
   'id': instance.id,
   'name': instance.name,
   'slug': instance.slug,
+  'parentId': instance.parentId,
 };
 
 _OwnerProduct _$OwnerProductFromJson(Map<String, dynamic> json) =>

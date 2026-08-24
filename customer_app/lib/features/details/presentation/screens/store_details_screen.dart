@@ -255,27 +255,41 @@ class _StoreDetailsScreenState extends ConsumerState<StoreDetailsScreen> {
       expandedHeight: 250,
       pinned: true,
       backgroundColor: AppColors.surface,
-      leading: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: GlassSurface(
-          borderRadius: 100.0,
-          child: IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-            onPressed: () => context.pop(),
+      leadingWidth: 64,
+      leading: Center(
+        child: Container(
+          margin: const EdgeInsets.only(left: 16.0),
+          width: 40,
+          height: 40,
+          child: GlassSurface(
+            borderRadius: 20.0,
+            padding: EdgeInsets.zero,
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary, size: 20),
+              onPressed: () => context.pop(),
+            ),
           ),
         ),
       ),
       actions: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: GlassSurface(
-            borderRadius: 100.0,
-            child: IconButton(
-              icon: const Icon(
-                Icons.share_outlined,
-                color: AppColors.textPrimary,
+        Center(
+          child: Container(
+            margin: const EdgeInsets.only(right: 16.0),
+            width: 40,
+            height: 40,
+            child: GlassSurface(
+              borderRadius: 20.0,
+              padding: EdgeInsets.zero,
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                icon: const Icon(
+                  Icons.share_outlined,
+                  color: AppColors.textPrimary,
+                  size: 20,
+                ),
+                onPressed: () {}, // Future step: Share
               ),
-              onPressed: () {}, // Future step: Share
             ),
           ),
         ),

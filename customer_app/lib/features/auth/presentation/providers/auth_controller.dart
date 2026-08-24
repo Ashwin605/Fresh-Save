@@ -20,18 +20,10 @@ class AuthController extends Notifier<AsyncValue<void>> {
     final result = await repo.login(email: email, password: password);
 
     switch (result) {
-      case Success():
-        final userResult = await repo.getCurrentUser();
-        switch (userResult) {
-          case Success(:final data):
-            ref.read(authStateProvider.notifier).login(data);
-            state = const AsyncData(null);
-          case Failure(:final error):
-            state = AsyncError(
-              _errorMessage(error),
-              StackTrace.current,
-            );
-        }
+      case Success(:final data):
+        // Use the user directly from the login response — no second API call needed
+        ref.read(authStateProvider.notifier).login(data.user);
+        state = const AsyncData(null);
       case Failure(:final error):
         state = AsyncError(
           _errorMessage(error),

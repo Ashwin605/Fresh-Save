@@ -106,8 +106,8 @@ final dioProvider = Provider<Dio>((ref) {
       baseUrl: const bool.hasEnvironment('API_URL') 
           ? const String.fromEnvironment('API_URL') 
           : 'https://fresh-save-api.onrender.com/api/v1',
-      connectTimeout: const Duration(seconds: 60),
-      receiveTimeout: const Duration(seconds: 60),
+      connectTimeout: const Duration(seconds: 15),
+      receiveTimeout: const Duration(seconds: 15),
       headers: {
         'Content-Type': 'application/json',
       },

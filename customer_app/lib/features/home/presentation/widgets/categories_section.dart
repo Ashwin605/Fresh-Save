@@ -80,13 +80,63 @@ class CategoriesSection extends ConsumerWidget {
                 );
               }
 
+              final displayCount = categories.length > 8 ? 8 : categories.length;
+              
               return ListView.separated(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                 scrollDirection: Axis.horizontal,
-                itemCount: categories.length,
+                itemCount: displayCount + 1, // +1 for "More"
                 separatorBuilder: (context, index) =>
                     const SizedBox(width: AppSpacing.md),
                 itemBuilder: (context, index) {
+                  if (index == displayCount) {
+                    return GestureDetector(
+                      onTap: () => context.push('/categories'),
+                      child: Container(
+                        width: 80,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.border),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.02),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceVariant,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.more_horiz,
+                                color: AppColors.primary,
+                                size: 24,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              'More',
+                              style: AppTypography.label.copyWith(
+                                color: AppColors.textPrimary,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
                   final category = categories[index];
                   return GestureDetector(
                     onTap: () => context.push('/category/${category.id}'),

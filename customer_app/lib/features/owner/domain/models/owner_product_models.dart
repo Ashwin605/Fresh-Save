@@ -9,6 +9,7 @@ abstract class OwnerProductCategory with _$OwnerProductCategory {
     required String id,
     required String name,
     required String slug,
+    String? parentId,
   }) = _OwnerProductCategory;
 
   factory OwnerProductCategory.fromJson(Map<String, dynamic> json) =>

@@ -11,6 +11,8 @@ import '../../../../core/widgets/feedback/app_skeleton.dart';
 import '../../../../core/widgets/feedback/empty_state_view.dart';
 import '../../../../core/widgets/domain/product_card.dart';
 import '../providers/category_products_provider.dart';
+import '../../../home/presentation/providers/home_providers.dart';
+import '../../../home/domain/models/home_models.dart';
 
 class CategoryDiscoveryScreen extends ConsumerStatefulWidget {
   final String categoryId;
@@ -26,18 +28,15 @@ class _CategoryDiscoveryScreenState
     extends ConsumerState<CategoryDiscoveryScreen> {
   final ScrollController _scrollController = ScrollController();
 
+  late String _selectedCategoryId;
+
   @override
   void initState() {
     super.initState();
-    print('[1] CATEGORY TAPPED');
-    print('category name: Unknown');
-    print('category ID: ${widget.categoryId}');
-    print('[2] NAVIGATION');
-    print('destination: CategoryDiscoveryScreen');
-    print('arguments: {categoryId: ${widget.categoryId}}');
-
+    _selectedCategoryId = widget.categoryId;
+    
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(categoryProductsProvider.notifier).fetchInitial(widget.categoryId);
+      ref.read(categoryProductsProvider.notifier).fetchInitial(_selectedCategoryId);
     });
 
     _scrollController.addListener(_onScroll);
@@ -53,12 +52,20 @@ class _CategoryDiscoveryScreenState
   void _onScroll() {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      ref.read(categoryProductsProvider.notifier).loadMore(widget.categoryId);
+      ref.read(categoryProductsProvider.notifier).loadMore(_selectedCategoryId);
     }
   }
 
   Future<void> _onRefresh() async {
-    await ref.read(categoryProductsProvider.notifier).refresh(widget.categoryId);
+    await ref.read(categoryProductsProvider.notifier).refresh(_selectedCategoryId);
+  }
+
+  void _onSubcategorySelected(String id) {
+    if (_selectedCategoryId == id) return;
+    setState(() {
+      _selectedCategoryId = id;
+    });
+    ref.read(categoryProductsProvider.notifier).fetchInitial(_selectedCategoryId);
   }
 
   @override
@@ -131,10 +138,48 @@ class _CategoryDiscoveryScreenState
       );
     }
 
+    final categoriesAsync = ref.watch(categoriesProvider);
+    final mainCategory = categoriesAsync.asData?.value.firstWhere(
+      (c) => c.id == widget.categoryId,
+      orElse: () => Category(id: widget.categoryId, name: 'Category'),
+    );
+    final hasSubcategories = mainCategory != null && mainCategory.children.isNotEmpty;
+
     return CustomScrollView(
       controller: _scrollController,
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
+        // Subcategories Bar
+        if (hasSubcategories)
+          SliverToBoxAdapter(
+            child: Container(
+              height: 56,
+              decoration: const BoxDecoration(
+                color: AppColors.surface,
+                border: Border(bottom: BorderSide(color: AppColors.border)),
+              ),
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 8),
+                children: [
+                  _buildSubcategoryChip(
+                    id: widget.categoryId,
+                    name: 'All ${mainCategory.name}',
+                    isSelected: _selectedCategoryId == widget.categoryId,
+                  ),
+                  ...mainCategory.children.map((sub) => Padding(
+                        padding: const EdgeInsets.only(left: AppSpacing.sm),
+                        child: _buildSubcategoryChip(
+                          id: sub.id,
+                          name: sub.name,
+                          isSelected: _selectedCategoryId == sub.id,
+                        ),
+                      )),
+                ],
+              ),
+            ),
+          ),
+          
         // Filter / Sort Bar
         SliverToBoxAdapter(
           child: Container(
@@ -216,6 +261,35 @@ class _CategoryDiscoveryScreenState
           const SizedBox(width: 4),
           Text(label, style: AppTypography.label.copyWith(color: AppColors.textPrimary)),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSubcategoryChip({
+    required String id,
+    required String name,
+    required bool isSelected,
+  }) {
+    return GestureDetector(
+      onTap: () => _onSubcategorySelected(id),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.border,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            name,
+            style: AppTypography.label.copyWith(
+              color: isSelected ? Colors.white : AppColors.textPrimary,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ),
       ),
     );
   }

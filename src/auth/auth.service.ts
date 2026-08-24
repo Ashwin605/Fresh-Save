@@ -9,6 +9,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as argon2 from 'argon2';
+import * as crypto from 'crypto';
 import { PrismaService } from '../database/prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { RegisterBusinessDto } from './dto/register-business.dto';
@@ -140,12 +141,17 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto, userAgent?: string) {
+    const startTime = Date.now();
+    this.logger.debug(`[AUTH] Login request received for email: ${loginDto.email}`);
+
     const { email, password } = loginDto;
     const normalizedEmail = email.toLowerCase().trim();
 
+    const t1 = Date.now();
     const user = await this.prisma.user.findUnique({
       where: { email: normalizedEmail },
     });
+    this.logger.debug(`[AUTH] Prisma user lookup took: ${Date.now() - t1}ms`);
 
     if (!user || !user.password) {
       throw new UnauthorizedException('Invalid credentials');
@@ -155,14 +161,20 @@ export class AuthService {
       throw new ForbiddenException(`Account is ${user.status.toLowerCase()}`);
     }
 
+    const t2 = Date.now();
     const isPasswordValid = await argon2.verify(user.password, password);
+    this.logger.debug(`[AUTH] Argon2 verification took: ${Date.now() - t2}ms`);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    const t3 = Date.now();
     const tokens = await this.generateTokens(user.id, user.role, userAgent);
+    this.logger.debug(`[AUTH] Token generation took: ${Date.now() - t3}ms`);
 
     const { password: _ignoredPass, ...userWithoutPassword } = user;
+    
+    this.logger.debug(`[AUTH] Total login execution took: ${Date.now() - startTime}ms`);
     return {
       user: userWithoutPassword,
       ...tokens,
@@ -201,11 +213,25 @@ export class AuthService {
         throw new UnauthorizedException('Session has been revoked');
       }
 
-      // Verify the hashed refresh token matches
-      const isTokenValid = await argon2.verify(
-        session.refreshToken,
-        refreshToken,
-      );
+      // Verify the refresh token
+      // 1. Check if it's the new SHA256 format
+      const hashedProvidedToken = crypto
+        .createHash('sha256')
+        .update(refreshToken)
+        .digest('hex');
+        
+      let isTokenValid = false;
+      
+      if (session.refreshToken === hashedProvidedToken) {
+        isTokenValid = true;
+      } else if (session.refreshToken.startsWith('$argon2')) {
+        // Fallback to Argon2 for backwards compatibility with existing sessions
+        isTokenValid = await argon2.verify(
+          session.refreshToken,
+          refreshToken,
+        );
+      }
+
       if (!isTokenValid) {
         throw new UnauthorizedException('Invalid refresh token');
       }
@@ -320,7 +346,10 @@ export class AuthService {
     const decodedRefresh = this.jwtService.decode(refreshToken);
     const expiresAt = new Date(decodedRefresh.exp * 1000);
 
-    const hashedRefreshToken = await argon2.hash(refreshToken);
+    const hashedRefreshToken = crypto
+      .createHash('sha256')
+      .update(refreshToken)
+      .digest('hex');
 
     await this.prisma.session.update({
       where: { id: session.id },
