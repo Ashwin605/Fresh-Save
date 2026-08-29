@@ -203,6 +203,40 @@ class LocationService {
     await Geolocator.openAppSettings();
   }
 
+  Future<List<LocationSearchResult>> searchLocations(String query) async {
+    try {
+      final response = await _dio.get(
+        'https://nominatim.openstreetmap.org/search',
+        queryParameters: {
+          'format': 'json',
+          'q': query,
+          'limit': 5,
+          'addressdetails': 1,
+        },
+      );
+      final List data = response.data;
+      return data.map((item) {
+        final address = item['address'] ?? {};
+        final name = item['name']?.toString() ?? '';
+        final state = address['state']?.toString() ?? '';
+        final country = address['country']?.toString() ?? '';
+        
+        final subtitleParts = <String>[];
+        if (state.isNotEmpty && state != name) subtitleParts.add(state);
+        if (country.isNotEmpty) subtitleParts.add(country);
+        
+        return LocationSearchResult(
+          name: name,
+          subtitle: subtitleParts.join(', '),
+          latitude: double.tryParse(item['lat'].toString()) ?? 0.0,
+          longitude: double.tryParse(item['lon'].toString()) ?? 0.0,
+        );
+      }).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
   LocationStatus _mapPermission(LocationPermission permission) {
     switch (permission) {
       case LocationPermission.always:

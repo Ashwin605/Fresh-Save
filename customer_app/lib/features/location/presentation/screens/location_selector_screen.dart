@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:async';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../domain/models/location_models.dart';
 import '../providers/location_provider.dart';
+import '../../data/services/location_service.dart';
 
 class LocationSelectorScreen extends ConsumerStatefulWidget {
   const LocationSelectorScreen({super.key});
@@ -19,7 +21,9 @@ class _LocationSelectorScreenState
     extends ConsumerState<LocationSelectorScreen> {
   final _searchController = TextEditingController();
   bool _isSearching = false;
+  bool _isLoading = false;
   List<_LocationOption> _searchResults = [];
+  Timer? _debounce;
 
   // Popular city presets
   static const _popularLocations = <_LocationOption>[
@@ -83,21 +87,51 @@ class _LocationSelectorScreenState
   @override
   void dispose() {
     _searchController.dispose();
+    _debounce?.cancel();
     super.dispose();
   }
 
   void _onSearchChanged() {
-    final query = _searchController.text.toLowerCase().trim();
-    setState(() {
-      _isSearching = query.isNotEmpty;
-      if (query.isEmpty) {
+    final query = _searchController.text.trim();
+    if (query.isEmpty) {
+      setState(() {
+        _isSearching = false;
+        _isLoading = false;
         _searchResults = List.from(_popularLocations);
-      } else {
-        _searchResults = _popularLocations
-            .where((loc) =>
-                loc.name.toLowerCase().contains(query) ||
-                loc.subtitle.toLowerCase().contains(query))
-            .toList();
+      });
+      return;
+    }
+
+    setState(() {
+      _isSearching = true;
+      _isLoading = true;
+    });
+
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 600), () async {
+      try {
+        final service = ref.read(locationServiceProvider);
+        final results = await service.searchLocations(query);
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _searchResults = results
+                .map((r) => _LocationOption(
+                      name: r.name,
+                      subtitle: r.subtitle,
+                      lat: r.latitude,
+                      lng: r.longitude,
+                    ))
+                .toList();
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _searchResults = [];
+          });
+        }
       }
     });
   }
@@ -270,7 +304,13 @@ class _LocationSelectorScreenState
 
           // City list
           Expanded(
-            child: _searchResults.isEmpty
+            child: _isLoading 
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.primary,
+                    ),
+                  )
+                : _searchResults.isEmpty
                 ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
