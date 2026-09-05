@@ -15,12 +15,12 @@ class AllCategoriesScreen extends ConsumerWidget {
     if (lower.contains('bakery') || lower.contains('bread')) {
       return Icons.bakery_dining;
     }
-    if (lower.contains('dairy') || lower.contains('milk')) return Icons.egg_alt;
+    if (lower.contains('dairy') || lower.contains('milk') || lower.contains('egg')) return Icons.egg_alt;
     if (lower.contains('produce') || lower.contains('fruit') || lower.contains('vegetable')) {
       return Icons.apple;
     }
-    if (lower.contains('meat') || lower.contains('poultry')) {
-      return Icons.lunch_dining;
+    if (lower.contains('meat') || lower.contains('poultry') || lower.contains('seafood')) {
+      return Icons.set_meal;
     }
     if (lower.contains('beverage') || lower.contains('drink')) {
       return Icons.local_cafe;
@@ -31,6 +31,9 @@ class AllCategoriesScreen extends ConsumerWidget {
     if (lower.contains('grocery') || lower.contains('groceries')) {
       return Icons.shopping_basket;
     }
+    if (lower.contains('household') || lower.contains('home')) return Icons.cleaning_services;
+    if (lower.contains('personal care') || lower.contains('health')) return Icons.spa;
+    if (lower.contains('baby') || lower.contains('pet')) return Icons.pets;
     return Icons.category;
   }
 
@@ -95,12 +98,12 @@ class AllCategoriesScreen extends ConsumerWidget {
           }
 
           return GridView.builder(
-            padding: const EdgeInsets.all(AppSpacing.md),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 100),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisSpacing: AppSpacing.md,
               crossAxisSpacing: AppSpacing.md,
-              childAspectRatio: 1.6,
+              childAspectRatio: 1.0,
             ),
             itemCount: categories.length,
             itemBuilder: (context, index) {
@@ -128,41 +131,53 @@ class AllCategoriesScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    child: Stack(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Subtle background accent
-                        Positioned(
-                          right: -20,
-                          bottom: -20,
-                          child: Icon(
-                            icon,
-                            size: 100,
-                            color: color.withValues(alpha: 0.05),
+                        Expanded(
+                          flex: 3,
+                          child: ClipRRect(
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                            child: Container(
+                              color: color.withValues(alpha: 0.1),
+                              child: category.image == null || category.image!.isEmpty
+                                  ? Icon(
+                                      icon,
+                                      size: 48,
+                                      color: color.withValues(alpha: 0.4),
+                                    )
+                                  : Image.network(
+                                      category.image!,
+                                      fit: BoxFit.cover,
+                                      width: double.infinity,
+                                      height: double.infinity,
+                                      errorBuilder: (context, error, stackTrace) => Icon(
+                                        icon,
+                                        size: 48,
+                                        color: color.withValues(alpha: 0.4),
+                                      ),
+                                    ),
+                            ),
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.all(AppSpacing.md),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: color.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(12),
+                        Expanded(
+                          flex: 2,
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  category.name,
+                                  style: AppTypography.title.copyWith(
+                                    fontSize: 16,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                child: Icon(icon, color: color, size: 24),
-                              ),
-                              Text(
-                                category.name,
-                                style: AppTypography.title.copyWith(
-                                  fontSize: 16,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ],
@@ -174,12 +189,12 @@ class AllCategoriesScreen extends ConsumerWidget {
           );
         },
         loading: () => GridView.builder(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, AppSpacing.md, 100),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
             mainAxisSpacing: AppSpacing.md,
             crossAxisSpacing: AppSpacing.md,
-            childAspectRatio: 1.6,
+            childAspectRatio: 1.0,
           ),
           itemCount: 6,
           itemBuilder: (context, index) => const AppSkeleton(

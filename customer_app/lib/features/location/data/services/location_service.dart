@@ -109,7 +109,10 @@ class LocationService {
 
   Future<String?> _reverseGeocodeWeb(double lat, double lng) async {
     try {
-      final response = await _dio.get(
+      final nominatimDio = Dio(BaseOptions(
+        headers: {'User-Agent': 'FreshSaveApp/1.0'},
+      ));
+      final response = await nominatimDio.get(
         'https://nominatim.openstreetmap.org/reverse',
         queryParameters: {
           'format': 'json',
@@ -170,7 +173,10 @@ class LocationService {
 
   Future<UserLocation?> _forwardGeocodeWeb(String address) async {
     try {
-      final response = await _dio.get(
+      final nominatimDio = Dio(BaseOptions(
+        headers: {'User-Agent': 'FreshSaveApp/1.0'},
+      ));
+      final response = await nominatimDio.get(
         'https://nominatim.openstreetmap.org/search',
         queryParameters: {
           'format': 'json',
@@ -205,7 +211,10 @@ class LocationService {
 
   Future<List<LocationSearchResult>> searchLocations(String query) async {
     try {
-      final response = await _dio.get(
+      final nominatimDio = Dio(BaseOptions(
+        headers: {'User-Agent': 'FreshSaveApp/1.0'},
+      ));
+      final response = await nominatimDio.get(
         'https://nominatim.openstreetmap.org/search',
         queryParameters: {
           'format': 'json',
