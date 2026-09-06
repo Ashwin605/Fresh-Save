@@ -10,6 +10,46 @@ import '../providers/home_providers.dart';
 class AllCategoriesScreen extends ConsumerWidget {
   const AllCategoriesScreen({super.key});
 
+  /// Maps category name keywords to local asset image paths.
+  /// Returns null if no matching asset is found.
+  static String? _assetForCategory(String name) {
+    final lower = name.toLowerCase();
+    if (lower.contains('bakery') || lower.contains('bread')) {
+      return 'assets/categories/bakery.jpg';
+    }
+    if (lower.contains('dairy') || lower.contains('milk') || lower.contains('egg')) {
+      return 'assets/categories/dairy.jpg';
+    }
+    if (lower.contains('produce') || lower.contains('fruit') || lower.contains('vegetable')) {
+      return 'assets/categories/produce.jpg';
+    }
+    if (lower.contains('meat') || lower.contains('poultry') || lower.contains('seafood')) {
+      return 'assets/categories/meat.jpg';
+    }
+    if (lower.contains('beverage') || lower.contains('drink') || lower.contains('coffee') || lower.contains('tea') || lower.contains('juice') || lower.contains('water')) {
+      return 'assets/categories/beverage.jpg';
+    }
+    if (lower.contains('snack') || lower.contains('chips') || lower.contains('cookie') || lower.contains('candy')) {
+      return 'assets/categories/snack.jpg';
+    }
+    if (lower.contains('frozen') || lower.contains('ice cream')) {
+      return 'assets/categories/frozen.jpg';
+    }
+    if (lower.contains('food')) {
+      return 'assets/categories/food.jpg';
+    }
+    if (lower.contains('household') || lower.contains('cleaning') || lower.contains('paper product')) {
+      return 'assets/categories/household.jpg';
+    }
+    if (lower.contains('personal care') || lower.contains('health') || lower.contains('hair care') || lower.contains('oral care') || lower.contains('soap') || lower.contains('body wash')) {
+      return 'assets/categories/personal_care.jpg';
+    }
+    if (lower.contains('pet') || lower.contains('dog food') || lower.contains('cat food') || lower.contains('baby')) {
+      return 'assets/categories/pet_supplies.jpg';
+    }
+    return null;
+  }
+
   static IconData _iconForCategory(String name) {
     final lower = name.toLowerCase();
     if (lower.contains('bakery') || lower.contains('bread')) {
@@ -31,9 +71,9 @@ class AllCategoriesScreen extends ConsumerWidget {
     if (lower.contains('grocery') || lower.contains('groceries')) {
       return Icons.shopping_basket;
     }
-    if (lower.contains('household') || lower.contains('home')) return Icons.cleaning_services;
-    if (lower.contains('personal care') || lower.contains('health')) return Icons.spa;
-    if (lower.contains('baby') || lower.contains('pet')) return Icons.pets;
+    if (lower.contains('household') || lower.contains('home') || lower.contains('cleaning')) return Icons.cleaning_services;
+    if (lower.contains('personal care') || lower.contains('health') || lower.contains('hair') || lower.contains('oral') || lower.contains('soap')) return Icons.spa;
+    if (lower.contains('baby') || lower.contains('pet') || lower.contains('dog') || lower.contains('cat')) return Icons.pets;
     return Icons.category;
   }
 
@@ -110,6 +150,7 @@ class AllCategoriesScreen extends ConsumerWidget {
               final category = categories[index];
               final color = _colorForIndex(index);
               final icon = _iconForCategory(category.name);
+              final assetPath = _assetForCategory(category.name);
 
               return Material(
                 color: Colors.transparent,
@@ -138,50 +179,23 @@ class AllCategoriesScreen extends ConsumerWidget {
                           flex: 3,
                           child: ClipRRect(
                             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                            child: Container(
-                              color: color.withValues(alpha: 0.1),
-                              child: category.image == null || category.image!.isEmpty
-                                  ? Icon(
-                                      icon,
-                                      size: 48,
-                                      color: color.withValues(alpha: 0.4),
-                                    )
-                                  : Image.network(
-                                      category.image!,
-                                      fit: BoxFit.cover,
-                                      width: double.infinity,
-                                      height: double.infinity,
-                                      errorBuilder: (context, error, stackTrace) => Icon(
+                            child: assetPath != null
+                                ? Image.asset(
+                                    assetPath,
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                  )
+                                : Container(
+                                    color: color.withValues(alpha: 0.1),
+                                    child: Center(
+                                      child: Icon(
                                         icon,
                                         size: 48,
                                         color: color.withValues(alpha: 0.4),
                                       ),
-                                      loadingBuilder: (context, child, loadingProgress) {
-                                        if (loadingProgress == null) return child;
-                                        return Stack(
-                                          alignment: Alignment.center,
-                                          children: [
-                                            Icon(
-                                              icon,
-                                              size: 48,
-                                              color: color.withValues(alpha: 0.1),
-                                            ),
-                                            SizedBox(
-                                              width: 24,
-                                              height: 24,
-                                              child: CircularProgressIndicator(
-                                                value: loadingProgress.expectedTotalBytes != null
-                                                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                                                    : null,
-                                                color: color.withValues(alpha: 0.5),
-                                                strokeWidth: 2,
-                                              ),
-                                            ),
-                                          ],
-                                        );
-                                      },
                                     ),
-                            ),
+                                  ),
                           ),
                         ),
                         Expanded(
