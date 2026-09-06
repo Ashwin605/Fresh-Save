@@ -4,13 +4,15 @@ import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import compression from 'compression';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: true,
   });
 
@@ -37,6 +39,11 @@ async function bootstrap(): Promise<void> {
     exposedHeaders: ['X-Request-Id'],
     credentials: true,
     maxAge: 3600,
+  });
+
+  // ── Static Assets ──────────────────────────────────────
+  app.useStaticAssets(join(__dirname, '..', 'public'), {
+    prefix: '/public/',
   });
 
   // ── Global Pipes ───────────────────────────────────────

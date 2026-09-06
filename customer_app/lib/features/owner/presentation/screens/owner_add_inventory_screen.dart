@@ -141,7 +141,21 @@ class _OwnerAddInventoryScreenState extends ConsumerState<OwnerAddInventoryScree
                       hint: const Text('Choose Main Category'),
                       items: categoryState.categories
                           .where((c) => c.parentId == null)
-                          .map((c) => DropdownMenuItem(value: c, child: Text(c.name)))
+                          .map((c) => DropdownMenuItem(
+                                value: c,
+                                child: Row(
+                                  children: [
+                                    if (c.image != null && c.image!.isNotEmpty) ...[
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(4),
+                                        child: Image.network(c.image!, width: 24, height: 24, fit: BoxFit.cover),
+                                      ),
+                                      const SizedBox(width: 8),
+                                    ],
+                                    Text(c.name),
+                                  ],
+                                ),
+                              ))
                           .toList(),
                       onChanged: (val) {
                         setState(() {
@@ -171,7 +185,21 @@ class _OwnerAddInventoryScreenState extends ConsumerState<OwnerAddInventoryScree
                       hint: const Text('Choose Subcategory'),
                       items: categoryState.categories
                           .where((c) => c.parentId == _selectedCategory?.id)
-                          .map((c) => DropdownMenuItem(value: c, child: Text(c.name)))
+                          .map((c) => DropdownMenuItem(
+                                value: c,
+                                child: Row(
+                                  children: [
+                                    if (c.image != null && c.image!.isNotEmpty) ...[
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(4),
+                                        child: Image.network(c.image!, width: 24, height: 24, fit: BoxFit.cover),
+                                      ),
+                                      const SizedBox(width: 8),
+                                    ],
+                                    Text(c.name),
+                                  ],
+                                ),
+                              ))
                           .toList(),
                       onChanged: (val) {
                         setState(() {

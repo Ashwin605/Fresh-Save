@@ -156,6 +156,30 @@ class AllCategoriesScreen extends ConsumerWidget {
                                         size: 48,
                                         color: color.withValues(alpha: 0.4),
                                       ),
+                                      loadingBuilder: (context, child, loadingProgress) {
+                                        if (loadingProgress == null) return child;
+                                        return Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            Icon(
+                                              icon,
+                                              size: 48,
+                                              color: color.withValues(alpha: 0.1),
+                                            ),
+                                            SizedBox(
+                                              width: 24,
+                                              height: 24,
+                                              child: CircularProgressIndicator(
+                                                value: loadingProgress.expectedTotalBytes != null
+                                                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                                    : null,
+                                                color: color.withValues(alpha: 0.5),
+                                                strokeWidth: 2,
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      },
                                     ),
                             ),
                           ),

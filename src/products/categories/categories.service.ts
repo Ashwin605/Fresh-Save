@@ -80,6 +80,7 @@ export class CategoriesService {
           icon: dto.icon,
           image: dto.image,
           parentId: dto.parentId,
+          sortOrder: dto.sortOrder,
         },
       });
 
@@ -104,9 +105,11 @@ export class CategoriesService {
         status: CategoryStatus.ACTIVE,
         deletedAt: null,
       },
+      orderBy: { sortOrder: 'asc' },
       include: {
         children: {
           where: { status: CategoryStatus.ACTIVE, deletedAt: null },
+          orderBy: { sortOrder: 'asc' },
         },
       },
     });
@@ -169,6 +172,7 @@ export class CategoriesService {
           icon: dto.icon,
           image: dto.image,
           parentId: dto.parentId,
+          sortOrder: dto.sortOrder,
         },
       });
 

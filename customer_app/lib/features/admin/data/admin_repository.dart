@@ -105,4 +105,26 @@ class AdminRepository {
       throw Exception(e.response?.data?['message'] ?? e.message ?? 'Failed to delete store');
     }
   }
+
+  Future<List<dynamic>> getCategories() async {
+    try {
+      final response = await _dio.get('/categories');
+      return response.data as List<dynamic>;
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Failed to fetch categories');
+    }
+  }
+
+  Future<void> updateCategory(String categoryId, {String? image, int? sortOrder, String? status}) async {
+    try {
+      final data = <String, dynamic>{};
+      if (image != null) data['image'] = image;
+      if (sortOrder != null) data['sortOrder'] = sortOrder;
+      if (status != null) data['status'] = status;
+      
+      await _dio.patch('/categories/$categoryId', data: data);
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Failed to update category');
+    }
+  }
 }
