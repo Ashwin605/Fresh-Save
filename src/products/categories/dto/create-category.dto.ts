@@ -4,6 +4,7 @@ import {
   IsString,
   IsUUID,
   MaxLength,
+  IsInt,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -35,4 +36,9 @@ export class CreateCategoryDto {
   @IsUUID()
   @IsOptional()
   parentId?: string;
+
+  @ApiPropertyOptional({ example: 0 })
+  @IsInt()
+  @IsOptional()
+  sortOrder?: number;
 }

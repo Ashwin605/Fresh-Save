@@ -140,6 +140,13 @@ class _AdminSideNav extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.xs),
           _NavItem(
+            title: 'Categories',
+            icon: Icons.category_outlined,
+            route: '/admin/categories',
+            isSelected: currentRoute == '/admin/categories',
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          _NavItem(
             title: 'Audit Logs',
             icon: Icons.security_outlined,
             route: '/admin/audit-logs',

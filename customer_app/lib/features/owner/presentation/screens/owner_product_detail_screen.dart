@@ -80,6 +80,11 @@ class OwnerProductDetailScreen extends ConsumerWidget {
                       const SizedBox(height: AppSpacing.sm),
                       if (product.category != null)
                         Chip(
+                          avatar: product.category!.image != null && product.category!.image!.isNotEmpty
+                              ? CircleAvatar(
+                                  backgroundImage: NetworkImage(product.category!.image!),
+                                )
+                              : null,
                           label: Text(
                             product.category!.name,
                             style: AppTypography.bodySmall,

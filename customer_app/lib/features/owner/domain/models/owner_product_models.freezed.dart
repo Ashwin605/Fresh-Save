@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$OwnerProductCategory {
 
- String get id; String get name; String get slug; String? get parentId;
+ String get id; String get name; String get slug; String? get parentId; String? get image;
 /// Create a copy of OwnerProductCategory
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $OwnerProductCategoryCopyWith<OwnerProductCategory> get copyWith => _$OwnerProdu
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is OwnerProductCategory&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.parentId, parentId) || other.parentId == parentId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OwnerProductCategory&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.image, image) || other.image == image));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,slug,parentId);
+int get hashCode => Object.hash(runtimeType,id,name,slug,parentId,image);
 
 @override
 String toString() {
-  return 'OwnerProductCategory(id: $id, name: $name, slug: $slug, parentId: $parentId)';
+  return 'OwnerProductCategory(id: $id, name: $name, slug: $slug, parentId: $parentId, image: $image)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $OwnerProductCategoryCopyWith<$Res>  {
   factory $OwnerProductCategoryCopyWith(OwnerProductCategory value, $Res Function(OwnerProductCategory) _then) = _$OwnerProductCategoryCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String slug, String? parentId
+ String id, String name, String slug, String? parentId, String? image
 });
 
 
@@ -65,12 +65,13 @@ class _$OwnerProductCategoryCopyWithImpl<$Res>
 
 /// Create a copy of OwnerProductCategory
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? slug = null,Object? parentId = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? slug = null,Object? parentId = freezed,Object? image = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
 as String,parentId: freezed == parentId ? _self.parentId : parentId // ignore: cast_nullable_to_non_nullable
+as String?,image: freezed == image ? _self.image : image // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -156,10 +157,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String slug,  String? parentId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String slug,  String? parentId,  String? image)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _OwnerProductCategory() when $default != null:
-return $default(_that.id,_that.name,_that.slug,_that.parentId);case _:
+return $default(_that.id,_that.name,_that.slug,_that.parentId,_that.image);case _:
   return orElse();
 
 }
@@ -177,10 +178,10 @@ return $default(_that.id,_that.name,_that.slug,_that.parentId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String slug,  String? parentId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String slug,  String? parentId,  String? image)  $default,) {final _that = this;
 switch (_that) {
 case _OwnerProductCategory():
-return $default(_that.id,_that.name,_that.slug,_that.parentId);case _:
+return $default(_that.id,_that.name,_that.slug,_that.parentId,_that.image);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -197,10 +198,10 @@ return $default(_that.id,_that.name,_that.slug,_that.parentId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String slug,  String? parentId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String slug,  String? parentId,  String? image)?  $default,) {final _that = this;
 switch (_that) {
 case _OwnerProductCategory() when $default != null:
-return $default(_that.id,_that.name,_that.slug,_that.parentId);case _:
+return $default(_that.id,_that.name,_that.slug,_that.parentId,_that.image);case _:
   return null;
 
 }
@@ -212,13 +213,14 @@ return $default(_that.id,_that.name,_that.slug,_that.parentId);case _:
 @JsonSerializable()
 
 class _OwnerProductCategory implements OwnerProductCategory {
-  const _OwnerProductCategory({required this.id, required this.name, required this.slug, this.parentId});
+  const _OwnerProductCategory({required this.id, required this.name, required this.slug, this.parentId, this.image});
   factory _OwnerProductCategory.fromJson(Map<String, dynamic> json) => _$OwnerProductCategoryFromJson(json);
 
 @override final  String id;
 @override final  String name;
 @override final  String slug;
 @override final  String? parentId;
+@override final  String? image;
 
 /// Create a copy of OwnerProductCategory
 /// with the given fields replaced by the non-null parameter values.
@@ -233,16 +235,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OwnerProductCategory&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.parentId, parentId) || other.parentId == parentId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _OwnerProductCategory&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.slug, slug) || other.slug == slug)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.image, image) || other.image == image));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,slug,parentId);
+int get hashCode => Object.hash(runtimeType,id,name,slug,parentId,image);
 
 @override
 String toString() {
-  return 'OwnerProductCategory(id: $id, name: $name, slug: $slug, parentId: $parentId)';
+  return 'OwnerProductCategory(id: $id, name: $name, slug: $slug, parentId: $parentId, image: $image)';
 }
 
 
@@ -253,7 +255,7 @@ abstract mixin class _$OwnerProductCategoryCopyWith<$Res> implements $OwnerProdu
   factory _$OwnerProductCategoryCopyWith(_OwnerProductCategory value, $Res Function(_OwnerProductCategory) _then) = __$OwnerProductCategoryCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String slug, String? parentId
+ String id, String name, String slug, String? parentId, String? image
 });
 
 
@@ -270,12 +272,13 @@ class __$OwnerProductCategoryCopyWithImpl<$Res>
 
 /// Create a copy of OwnerProductCategory
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? slug = null,Object? parentId = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? slug = null,Object? parentId = freezed,Object? image = freezed,}) {
   return _then(_OwnerProductCategory(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,slug: null == slug ? _self.slug : slug // ignore: cast_nullable_to_non_nullable
 as String,parentId: freezed == parentId ? _self.parentId : parentId // ignore: cast_nullable_to_non_nullable
+as String?,image: freezed == image ? _self.image : image // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

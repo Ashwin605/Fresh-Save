@@ -55,7 +55,7 @@ class CategoriesSection extends ConsumerWidget {
         ).animate().fade(duration: AppAnimations.medium, delay: 400.ms).slideY(begin: 0.2, end: 0),
         const SizedBox(height: AppSpacing.sm),
         SizedBox(
-          height: 110,
+          height: 120,
           child: categoriesAsync.when(
             data: (categories) {
               if (categories.isEmpty) {
@@ -136,7 +136,8 @@ class CategoriesSection extends ConsumerWidget {
                     onTap: () => context.push('/category/${category.id}'),
                     scaleDown: 0.9,
                     child: Container(
-                      width: 80,
+                      width: 90,
+                      clipBehavior: Clip.antiAlias,
                       decoration: BoxDecoration(
                         color: AppColors.surface,
                         borderRadius: BorderRadius.circular(20),
@@ -150,30 +151,41 @@ class CategoriesSection extends ConsumerWidget {
                         ],
                       ),
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: const BoxDecoration(
-                              color: AppColors.surfaceVariant,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              _iconForCategory(category.name),
-                              color: AppColors.primary,
-                              size: 24,
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceVariant,
+                                image: category.image != null && category.image!.isNotEmpty
+                                    ? DecorationImage(
+                                        image: NetworkImage(category.image!),
+                                        fit: BoxFit.cover,
+                                      )
+                                    : null,
+                              ),
+                              child: category.image == null || category.image!.isEmpty
+                                  ? Icon(
+                                      _iconForCategory(category.name),
+                                      color: AppColors.primary,
+                                      size: 32,
+                                    )
+                                  : null,
                             ),
                           ),
-                          const SizedBox(height: AppSpacing.xs),
-                          Text(
-                            category.name,
-                            style: AppTypography.label.copyWith(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w600,
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: AppSpacing.xs),
+                            child: Text(
+                              category.name,
+                              style: AppTypography.label.copyWith(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 11,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
@@ -191,7 +203,7 @@ class CategoriesSection extends ConsumerWidget {
               physics: const NeverScrollableScrollPhysics(),
               itemCount: 5,
               separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.md),
-              itemBuilder: (context, index) => const AppSkeleton(width: 80, height: 110, borderRadius: 20),
+              itemBuilder: (context, index) => const AppSkeleton(width: 90, height: 120, borderRadius: 20),
             ),
             error: (error, stack) => Center(
               child: Text(

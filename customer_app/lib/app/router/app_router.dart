@@ -69,6 +69,7 @@ import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
 import '../../features/admin/presentation/screens/admin_users_screen.dart';
 import '../../features/admin/presentation/screens/admin_stores_screen.dart';
 import '../../features/admin/presentation/screens/admin_audit_logs_screen.dart';
+import '../../features/admin/presentation/screens/admin_categories_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
@@ -351,6 +352,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/admin/users',
             builder: (context, state) => const AdminUsersScreen(),
+          ),
+          GoRoute(
+            path: '/admin/categories',
+            builder: (context, state) => const AdminCategoriesScreen(),
           ),
           GoRoute(
             path: '/admin/stores',
