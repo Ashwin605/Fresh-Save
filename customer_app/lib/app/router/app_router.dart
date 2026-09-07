@@ -6,6 +6,8 @@ import '../../features/auth/presentation/screens/auth_landing_screen.dart';
 import '../../features/auth/presentation/screens/role_selection_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
+import '../../features/auth/presentation/screens/forgot_password_screen.dart';
+import '../../features/auth/presentation/screens/reset_password_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/home/presentation/screens/all_categories_screen.dart';
 import '../../features/home/presentation/screens/all_nearby_deals_screen.dart';
@@ -85,6 +87,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           state.matchedLocation == '/welcome' ||
           state.matchedLocation == '/login' ||
           state.matchedLocation == '/register' ||
+          state.matchedLocation == '/forgot-password' ||
           state.matchedLocation == '/owner/login' ||
           state.matchedLocation == '/owner/register';
       final isShowcase = state.matchedLocation == '/showcase';
@@ -198,6 +201,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        builder: (context, state) {
+          final email = state.extra as String? ?? '';
+          return ResetPasswordScreen(email: email);
+        },
       ),
       // --- Onboarding Routes ---
       GoRoute(

@@ -10,60 +10,90 @@ import '../../../../app/theme/app_animations.dart';
 import '../../../../core/widgets/inputs/app_text_field.dart';
 import '../../../../core/widgets/buttons/app_button.dart';
 import '../../../../core/widgets/feedback/app_snackbar.dart';
-import '../providers/auth_controller.dart';
+import '../../data/repositories/auth_repository_impl.dart';
 
-class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+class ResetPasswordScreen extends ConsumerStatefulWidget {
+  final String email;
+
+  const ResetPasswordScreen({super.key, required this.email});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _emailController = TextEditingController();
+class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
+  final _otpController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isLoading = false;
   bool _obscurePassword = true;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _otpController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  void _submit() {
+  void _submit() async {
     FocusScope.of(context).unfocus();
-    final email = _emailController.text.trim();
-    final password = _passwordController.text;
+    final otp = _otpController.text.trim();
+    final password = _passwordController.text.trim();
 
-    if (email.isEmpty || password.isEmpty) {
+    if (otp.isEmpty || password.isEmpty) {
       AppSnackbar.show(
         context,
-        message: 'Please enter your email and password.',
+        message: 'Please enter the reset code and a new password.',
         variant: SnackbarVariant.error,
       );
       return;
     }
 
-    ref.read(authControllerProvider.notifier).login(email, password);
+    if (password.length < 8) {
+      AppSnackbar.show(
+        context,
+        message: 'Password must be at least 8 characters long.',
+        variant: SnackbarVariant.error,
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final result = await ref.read(authRepositoryProvider).resetPassword(
+      email: widget.email,
+      otp: otp,
+      newPassword: password,
+    );
+
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    result.when(
+      success: (_) {
+        AppSnackbar.show(
+          context,
+          message: 'Your password has been successfully reset. Please log in.',
+          variant: SnackbarVariant.success,
+        );
+        // Navigate back to login
+        while (context.canPop()) {
+          context.pop();
+        }
+        context.pushReplacement('/login');
+      },
+      failure: (error) {
+        AppSnackbar.show(
+          context,
+          message: error.message ?? 'Invalid or expired reset code.',
+          variant: SnackbarVariant.error,
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authControllerProvider);
     final screenSize = MediaQuery.of(context).size;
-
-    ref.listen<AsyncValue<void>>(authControllerProvider, (prev, next) {
-      next.whenOrNull(
-        error: (error, _) {
-          AppSnackbar.show(
-            context,
-            message: error.toString(),
-            variant: SnackbarVariant.error,
-          );
-        },
-      );
-    });
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -80,7 +110,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    AppColors.primaryLight.withValues(alpha: 0.15),
+                    AppColors.secondary.withValues(alpha: 0.15),
                     AppColors.background.withValues(alpha: 0.0),
                   ],
                 ),
@@ -88,25 +118,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ).animate(
               onPlay: (controller) => controller.repeat(reverse: true),
             ).scaleXY(end: 1.1, duration: const Duration(seconds: 4), curve: Curves.easeInOutSine),
-          ),
-          Positioned(
-            bottom: 150,
-            left: -100,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    AppColors.secondary.withValues(alpha: 0.10),
-                    AppColors.background.withValues(alpha: 0.0),
-                  ],
-                ),
-              ),
-            ).animate(
-              onPlay: (controller) => controller.repeat(reverse: true),
-            ).scaleXY(begin: 1.05, end: 0.95, duration: const Duration(seconds: 5), curve: Curves.easeInOutSine),
           ),
 
           SafeArea(
@@ -133,7 +144,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ).animate().fade(duration: AppAnimations.medium),
                       const SizedBox(height: AppSpacing.xl),
                       
-                      // Logo
+                      // Icon
                       Center(
                         child: Container(
                           width: 80,
@@ -142,12 +153,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             gradient: const LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
-                              colors: [AppColors.primary, AppColors.primaryLight],
+                              colors: [AppColors.secondary, AppColors.secondary],
                             ),
                             borderRadius: BorderRadius.circular(24),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primary.withValues(alpha: 0.3),
+                                color: AppColors.secondary.withValues(alpha: 0.3),
                                 blurRadius: 24,
                                 offset: const Offset(0, 8),
                                 spreadRadius: -4,
@@ -155,7 +166,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ],
                           ),
                           child: const Center(
-                            child: Icon(Icons.eco_rounded, color: Colors.white, size: 40),
+                            child: Icon(Icons.password_rounded, color: Colors.white, size: 40),
                           ),
                         ),
                       ).animate().fade(duration: AppAnimations.medium).slideY(begin: -0.2, end: 0),
@@ -164,7 +175,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       
                       // Header Texts
                       Text(
-                        'Welcome back',
+                        'Reset Password',
                         textAlign: TextAlign.center,
                         style: AppTypography.display.copyWith(
                           fontSize: 32,
@@ -172,7 +183,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ).animate().fade(duration: AppAnimations.medium, delay: 100.ms).slideY(begin: 0.2, end: 0),
                       const SizedBox(height: AppSpacing.sm),
                       Text(
-                        'Sign in to continue saving fresh',
+                        'Enter the 6-digit code sent to ${widget.email} and your new password.',
                         textAlign: TextAlign.center,
                         style: AppTypography.body.copyWith(color: AppColors.textSecondary),
                       ).animate().fade(duration: AppAnimations.medium, delay: 200.ms).slideY(begin: 0.2, end: 0),
@@ -196,15 +207,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         child: Column(
                           children: [
                             AppTextField(
-                              controller: _emailController,
-                              labelText: 'Email Address',
-                              keyboardType: TextInputType.emailAddress,
-                              prefixIcon: const Icon(Icons.email_outlined),
+                              controller: _otpController,
+                              labelText: '6-Digit Reset Code',
+                              keyboardType: TextInputType.number,
+                              prefixIcon: const Icon(Icons.pin_outlined),
                             ).animate().fade(duration: AppAnimations.medium, delay: 300.ms).slideY(begin: 0.2, end: 0),
                             const SizedBox(height: AppSpacing.lg),
                             AppTextField(
                               controller: _passwordController,
-                              labelText: 'Password',
+                              labelText: 'New Password',
                               obscureText: _obscurePassword,
                               prefixIcon: const Icon(Icons.lock_outline),
                               suffixIcon: IconButton(
@@ -215,56 +226,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                               ),
                             ).animate().fade(duration: AppAnimations.medium, delay: 400.ms).slideY(begin: 0.2, end: 0),
-                            const SizedBox(height: AppSpacing.md),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton(
-                                onPressed: () => context.push('/forgot-password'),
-                                child: Text(
-                                  'Forgot password?',
-                                  style: AppTypography.bodySmall.copyWith(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ),
-                            ).animate().fade(duration: AppAnimations.medium, delay: 500.ms),
                             const SizedBox(height: AppSpacing.xl),
                             SizedBox(
                               width: double.infinity,
                               child: AppButton.primary(
-                                label: 'Log In',
-                                isLoading: authState.isLoading,
+                                label: 'Reset Password',
+                                isLoading: _isLoading,
                                 onPressed: _submit,
                               ),
-                            ).animate().fade(duration: AppAnimations.medium, delay: 600.ms).scaleXY(begin: 0.9, end: 1.0),
+                            ).animate().fade(duration: AppAnimations.medium, delay: 500.ms).scaleXY(begin: 0.9, end: 1.0),
                           ],
                         ),
                       ).animate().fade(duration: AppAnimations.medium, delay: 300.ms).slideY(begin: 0.1, end: 0),
                       
                       const Spacer(),
-                      const SizedBox(height: AppSpacing.xl),
-                      
-                      // Footer
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            'New to FreshSave? ',
-                            style: AppTypography.body.copyWith(color: AppColors.textSecondary),
-                          ),
-                          GestureDetector(
-                            onTap: () => context.pushReplacement('/register'),
-                            child: Text(
-                              'Create Account',
-                              style: AppTypography.body.copyWith(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ).animate().fade(duration: AppAnimations.medium, delay: 700.ms),
                       const SizedBox(height: AppSpacing.xl),
                     ],
                   ),

@@ -5,12 +5,14 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { DatabaseModule } from '../database/database.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
     DatabaseModule,
     PassportModule,
     JwtModule.register({}), // Secrets are loaded via config in JwtStrategy/AuthService
+    MailModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

@@ -11,6 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import * as argon2 from 'argon2';
 import * as crypto from 'crypto';
 import { PrismaService } from '../database/prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
 import { RegisterDto } from './dto/register.dto';
 import { RegisterBusinessDto } from './dto/register-business.dto';
 import { LoginDto } from './dto/login.dto';
@@ -32,6 +33,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private mailService: MailService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -298,6 +300,77 @@ export class AuthService {
       },
       data: { isRevoked: true },
     });
+  }
+
+  async forgotPassword(email: string) {
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await this.prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
+
+    if (!user) {
+      // Return success anyway to prevent email enumeration
+      return { message: 'If an account exists, a reset link was sent.' };
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const hashedOtp = await argon2.hash(otp);
+
+    // Set expiry to 15 mins from now
+    const expires = new Date();
+    expires.setMinutes(expires.getMinutes() + 15);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        resetPasswordToken: hashedOtp,
+        resetPasswordExpires: expires,
+      },
+    });
+
+    await this.mailService.sendPasswordResetEmail(user.email, otp);
+
+    return { message: 'If an account exists, a reset link was sent.' };
+  }
+
+  async resetPassword(email: string, otp: string, newPassword: string) {
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await this.prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
+
+    if (!user || !user.resetPasswordToken || !user.resetPasswordExpires) {
+      throw new UnauthorizedException('Invalid or expired reset token');
+    }
+
+    if (new Date() > user.resetPasswordExpires) {
+      throw new UnauthorizedException('Reset token has expired');
+    }
+
+    const isValid = await argon2.verify(user.resetPasswordToken, otp);
+    if (!isValid) {
+      throw new UnauthorizedException('Invalid reset token');
+    }
+
+    const newHashedPassword = await argon2.hash(newPassword);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: newHashedPassword,
+        resetPasswordToken: null,
+        resetPasswordExpires: null,
+      },
+    });
+
+    // Invalidate all existing sessions
+    await this.prisma.session.updateMany({
+      where: { userId: user.id },
+      data: { isRevoked: true },
+    });
+
+    return { message: 'Password has been successfully reset' };
   }
 
   private async generateTokens(

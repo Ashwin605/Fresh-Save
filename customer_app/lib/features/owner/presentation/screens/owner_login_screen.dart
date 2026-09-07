@@ -225,7 +225,7 @@ class _OwnerLoginScreenState extends ConsumerState<OwnerLoginScreen> {
                             Align(
                               alignment: Alignment.centerRight,
                               child: TextButton(
-                                onPressed: () {},
+                                onPressed: () => context.push('/forgot-password'),
                                 child: Text(
                                   'Forgot password?',
                                   style: AppTypography.bodySmall.copyWith(
