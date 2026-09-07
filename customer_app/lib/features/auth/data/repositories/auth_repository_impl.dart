@@ -131,4 +131,31 @@ class AuthRepositoryImpl implements AuthRepository {
       return Result.failure(ApiErrorHandler.handle(e));
     }
   }
+
+  @override
+  Future<Result<void>> forgotPassword({required String email}) async {
+    try {
+      await dio.post('/auth/forgot-password', data: {'email': email});
+      return const Result.success(null);
+    } catch (e) {
+      return Result.failure(ApiErrorHandler.handle(e));
+    }
+  }
+
+  @override
+  Future<Result<void>> resetPassword({
+    required String email,
+    required String otp,
+    required String newPassword,
+  }) async {
+    try {
+      await dio.post(
+        '/auth/reset-password',
+        data: {'email': email, 'otp': otp, 'newPassword': newPassword},
+      );
+      return const Result.success(null);
+    } catch (e) {
+      return Result.failure(ApiErrorHandler.handle(e));
+    }
+  }
 }
