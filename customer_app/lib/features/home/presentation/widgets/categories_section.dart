@@ -25,6 +25,7 @@ class CategoriesSection extends ConsumerWidget {
     if (lower.contains('food')) return Icons.restaurant;
     if (lower.contains('grocery') || lower.contains('groceries')) return Icons.shopping_basket;
     if (lower.contains('household') || lower.contains('home') || lower.contains('cleaning')) return Icons.cleaning_services;
+    if (lower.contains('clothing') || lower.contains('apparel') || lower.contains('fashion')) return Icons.checkroom;
     if (lower.contains('personal care') || lower.contains('health') || lower.contains('hair') || lower.contains('oral') || lower.contains('soap')) return Icons.spa;
     if (lower.contains('baby') || lower.contains('pet') || lower.contains('dog') || lower.contains('cat')) return Icons.pets;
     return Icons.category;
@@ -41,6 +42,7 @@ class CategoriesSection extends ConsumerWidget {
     if (lower.contains('frozen') || lower.contains('ice cream')) return 'assets/categories/frozen.jpg';
     if (lower.contains('food')) return 'assets/categories/food.jpg';
     if (lower.contains('household') || lower.contains('cleaning') || lower.contains('paper product')) return 'assets/categories/household.jpg';
+    if (lower.contains('clothing') || lower.contains('apparel') || lower.contains('fashion')) return 'assets/categories/clothing.jpg';
     if (lower.contains('personal care') || lower.contains('health') || lower.contains('hair care') || lower.contains('oral care') || lower.contains('soap') || lower.contains('body wash')) return 'assets/categories/personal_care.jpg';
     if (lower.contains('pet') || lower.contains('dog food') || lower.contains('cat food') || lower.contains('baby')) return 'assets/categories/pet_supplies.jpg';
     return null;

@@ -10,6 +10,7 @@ import '../../../../app/theme/app_animations.dart';
 import '../../../../core/widgets/inputs/app_text_field.dart';
 import '../../../../core/widgets/buttons/app_button.dart';
 import '../../../../core/widgets/feedback/app_snackbar.dart';
+import '../../../../core/network/result.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {

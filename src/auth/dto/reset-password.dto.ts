@@ -5,16 +5,16 @@ export class ResetPasswordDto {
   @ApiProperty({ example: 'user@example.com' })
   @IsEmail()
   @IsNotEmpty()
-  email: string;
+  email!: string;
 
   @ApiProperty({ example: '123456' })
   @IsString()
   @IsNotEmpty()
-  otp: string;
+  otp!: string;
 
-  @ApiProperty({ example: 'NewStrongPassword123!' })
+  @ApiProperty({ example: 'NewPassword123!' })
   @IsString()
   @MinLength(8)
   @IsNotEmpty()
-  newPassword: string;
+  newPassword!: string;
 }
