@@ -1,0 +1,569 @@
+[
+  {
+    "method": "GET",
+    "endpoint": "/admin/dashboard",
+    "file": "admin.controller.ts",
+    "handler": "getDashboard",
+    "roles": "ADMIN, SUPER_ADMIN"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/admin/users",
+    "file": "admin.controller.ts",
+    "handler": "getUsers",
+    "roles": "ADMIN, SUPER_ADMIN"
+  },
+  {
+    "method": "PATCH",
+    "endpoint": "/admin/users/:id/suspend",
+    "file": "admin.controller.ts",
+    "handler": "suspendUser",
+    "roles": "ADMIN, SUPER_ADMIN"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/admin/stores",
+    "file": "admin.controller.ts",
+    "handler": "getStores",
+    "roles": "ADMIN, SUPER_ADMIN"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/admin/stores",
+    "file": "admin.controller.ts",
+    "handler": "createStore",
+    "roles": "ADMIN, SUPER_ADMIN"
+  },
+  {
+    "method": "PATCH",
+    "endpoint": "/admin/stores/:id",
+    "file": "admin.controller.ts",
+    "handler": "updateStore",
+    "roles": "ADMIN, SUPER_ADMIN"
+  },
+  {
+    "method": "DELETE",
+    "endpoint": "/admin/stores/:id",
+    "file": "admin.controller.ts",
+    "handler": "deleteStore",
+    "roles": "ADMIN, SUPER_ADMIN"
+  },
+  {
+    "method": "PATCH",
+    "endpoint": "/admin/stores/:id/status",
+    "file": "admin.controller.ts",
+    "handler": "updateStoreStatus",
+    "roles": "ADMIN, SUPER_ADMIN"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/admin/audit-logs",
+    "file": "admin.controller.ts",
+    "handler": "getAuditLogs",
+    "roles": "ADMIN, SUPER_ADMIN"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/admin/ai/insights",
+    "file": "ai-admin.controller.ts",
+    "handler": "getInsights",
+    "roles": "ADMIN, SUPER_ADMIN"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/ai/recommendations/deals",
+    "file": "ai-customer.controller.ts",
+    "handler": "getDeals",
+    "roles": "CUSTOMER, ADMIN, SUPER_ADMIN"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/ai/inventory/:inventoryId/risk",
+    "file": "ai-inventory.controller.ts",
+    "handler": "calculateRisk",
+    "roles": "SHOP_OWNER, SHOP_STAFF, ADMIN, SUPER_ADMIN, "
+  },
+  {
+    "method": "POST",
+    "endpoint": "/ai/inventory/:inventoryId/discount-recommendation",
+    "file": "ai-inventory.controller.ts",
+    "handler": "recommendDiscount",
+    "roles": "SHOP_OWNER, SHOP_STAFF, ADMIN, SUPER_ADMIN, "
+  },
+  {
+    "method": "GET",
+    "endpoint": "/ai/inventory/:inventoryId/predictions",
+    "file": "ai-inventory.controller.ts",
+    "handler": "findMany",
+    "roles": "SHOP_OWNER, SHOP_STAFF, ADMIN, SUPER_ADMIN, "
+  },
+  {
+    "method": "POST",
+    "endpoint": "/auth/register",
+    "file": "auth.controller.ts",
+    "handler": "register",
+    "roles": "Any"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/auth/register-business",
+    "file": "auth.controller.ts",
+    "handler": "registerBusiness",
+    "roles": "Any"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/auth/login",
+    "file": "auth.controller.ts",
+    "handler": "login",
+    "roles": "Any"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/auth/refresh",
+    "file": "auth.controller.ts",
+    "handler": "refresh",
+    "roles": "Any"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/auth/logout",
+    "file": "auth.controller.ts",
+    "handler": "logout",
+    "roles": "Any"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/auth/me",
+    "file": "auth.controller.ts",
+    "handler": "getProfile",
+    "roles": "Any"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/auth/change-password",
+    "file": "auth.controller.ts",
+    "handler": "changePassword",
+    "roles": "Any"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/auth/forgot-password",
+    "file": "auth.controller.ts",
+    "handler": "forgotPassword",
+    "roles": "Any"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/auth/reset-password",
+    "file": "auth.controller.ts",
+    "handler": "resetPassword",
+    "roles": "Any"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/businesses/my",
+    "file": "businesses.controller.ts",
+    "handler": "findMyBusiness",
+    "roles": "SHOP_OWNER"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/businesses/:id",
+    "file": "businesses.controller.ts",
+    "handler": "findOne",
+    "roles": "SHOP_OWNER"
+  },
+  {
+    "method": "PATCH",
+    "endpoint": "/businesses/:id",
+    "file": "businesses.controller.ts",
+    "handler": "update",
+    "roles": "SHOP_OWNER"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/businesses/:id/verify",
+    "file": "businesses.controller.ts",
+    "handler": "setVerificationStatus",
+    "roles": "SHOP_OWNER"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/businesses/:id/reject",
+    "file": "businesses.controller.ts",
+    "handler": "setVerificationStatus",
+    "roles": "SHOP_OWNER"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/businesses/:id/suspend",
+    "file": "businesses.controller.ts",
+    "handler": "setStatus",
+    "roles": "SHOP_OWNER"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/businesses/:id/reactivate",
+    "file": "businesses.controller.ts",
+    "handler": "setStatus",
+    "roles": "SHOP_OWNER"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/discovery/deals/nearby",
+    "file": "discovery.controller.ts",
+    "handler": "unknown",
+    "roles": "Any"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/discovery/stores/nearby",
+    "file": "discovery.controller.ts",
+    "handler": "findNearbyStores",
+    "roles": "Any"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/discovery/products",
+    "file": "discovery.controller.ts",
+    "handler": "findProducts",
+    "roles": "Any"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/discovery/categories",
+    "file": "discovery.controller.ts",
+    "handler": "findCategories",
+    "roles": "Any"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/discovery/deals/:offerId",
+    "file": "discovery.controller.ts",
+    "handler": "unknown",
+    "roles": "Any"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/health/db",
+    "file": "health.controller.ts",
+    "handler": "checkDatabase",
+    "roles": "Any"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/health/redis",
+    "file": "health.controller.ts",
+    "handler": "checkRedis",
+    "roles": "Any"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/stores/:storeId/inventory",
+    "file": "inventory.controller.ts",
+    "handler": "unknown",
+    "roles": "SHOP_OWNER, SHOP_STAFF, ADMIN, SUPER_ADMIN, "
+  },
+  {
+    "method": "GET",
+    "endpoint": "/stores/:storeId/inventory",
+    "file": "inventory.controller.ts",
+    "handler": "unknown",
+    "roles": "SHOP_OWNER, SHOP_STAFF, ADMIN, SUPER_ADMIN, "
+  },
+  {
+    "method": "GET",
+    "endpoint": "/inventory/:id",
+    "file": "inventory.controller.ts",
+    "handler": "findOne",
+    "roles": "SHOP_OWNER, SHOP_STAFF, ADMIN, SUPER_ADMIN, "
+  },
+  {
+    "method": "PATCH",
+    "endpoint": "/inventory/:id",
+    "file": "inventory.controller.ts",
+    "handler": "unknown",
+    "roles": "SHOP_OWNER, SHOP_STAFF, ADMIN, SUPER_ADMIN, "
+  },
+  {
+    "method": "POST",
+    "endpoint": "/inventory/:id/adjust-stock",
+    "file": "inventory.controller.ts",
+    "handler": "adjustStock",
+    "roles": "SHOP_OWNER, SHOP_STAFF, ADMIN, SUPER_ADMIN, "
+  },
+  {
+    "method": "DELETE",
+    "endpoint": "/inventory/:id",
+    "file": "inventory.controller.ts",
+    "handler": "remove",
+    "roles": "SHOP_OWNER, SHOP_STAFF, ADMIN, SUPER_ADMIN, "
+  },
+  {
+    "method": "GET",
+    "endpoint": "/notifications/unread-count",
+    "file": "notifications.controller.ts",
+    "handler": "getUnreadCount",
+    "roles": "CUSTOMER, SHOP_OWNER, SHOP_STAFF, ADMIN, SUPER_ADMIN, "
+  },
+  {
+    "method": "POST",
+    "endpoint": "/notifications/:id/read",
+    "file": "notifications.controller.ts",
+    "handler": "markAsRead",
+    "roles": "CUSTOMER, SHOP_OWNER, SHOP_STAFF, ADMIN, SUPER_ADMIN, "
+  },
+  {
+    "method": "POST",
+    "endpoint": "/notifications/read-all",
+    "file": "notifications.controller.ts",
+    "handler": "markAllAsRead",
+    "roles": "CUSTOMER, SHOP_OWNER, SHOP_STAFF, ADMIN, SUPER_ADMIN, "
+  },
+  {
+    "method": "DELETE",
+    "endpoint": "/notifications/:id",
+    "file": "notifications.controller.ts",
+    "handler": "deleteNotification",
+    "roles": "CUSTOMER, SHOP_OWNER, SHOP_STAFF, ADMIN, SUPER_ADMIN, "
+  },
+  {
+    "method": "POST",
+    "endpoint": "/notifications/devices",
+    "file": "notifications.controller.ts",
+    "handler": "registerDevice",
+    "roles": "CUSTOMER, SHOP_OWNER, SHOP_STAFF, ADMIN, SUPER_ADMIN, "
+  },
+  {
+    "method": "DELETE",
+    "endpoint": "/notifications/devices/:deviceId",
+    "file": "notifications.controller.ts",
+    "handler": "removeDevice",
+    "roles": "CUSTOMER, SHOP_OWNER, SHOP_STAFF, ADMIN, SUPER_ADMIN, "
+  },
+  {
+    "method": "GET",
+    "endpoint": "/notifications/preferences",
+    "file": "notifications.controller.ts",
+    "handler": "getPreferences",
+    "roles": "CUSTOMER, SHOP_OWNER, SHOP_STAFF, ADMIN, SUPER_ADMIN, "
+  },
+  {
+    "method": "PATCH",
+    "endpoint": "/notifications/preferences",
+    "file": "notifications.controller.ts",
+    "handler": "updatePreferences",
+    "roles": "CUSTOMER, SHOP_OWNER, SHOP_STAFF, ADMIN, SUPER_ADMIN, "
+  },
+  {
+    "method": "POST",
+    "endpoint": "/inventory/:inventoryId/offers",
+    "file": "offers.controller.ts",
+    "handler": "create",
+    "roles": "SHOP_OWNER, SHOP_STAFF, ADMIN, SUPER_ADMIN, "
+  },
+  {
+    "method": "GET",
+    "endpoint": "/stores/:storeId/offers",
+    "file": "offers.controller.ts",
+    "handler": "findAllByStore",
+    "roles": "SHOP_OWNER, SHOP_STAFF, ADMIN, SUPER_ADMIN, "
+  },
+  {
+    "method": "GET",
+    "endpoint": "/admin/offers",
+    "file": "offers.controller.ts",
+    "handler": "findAllAdmin",
+    "roles": "SHOP_OWNER, SHOP_STAFF, ADMIN, SUPER_ADMIN, "
+  },
+  {
+    "method": "GET",
+    "endpoint": "/offers/:id",
+    "file": "offers.controller.ts",
+    "handler": "findOne",
+    "roles": "SHOP_OWNER, SHOP_STAFF, ADMIN, SUPER_ADMIN, "
+  },
+  {
+    "method": "PATCH",
+    "endpoint": "/offers/:id",
+    "file": "offers.controller.ts",
+    "handler": "update",
+    "roles": "SHOP_OWNER, SHOP_STAFF, ADMIN, SUPER_ADMIN, "
+  },
+  {
+    "method": "POST",
+    "endpoint": "/offers/:id/activate",
+    "file": "offers.controller.ts",
+    "handler": "activate",
+    "roles": "SHOP_OWNER, SHOP_STAFF, ADMIN, SUPER_ADMIN, "
+  },
+  {
+    "method": "POST",
+    "endpoint": "/offers/:id/pause",
+    "file": "offers.controller.ts",
+    "handler": "pause",
+    "roles": "SHOP_OWNER, SHOP_STAFF, ADMIN, SUPER_ADMIN, "
+  },
+  {
+    "method": "POST",
+    "endpoint": "/offers/:id/cancel",
+    "file": "offers.controller.ts",
+    "handler": "cancel",
+    "roles": "SHOP_OWNER, SHOP_STAFF, ADMIN, SUPER_ADMIN, "
+  },
+  {
+    "method": "GET",
+    "endpoint": "/categories/:id",
+    "file": "categories.controller.ts",
+    "handler": "findOne",
+    "roles": "ADMIN, SUPER_ADMIN, SHOP_OWNER"
+  },
+  {
+    "method": "PATCH",
+    "endpoint": "/categories/:id",
+    "file": "categories.controller.ts",
+    "handler": "update",
+    "roles": "ADMIN, SUPER_ADMIN, SHOP_OWNER"
+  },
+  {
+    "method": "DELETE",
+    "endpoint": "/categories/:id",
+    "file": "categories.controller.ts",
+    "handler": "remove",
+    "roles": "ADMIN, SUPER_ADMIN, SHOP_OWNER"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/products/:id",
+    "file": "products.controller.ts",
+    "handler": "findOne",
+    "roles": "ADMIN, SUPER_ADMIN, SHOP_OWNER"
+  },
+  {
+    "method": "PATCH",
+    "endpoint": "/products/:id",
+    "file": "products.controller.ts",
+    "handler": "update",
+    "roles": "ADMIN, SUPER_ADMIN, SHOP_OWNER"
+  },
+  {
+    "method": "DELETE",
+    "endpoint": "/products/:id",
+    "file": "products.controller.ts",
+    "handler": "remove",
+    "roles": "ADMIN, SUPER_ADMIN, SHOP_OWNER"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/reservations/:id",
+    "file": "reservations.controller.ts",
+    "handler": "getCustomerReservationById",
+    "roles": "CUSTOMER"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/reservations/:id/cancel",
+    "file": "reservations.controller.ts",
+    "handler": "cancel",
+    "roles": "CUSTOMER"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/stores/:storeId/reservations",
+    "file": "store-reservations.controller.ts",
+    "handler": "findAll",
+    "roles": "SHOP_OWNER, SHOP_STAFF"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/stores/reservations/:id/confirm",
+    "file": "store-reservations.controller.ts",
+    "handler": "confirmReservation",
+    "roles": "SHOP_OWNER, SHOP_STAFF"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/stores/reservations/:id/reject",
+    "file": "store-reservations.controller.ts",
+    "handler": "reject",
+    "roles": "SHOP_OWNER, SHOP_STAFF"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/stores/reservations/:id/ready",
+    "file": "store-reservations.controller.ts",
+    "handler": "markReady",
+    "roles": "SHOP_OWNER, SHOP_STAFF"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/stores/reservations/:id/complete",
+    "file": "store-reservations.controller.ts",
+    "handler": "completeReservation",
+    "roles": "SHOP_OWNER, SHOP_STAFF"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/stores/:storeId/staff/businesses/:businessId/stores",
+    "file": "stores.controller.ts",
+    "handler": "create",
+    "roles": "SHOP_OWNER"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/stores/:storeId/staff/businesses/:businessId/stores",
+    "file": "stores.controller.ts",
+    "handler": "findBusinessStores",
+    "roles": "SHOP_OWNER"
+  },
+  {
+    "method": "GET",
+    "endpoint": "/stores/:storeId/staff/stores/:storeId",
+    "file": "stores.controller.ts",
+    "handler": "findOne",
+    "roles": "SHOP_OWNER"
+  },
+  {
+    "method": "PATCH",
+    "endpoint": "/stores/:storeId/staff/stores/:storeId",
+    "file": "stores.controller.ts",
+    "handler": "update",
+    "roles": "SHOP_OWNER"
+  },
+  {
+    "method": "DELETE",
+    "endpoint": "/stores/:storeId/staff/:staffId",
+    "file": "stores.controller.ts",
+    "handler": "removeStaff",
+    "roles": "SHOP_OWNER"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/stores/:storeId/staff/:id/verify",
+    "file": "stores.controller.ts",
+    "handler": "setVerificationStatus",
+    "roles": "SHOP_OWNER"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/stores/:storeId/staff/:id/reject",
+    "file": "stores.controller.ts",
+    "handler": "setVerificationStatus",
+    "roles": "SHOP_OWNER"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/stores/:storeId/staff/:id/suspend",
+    "file": "stores.controller.ts",
+    "handler": "setStatus",
+    "roles": "SHOP_OWNER"
+  },
+  {
+    "method": "POST",
+    "endpoint": "/stores/:storeId/staff/:id/reactivate",
+    "file": "stores.controller.ts",
+    "handler": "setStatus",
+    "roles": "SHOP_OWNER"
+  }
+]

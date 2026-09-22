@@ -9,13 +9,13 @@ WORKDIR /app
 
 # Copy package files first for layer caching
 COPY package*.json ./
-COPY prisma ./prisma/
+COPY database/prisma ./database/prisma/
 
 RUN npm ci
 
 COPY . .
 
-RUN npx prisma generate
+RUN npx prisma generate --schema=database/prisma/schema.prisma
 RUN npm run build
 
 # ── Stage 2: Production ──────────────────────────────
@@ -29,10 +29,10 @@ WORKDIR /app
 
 # Copy package files and install production deps only
 COPY package*.json ./
-COPY prisma ./prisma/
+COPY database/prisma ./database/prisma/
 
 RUN npm ci --only=production && \
-    npx prisma generate && \
+    npx prisma generate --schema=database/prisma/schema.prisma && \
     npm cache clean --force
 
 # Copy built application
@@ -49,4 +49,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/v1/health || exit 1
 
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/apps/backend/src/main.js"]

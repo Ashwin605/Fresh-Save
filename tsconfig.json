@@ -23,11 +23,11 @@
     "noFallthroughCasesInSwitch": true,
     "strict": true,
     "paths": {
-      "@config/*": ["src/config/*"],
-      "@common/*": ["src/common/*"],
-      "@database/*": ["src/database/*"],
-      "@redis/*": ["src/redis/*"],
-      "@health/*": ["src/health/*"]
+      "@config/*": ["apps/backend/src/config/*"],
+      "@common/*": ["apps/backend/src/common/*"],
+      "@database/*": ["apps/backend/src/database/*"],
+      "@redis/*": ["apps/backend/src/redis/*"],
+      "@health/*": ["apps/backend/src/health/*"]
     }
   }
 }
