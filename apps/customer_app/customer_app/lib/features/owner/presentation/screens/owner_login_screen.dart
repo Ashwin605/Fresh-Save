@@ -34,7 +34,7 @@ class _OwnerLoginScreenState extends ConsumerState<OwnerLoginScreen> {
   void _submit() {
     FocusScope.of(context).unfocus();
     final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
+    final password = _passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
       AppSnackbar.show(
