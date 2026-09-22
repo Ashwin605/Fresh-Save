@@ -73,15 +73,39 @@ import '../../features/admin/presentation/screens/admin_stores_screen.dart';
 import '../../features/admin/presentation/screens/admin_audit_logs_screen.dart';
 import '../../features/admin/presentation/screens/admin_categories_screen.dart';
 
+/// A [ChangeNotifier] that bridges Riverpod state changes to GoRouter's
+/// [refreshListenable]. This ensures the GoRouter instance is created ONCE
+/// and only re-evaluates its redirect logic when notified — without
+/// recreating the entire router (which would reset navigation state).
+class RouterRefreshNotifier extends ChangeNotifier {
+  void notify() => notifyListeners();
+}
+
+final _routerRefreshProvider = Provider<RouterRefreshNotifier>((ref) {
+  final notifier = RouterRefreshNotifier();
+
+  // Listen (not watch!) to state changes and notify GoRouter to re-run redirects
+  ref.listen(authStateProvider, (_, __) => notifier.notify());
+  ref.listen(ownerStateProvider, (_, __) => notifier.notify());
+  ref.listen(onboardingProvider, (_, __) => notifier.notify());
+
+  ref.onDispose(() => notifier.dispose());
+  return notifier;
+});
+
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
-  final ownerState = ref.watch(ownerStateProvider);
-  final hasCompletedOnboarding = ref.watch(onboardingProvider);
+  final refreshNotifier = ref.watch(_routerRefreshProvider);
 
   return GoRouter(
     initialLocation: '/role-selection',
     debugLogDiagnostics: true,
+    refreshListenable: refreshNotifier,
     redirect: (context, state) {
+      // Read fresh state each time redirect is evaluated
+      final authState = ref.read(authStateProvider);
+      final ownerState = ref.read(ownerStateProvider);
+      final hasCompletedOnboarding = ref.read(onboardingProvider);
+
       final isAuthRoute =
           state.matchedLocation == '/role-selection' ||
           state.matchedLocation == '/welcome' ||
