@@ -176,15 +176,16 @@ class _OwnerRegisterScreenState extends ConsumerState<OwnerRegisterScreen> {
 
       if (!mounted) return;
       if (result) {
-        ref.read(authControllerProvider.notifier).login(email, password);
+        // Await the login so we don't race with the router redirect
+        await ref.read(authControllerProvider.notifier).login(email, password);
       } else {
         final errorMessage = ref.read(authStateProvider).error ?? 'Registration failed';
         AppSnackbar.show(context, message: errorMessage, variant: SnackbarVariant.error);
+        if (mounted) setState(() => _isLoading = false);
       }
     } catch (e) {
       if (!mounted) return;
       AppSnackbar.show(context, message: e.toString(), variant: SnackbarVariant.error);
-    } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
