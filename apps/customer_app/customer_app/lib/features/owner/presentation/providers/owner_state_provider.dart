@@ -55,7 +55,7 @@ class OwnerNotifier extends Notifier<OwnerState> {
   @override
   OwnerState build() {
     // Automatically load context when authenticated as owner
-    final authStatus = ref.watch(authStateProvider).status;
+    final authStatus = ref.watch(authStateProvider.select((s) => s.status));
     if (authStatus == AuthStatus.authenticated) {
       Future.microtask(() => loadOwnerContext());
     }

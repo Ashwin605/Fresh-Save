@@ -6,18 +6,41 @@ import helmet from 'helmet';
 import compression from 'compression';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import * as fs from 'fs';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap(): Promise<void> {
+  const logger = new Logger('Bootstrap');
+  let httpsOptions = undefined;
+
+  const isHttpsEnabled = process.env.HTTPS_ENABLED === 'true';
+  if (isHttpsEnabled) {
+    try {
+      const keyPath = process.env.TLS_KEY_PATH;
+      const certPath = process.env.TLS_CERT_PATH;
+      if (keyPath && certPath) {
+        httpsOptions = {
+          key: fs.readFileSync(keyPath),
+          cert: fs.readFileSync(certPath),
+        };
+        logger.log('🔐 HTTPS is enabled with provided certificates.');
+      } else {
+        logger.warn('HTTPS_ENABLED is true, but TLS_KEY_PATH or TLS_CERT_PATH is missing. Falling back to HTTP.');
+      }
+    } catch (err: any) {
+      logger.error(`Failed to load TLS certificates: ${err.message}. Falling back to HTTP.`);
+    }
+  }
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: true,
+    httpsOptions,
   });
 
   const configService = app.get(ConfigService);
-  const logger = new Logger('Bootstrap');
 
   // ── Global Prefix ──────────────────────────────────────
   const apiPrefix = configService.get<string>('app.apiPrefix', 'api/v1');
@@ -98,12 +121,13 @@ async function bootstrap(): Promise<void> {
 
   await app.listen(port, '0.0.0.0');
 
+  const protocol = httpsOptions ? 'https' : 'http';
   logger.log(
-    `🚀 ${appName} API is running on: http://localhost:${port}/${apiPrefix}`,
+    `🚀 ${appName} API is running on: ${protocol}://localhost:${port}/${apiPrefix}`,
   );
-  logger.log(`📚 Swagger docs available at: http://localhost:${port}/api/docs`);
+  logger.log(`📚 Swagger docs available at: ${protocol}://localhost:${port}/api/docs`);
   logger.log(
-    `🏥 Health check at: http://localhost:${port}/${apiPrefix}/health`,
+    `🏥 Health check at: ${protocol}://localhost:${port}/${apiPrefix}/health`,
   );
 }
 

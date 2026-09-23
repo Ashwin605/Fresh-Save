@@ -4,6 +4,28 @@
 # Usage: docker compose up -d
 
 services:
+  # ── Backend API (Example for Production/HTTPS) ────────
+  # Uncomment and adjust for production if running NestJS directly
+  # backend:
+  #   build: .
+  #   container_name: freshsave-backend
+  #   restart: unless-stopped
+  #   ports:
+  #     - "443:3000" # Mapping host 443 to container 3000
+  #   environment:
+  #     - HTTPS_ENABLED=true
+  #     - TLS_KEY_PATH=/etc/secrets/private-key.pem
+  #     - TLS_CERT_PATH=/etc/secrets/certificate.pem
+  #   volumes:
+  #     - ./secrets:/etc/secrets:ro # Mount certs securely as read-only
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   networks:
+  #     - freshsave-network
+
   # ── PostgreSQL with PostGIS ───────────────────────────
   postgres:
     image: postgis/postgis:16-3.4-alpine

@@ -19,7 +19,21 @@ class OwnerAnalyticsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final analyticsState = ref.watch(analyticsProvider);
-    final activeStore = ref.watch(ownerStateProvider).activeStore;
+    final ownerState = ref.watch(ownerStateProvider);
+    if (ownerState.contextState == OwnerContextState.loading || ownerState.contextState == OwnerContextState.initial) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    
+    final activeStore = ownerState.activeStore;
+    if (activeStore == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: Text('No active store available.')),
+      );
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,

@@ -28,6 +28,21 @@ class _OwnerProductListScreenState
 
   @override
   Widget build(BuildContext context) {
+    final ownerState = ref.watch(ownerStateProvider);
+    if (ownerState.contextState == OwnerContextState.loading || ownerState.contextState == OwnerContextState.initial) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (ownerState.activeStore == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: Text('No active store available.')),
+      );
+    }
+
     final productsState = ref.watch(ownerProductListProvider);
 
     return Scaffold(

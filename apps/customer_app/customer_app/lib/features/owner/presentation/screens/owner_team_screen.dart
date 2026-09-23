@@ -39,8 +39,23 @@ class _OwnerTeamScreenState extends ConsumerState<OwnerTeamScreen>
 
   @override
   Widget build(BuildContext context) {
+    final ownerState = ref.watch(ownerStateProvider);
+    if (ownerState.contextState == OwnerContextState.loading || ownerState.contextState == OwnerContextState.initial) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    
+    final activeStore = ownerState.activeStore;
+    if (activeStore == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: Text('No active store available.')),
+      );
+    }
+
     final teamState = ref.watch(teamProvider);
-    final activeStore = ref.watch(ownerStateProvider).activeStore;
 
     return Scaffold(
       backgroundColor: AppColors.background,

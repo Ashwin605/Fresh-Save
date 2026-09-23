@@ -113,6 +113,28 @@ class _OwnerAddInventoryScreenState extends ConsumerState<OwnerAddInventoryScree
 
   @override
   Widget build(BuildContext context) {
+    final ownerState = ref.watch(ownerStateProvider);
+    if (ownerState.contextState == OwnerContextState.loading || ownerState.contextState == OwnerContextState.initial) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Add Inventory')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (ownerState.contextState == OwnerContextState.error) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Add Inventory')),
+        body: Center(child: Text('Error: ${ownerState.error}', style: const TextStyle(color: AppColors.error))),
+      );
+    }
+
+    if (ownerState.activeStore == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Add Inventory')),
+        body: const Center(child: Text('No active store available.')),
+      );
+    }
+
     final categoryState = ref.watch(categoryListProvider);
     final productState = ref.watch(ownerProductListProvider);
 
