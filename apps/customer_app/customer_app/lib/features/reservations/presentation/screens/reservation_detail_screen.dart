@@ -10,9 +10,12 @@ import '../../../../app/theme/app_animations.dart';
 import '../../../../core/widgets/buttons/app_button.dart';
 import '../../../../core/widgets/layout/interactive_container.dart';
 
+import '../../domain/models/reservation_models.dart';
+import '../../data/repositories/reservation_repository.dart';
+import '../../../../core/network/result.dart';
 import '../providers/reservation_providers.dart';
 
-class ReservationDetailScreen extends ConsumerWidget {
+class ReservationDetailScreen extends ConsumerStatefulWidget {
   final String reservationId;
 
   const ReservationDetailScreen({
@@ -21,8 +24,63 @@ class ReservationDetailScreen extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final reservationAsync = ref.watch(reservationDetailsProvider(reservationId));
+  ConsumerState<ReservationDetailScreen> createState() => _ReservationDetailScreenState();
+}
+
+class _ReservationDetailScreenState extends ConsumerState<ReservationDetailScreen> {
+  bool _isCancelling = false;
+
+  Future<void> _cancelReservation(Reservation reservation) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancel Reservation?'),
+        content: const Text('Are you sure you want to cancel this reservation?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('No, keep it'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Yes, cancel', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !mounted) return;
+
+    setState(() => _isCancelling = true);
+    
+    final repo = ref.read(reservationRepositoryProvider);
+    final result = await repo.cancelReservation(widget.reservationId);
+    
+    if (!mounted) return;
+    setState(() => _isCancelling = false);
+
+    if (result is Success<Reservation>) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Reservation cancelled successfully'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+      // Invalidate the provider to fetch the latest details
+      ref.invalidate(reservationDetailsProvider(widget.reservationId));
+    } else if (result is Failure<Reservation>) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.error.message ?? 'Failed to cancel reservation'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final reservationAsync = ref.watch(reservationDetailsProvider(widget.reservationId));
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -55,6 +113,9 @@ class ReservationDetailScreen extends ConsumerWidget {
           ),
         ),
         data: (reservation) {
+          final canCancel = reservation.status == ReservationStatus.pending || 
+                            reservation.status == ReservationStatus.confirmed;
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(AppSpacing.xl),
             physics: const BouncingScrollPhysics(),
@@ -84,13 +145,17 @@ class ReservationDetailScreen extends ConsumerWidget {
                           vertical: AppSpacing.xs,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryLight.withValues(alpha: 0.2),
+                          color: reservation.status == ReservationStatus.cancelled || reservation.status == ReservationStatus.rejected 
+                            ? AppColors.error.withValues(alpha: 0.2) 
+                            : AppColors.primaryLight.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(AppRadius.sm),
                         ),
                         child: Text(
                           reservation.status.name.toUpperCase(),
                           style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.primary,
+                            color: reservation.status == ReservationStatus.cancelled || reservation.status == ReservationStatus.rejected 
+                              ? AppColors.error 
+                              : AppColors.primary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -101,7 +166,7 @@ class ReservationDetailScreen extends ConsumerWidget {
                         style: AppTypography.headline,
                       ),
                       const SizedBox(height: AppSpacing.xs),
-                      if (reservation.expiresAt != null)
+                      if (reservation.expiresAt != null && reservation.status != ReservationStatus.cancelled && reservation.status != ReservationStatus.rejected && reservation.status != ReservationStatus.completed)
                         Text(
                           'Expires at ${reservation.expiresAt!.toLocal().toString().split('.')[0]}',
                           style: AppTypography.body.copyWith(
@@ -186,6 +251,16 @@ class ReservationDetailScreen extends ConsumerWidget {
                   variant: AppButtonVariant.primary,
                   onPressed: () {},
                 ).animate().fade(duration: AppAnimations.medium, delay: 350.ms).slideY(begin: 0.1, end: 0),
+                
+                if (canCancel) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  AppButton(
+                    label: 'Cancel Reservation',
+                    variant: AppButtonVariant.secondary,
+                    isLoading: _isCancelling,
+                    onPressed: () => _cancelReservation(reservation),
+                  ).animate().fade(duration: AppAnimations.medium, delay: 400.ms).slideY(begin: 0.1, end: 0),
+                ]
               ],
             ),
           );

@@ -118,4 +118,34 @@ class ReservationRepositoryImpl implements ReservationRepository {
       return Result.failure(AppError.unknown(message: e.toString()));
     }
   }
+
+  @override
+  Future<Result<Reservation>> cancelReservation(String id, {String? reason}) async {
+    try {
+      final response = await _dio.post(
+        '/reservations/$id/cancel',
+        data: reason != null ? {'reason': reason} : {},
+      );
+
+      if (response.data != null && response.data['success'] == true) {
+        final reservation = Reservation.fromJson(
+          response.data['data']['reservation'],
+        );
+        return Result.success(reservation);
+      }
+      return const Result.failure(
+        AppError.server(message: 'Invalid response from server'),
+      );
+    } on DioException catch (e) {
+      return Result.failure(
+        AppError.server(
+          message:
+              e.response?.data?['message']?.toString() ??
+              'Failed to cancel reservation',
+        ),
+      );
+    } catch (e) {
+      return Result.failure(AppError.unknown(message: e.toString()));
+    }
+  }
 }

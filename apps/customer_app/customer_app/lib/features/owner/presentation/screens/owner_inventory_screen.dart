@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../../app/theme/app_colors.dart';
 import '../../../../../app/theme/app_spacing.dart';
 import '../providers/inventory_list_provider.dart';
+import '../providers/owner_state_provider.dart';
 import '../widgets/inventory/inventory_card.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 

@@ -91,4 +91,59 @@ export class AdminController {
       Number(limit) || 50,
     );
   }
+
+  @Get('products')
+  getProducts(@Query('page') page: string, @Query('limit') limit: string) {
+    return this.adminService.getProducts(Number(page) || 1, Number(limit) || 20);
+  }
+
+  @Patch('products/:id/status')
+  updateProductStatus(@Param('id') id: string, @Body('status') status: string, @Request() req: any) {
+    return this.adminService.updateProductStatus(id, status, req.user.userId);
+  }
+
+  @Get('inventory')
+  getInventory(@Query('page') page: string, @Query('limit') limit: string, @Query('storeId') storeId: string, @Query('search') search: string) {
+    return this.adminService.getInventory(Number(page) || 1, Number(limit) || 20, storeId, search);
+  }
+
+  @Get('inventory/movements')
+  getInventoryMovements(@Query('page') page: string, @Query('limit') limit: string) {
+    return this.adminService.getInventoryMovements(Number(page) || 1, Number(limit) || 20);
+  }
+
+  @Get('reservations')
+  getReservations(@Query('page') page: string, @Query('limit') limit: string, @Query('status') status: string) {
+    return this.adminService.getReservations(Number(page) || 1, Number(limit) || 20, status);
+  }
+
+  @Get('users/login-activity')
+  getDailyLoginStats() {
+    return this.adminService.getDailyLoginStats();
+  }
+
+  @Get('shopkeepers')
+  getShopkeepers(@Query('page') page: string, @Query('limit') limit: string) {
+    return this.adminService.getShopkeepers(Number(page) || 1, Number(limit) || 20);
+  }
+
+  @Get('offers')
+  getOffers(@Query('page') page: string, @Query('limit') limit: string) {
+    return this.adminService.getOffers(Number(page) || 1, Number(limit) || 20);
+  }
+
+  @Get('coupons')
+  getCoupons(@Query('page') page: string, @Query('limit') limit: string) {
+    return this.adminService.getCoupons(Number(page) || 1, Number(limit) || 20);
+  }
+
+  @Get('contacts')
+  getContactRequests(@Query('page') page: string, @Query('limit') limit: string) {
+    return this.adminService.getContactRequests(Number(page) || 1, Number(limit) || 20);
+  }
+
+  @Patch('contacts/:id/status')
+  updateContactRequestStatus(@Param('id') id: string, @Body('status') status: string, @Request() req: any) {
+    return this.adminService.updateContactRequestStatus(id, status, req.user.userId);
+  }
 }

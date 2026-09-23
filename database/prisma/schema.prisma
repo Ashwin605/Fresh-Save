@@ -4,7 +4,7 @@
 
 generator client {
   provider        = "prisma-client-js"
-  output          = "../node_modules/.prisma/client"
+  output          = "../../node_modules/.prisma/client"
   previewFeatures = ["postgresqlExtensions"]
 }
 
@@ -729,3 +729,26 @@ model Session {
   @@index([userId])
   @@index([expiresAt])
 }
+
+enum ContactStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model ContactRequest {
+  id        String        @id @default(uuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  status    ContactStatus @default(OPEN)
+  
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  
+  @@index([status])
+  @@index([createdAt])
+}
+

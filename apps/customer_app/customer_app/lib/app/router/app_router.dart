@@ -72,6 +72,15 @@ import '../../features/admin/presentation/screens/admin_users_screen.dart';
 import '../../features/admin/presentation/screens/admin_stores_screen.dart';
 import '../../features/admin/presentation/screens/admin_audit_logs_screen.dart';
 import '../../features/admin/presentation/screens/admin_categories_screen.dart';
+import '../../features/admin/presentation/screens/admin_products_screen.dart';
+import '../../features/admin/presentation/screens/admin_inventory_screen.dart';
+import '../../features/admin/presentation/screens/admin_stock_transfers_screen.dart';
+import '../../features/admin/presentation/screens/admin_packages_screen.dart';
+import '../../features/admin/presentation/screens/admin_user_logins_screen.dart';
+import '../../features/admin/presentation/screens/admin_shopkeepers_screen.dart';
+import '../../features/admin/presentation/screens/admin_discounts_screen.dart';
+import '../../features/admin/presentation/screens/admin_coupons_screen.dart';
+import '../../features/admin/presentation/screens/admin_contacts_screen.dart';
 
 /// A [ChangeNotifier] that bridges Riverpod state changes to GoRouter's
 /// [refreshListenable]. This ensures the GoRouter instance is created ONCE
@@ -406,6 +415,42 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/admin/notifications',
             builder: (context, state) => const NotificationScreen(),
+          ),
+          GoRoute(
+            path: '/admin/products',
+            builder: (context, state) => const AdminProductsScreen(),
+          ),
+          GoRoute(
+            path: '/admin/inventory',
+            builder: (context, state) => const AdminInventoryScreen(),
+          ),
+          GoRoute(
+            path: '/admin/stock-transfers',
+            builder: (context, state) => const AdminStockTransfersScreen(),
+          ),
+          GoRoute(
+            path: '/admin/packages',
+            builder: (context, state) => const AdminPackagesScreen(),
+          ),
+          GoRoute(
+            path: '/admin/user-logins',
+            builder: (context, state) => const AdminUserLoginsScreen(),
+          ),
+          GoRoute(
+            path: '/admin/shopkeepers',
+            builder: (context, state) => const AdminShopkeepersScreen(),
+          ),
+          GoRoute(
+            path: '/admin/discounts',
+            builder: (context, state) => const AdminDiscountsScreen(),
+          ),
+          GoRoute(
+            path: '/admin/coupons',
+            builder: (context, state) => const AdminCouponsScreen(),
+          ),
+          GoRoute(
+            path: '/admin/contacts',
+            builder: (context, state) => const AdminContactsScreen(),
           ),
         ],
       ),

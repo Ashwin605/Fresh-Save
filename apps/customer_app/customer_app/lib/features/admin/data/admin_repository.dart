@@ -125,6 +125,107 @@ class AdminRepository {
       await _dio.patch('/categories/$categoryId', data: data);
     } on DioException catch (e) {
       throw Exception(e.response?.data?['message'] ?? e.message ?? 'Failed to update category');
+  Future<Map<String, dynamic>> getProducts({int page = 1, int limit = 20}) async {
+    try {
+      final response = await _dio.get('/admin/products', queryParameters: {'page': page, 'limit': limit});
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Failed to fetch products');
+    }
+  }
+
+  Future<void> updateProductStatus(String id, String status) async {
+    try {
+      await _dio.patch('/admin/products/$id/status', data: {'status': status});
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Failed to update product status');
+    }
+  }
+
+  Future<Map<String, dynamic>> getInventory({int page = 1, int limit = 20, String? storeId, String? search}) async {
+    try {
+      final response = await _dio.get('/admin/inventory', queryParameters: {
+        'page': page, 'limit': limit,
+        if (storeId != null) 'storeId': storeId,
+        if (search != null) 'search': search,
+      });
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Failed to fetch inventory');
+    }
+  }
+
+  Future<Map<String, dynamic>> getInventoryMovements({int page = 1, int limit = 20}) async {
+    try {
+      final response = await _dio.get('/admin/inventory/movements', queryParameters: {'page': page, 'limit': limit});
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Failed to fetch inventory movements');
+    }
+  }
+
+  Future<Map<String, dynamic>> getReservations({int page = 1, int limit = 20, String? status}) async {
+    try {
+      final response = await _dio.get('/admin/reservations', queryParameters: {
+        'page': page, 'limit': limit,
+        if (status != null) 'status': status,
+      });
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Failed to fetch reservations');
+    }
+  }
+
+  Future<List<dynamic>> getDailyLoginStats() async {
+    try {
+      final response = await _dio.get('/admin/users/login-activity');
+      return response.data as List<dynamic>;
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Failed to fetch login stats');
+    }
+  }
+
+  Future<Map<String, dynamic>> getShopkeepers({int page = 1, int limit = 20}) async {
+    try {
+      final response = await _dio.get('/admin/shopkeepers', queryParameters: {'page': page, 'limit': limit});
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Failed to fetch shopkeepers');
+    }
+  }
+
+  Future<Map<String, dynamic>> getOffers({int page = 1, int limit = 20}) async {
+    try {
+      final response = await _dio.get('/admin/offers', queryParameters: {'page': page, 'limit': limit});
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Failed to fetch offers');
+    }
+  }
+
+  Future<Map<String, dynamic>> getCoupons({int page = 1, int limit = 20}) async {
+    try {
+      final response = await _dio.get('/admin/coupons', queryParameters: {'page': page, 'limit': limit});
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Failed to fetch coupons');
+    }
+  }
+
+  Future<Map<String, dynamic>> getContacts({int page = 1, int limit = 20}) async {
+    try {
+      final response = await _dio.get('/admin/contacts', queryParameters: {'page': page, 'limit': limit});
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Failed to fetch contacts');
+    }
+  }
+
+  Future<void> updateContactStatus(String id, String status) async {
+    try {
+      await _dio.patch('/admin/contacts/$id/status', data: {'status': status});
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Failed to update contact status');
     }
   }
 }

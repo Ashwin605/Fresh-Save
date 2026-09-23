@@ -58,7 +58,7 @@ class OwnerReservationRepositoryImpl implements OwnerReservationRepository {
     String reservationId,
   ) async {
     try {
-      final response = await _dioClient.patch(
+      final response = await _dioClient.post(
         '/stores/reservations/$reservationId/confirm',
       );
       return Result.success(
@@ -79,7 +79,7 @@ class OwnerReservationRepositoryImpl implements OwnerReservationRepository {
     required String reason,
   }) async {
     try {
-      final response = await _dioClient.patch(
+      final response = await _dioClient.post(
         '/stores/reservations/$reservationId/reject',
         data: {'reason': reason},
       );
@@ -98,7 +98,7 @@ class OwnerReservationRepositoryImpl implements OwnerReservationRepository {
   @override
   Future<Result<OwnerReservation>> markReady(String reservationId) async {
     try {
-      final response = await _dioClient.patch(
+      final response = await _dioClient.post(
         '/stores/reservations/$reservationId/ready',
       );
       return Result.success(
@@ -118,7 +118,7 @@ class OwnerReservationRepositoryImpl implements OwnerReservationRepository {
     String reservationId,
   ) async {
     try {
-      final response = await _dioClient.patch(
+      final response = await _dioClient.post(
         '/stores/reservations/$reservationId/complete',
       );
       return Result.success(

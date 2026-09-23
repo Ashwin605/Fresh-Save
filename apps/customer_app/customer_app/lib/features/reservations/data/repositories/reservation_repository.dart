@@ -14,6 +14,7 @@ abstract class ReservationRepository {
     int page = 1,
     int limit = 20,
   });
+  Future<Result<Reservation>> cancelReservation(String id, {String? reason});
 }
 
 class ReservationListResult {

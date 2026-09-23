@@ -241,4 +241,130 @@ export class AdminService {
 
     return { data: logs, total, page, limit };
   }
+
+  async getProducts(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.prisma.product.findMany({ skip, take: limit, orderBy: { createdAt: 'desc' }, include: { category: true } }),
+      this.prisma.product.count(),
+    ]);
+    return { data, total, page, limit };
+  }
+
+  async updateProductStatus(productId: string, status: any, adminId: string) {
+    const product = await this.prisma.product.update({
+      where: { id: productId },
+      data: { status },
+    });
+    await this.prisma.auditLog.create({
+      data: { actorId: adminId, action: `UPDATE_PRODUCT_STATUS_${status}`, entityType: 'Product', entityId: productId },
+    });
+    return product;
+  }
+
+  async getInventory(page = 1, limit = 20, storeId?: string, search?: string) {
+    const skip = (page - 1) * limit;
+    const where: any = {};
+    if (storeId) where.storeId = storeId;
+    if (search) where.store = { name: { contains: search, mode: 'insensitive' } };
+
+    const [data, total] = await Promise.all([
+      this.prisma.inventory.findMany({
+        where, skip, take: limit,
+        include: { product: true, store: true },
+        orderBy: { updatedAt: 'desc' },
+      }),
+      this.prisma.inventory.count({ where }),
+    ]);
+    return { data, total, page, limit };
+  }
+
+  async getInventoryMovements(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.prisma.inventoryStockMovement.findMany({
+        skip, take: limit,
+        include: { inventory: { include: { product: true, store: true } } },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.inventoryStockMovement.count(),
+    ]);
+    return { data, total, page, limit };
+  }
+
+  async getReservations(page = 1, limit = 20, status?: any) {
+    const skip = (page - 1) * limit;
+    const where = status ? { status } : {};
+    const [data, total] = await Promise.all([
+      this.prisma.reservation.findMany({
+        where, skip, take: limit,
+        include: { customer: { select: { name: true, email: true } }, store: { select: { name: true } } },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.reservation.count({ where }),
+    ]);
+    return { data, total, page, limit };
+  }
+
+  async getDailyLoginStats() {
+    const sessions = await this.prisma.session.findMany({
+      select: { createdAt: true },
+      orderBy: { createdAt: 'desc' },
+    });
+    const stats: Record<string, number> = {};
+    for (const session of sessions) {
+      const date = session.createdAt.toISOString().split('T')[0];
+      stats[date] = (stats[date] || 0) + 1;
+    }
+    return Object.entries(stats).map(([date, count]) => ({ date, count }));
+  }
+
+  async getShopkeepers(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.prisma.user.findMany({
+        where: { role: UserRole.SHOP_OWNER },
+        skip, take: limit,
+        include: { businesses: { include: { stores: true } } },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.user.count({ where: { role: UserRole.SHOP_OWNER } }),
+    ]);
+    return { data, total, page, limit };
+  }
+
+  async getOffers(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.prisma.offer.findMany({ skip, take: limit, include: { inventory: { include: { store: true } } }, orderBy: { createdAt: 'desc' } }),
+      this.prisma.offer.count(),
+    ]);
+    return { data, total, page, limit };
+  }
+
+  async getCoupons(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.prisma.coupon.findMany({ skip, take: limit, orderBy: { createdAt: 'desc' } }),
+      this.prisma.coupon.count(),
+    ]);
+    return { data, total, page, limit };
+  }
+
+  async getContactRequests(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [data, total] = await Promise.all([
+      this.prisma.contactRequest.findMany({ skip, take: limit, orderBy: { createdAt: 'desc' } }),
+      this.prisma.contactRequest.count(),
+    ]);
+    return { data, total, page, limit };
+  }
+
+  async updateContactRequestStatus(id: string, status: any, adminId: string) {
+    const request = await this.prisma.contactRequest.update({ where: { id }, data: { status } });
+    await this.prisma.auditLog.create({
+      data: { actorId: adminId, action: `UPDATE_CONTACT_STATUS_${status}`, entityType: 'ContactRequest', entityId: id },
+    });
+    return request;
+  }
 }
