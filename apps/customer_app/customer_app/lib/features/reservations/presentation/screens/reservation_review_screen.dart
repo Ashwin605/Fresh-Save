@@ -18,6 +18,7 @@ import '../../../details/domain/models/details_models.dart';
 import '../../../details/presentation/providers/details_providers.dart';
 import '../../domain/models/reservation_models.dart';
 import '../../data/repositories/reservation_repository.dart';
+import '../../data/repositories/pricing_repository.dart';
 
 class ReservationReviewScreen extends ConsumerStatefulWidget {
   final String offerId;
@@ -34,21 +35,36 @@ class _ReservationReviewScreenState
   bool _isSubmitting = false;
   late final String _idempotencyKey;
 
+  final TextEditingController _couponController = TextEditingController();
+  bool _isCalculating = false;
+  Map<String, dynamic>? _pricingData;
+  String? _couponMessage;
+  String? _appliedCouponCode;
+  DealDetail? _cachedDeal;
+
   @override
   void initState() {
     super.initState();
     _idempotencyKey = const Uuid().v4();
   }
 
+  @override
+  void dispose() {
+    _couponController.dispose();
+    super.dispose();
+  }
+
   void _incrementQuantity(int max) {
     if (_quantity < max) {
       setState(() => _quantity++);
+      _recalculatePrice();
     }
   }
 
   void _decrementQuantity() {
     if (_quantity > 1) {
       setState(() => _quantity--);
+      _recalculatePrice();
     }
   }
 
@@ -66,6 +82,7 @@ class _ReservationReviewScreenState
         ),
       ],
       notes: 'Customer pick-up', // Optional
+      couponCode: _appliedCouponCode,
     );
 
     final repo = ref.read(reservationRepositoryProvider);
@@ -80,15 +97,93 @@ class _ReservationReviewScreenState
       context.go('/reservation/success/${result.data.id}');
     } else if (result is Failure<Reservation>) {
       setState(() => _isSubmitting = false);
+      String errorMessage = result.error.message ?? 'Failed to reserve. Please try again.';
+      if (errorMessage.toLowerCase().contains('price') || errorMessage.toLowerCase().contains('changed')) {
+        errorMessage = 'Some prices have changed. Please review your cart.';
+      } else if (errorMessage.toLowerCase().contains('stock') || errorMessage.toLowerCase().contains('expired') || errorMessage.toLowerCase().contains('not found')) {
+        errorMessage = 'Some items are out of stock. Please remove them.';
+      } else if (errorMessage.toLowerCase().contains('coupon') || errorMessage.toLowerCase().contains('valid')) {
+        errorMessage = 'This coupon is no longer valid.';
+      }
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            result.error.message ?? 'Failed to reserve. Please try again.',
-          ),
+          content: Text(errorMessage),
           backgroundColor: AppColors.error,
         ),
       );
     }
+  }
+
+  Future<void> _recalculatePrice({bool isApplyingCoupon = false}) async {
+    if (_cachedDeal == null) return;
+    final deal = _cachedDeal!;
+    
+    final code = _couponController.text.trim();
+    if (isApplyingCoupon && code.isEmpty) return;
+
+    setState(() {
+      _isCalculating = true;
+      if (isApplyingCoupon) {
+        _couponMessage = null;
+      }
+    });
+
+    final request = CreateReservationRequest(
+      storeId: deal.store.id,
+      items: [
+        ReservationItemRequest(
+          inventoryId: deal.inventory.id,
+          quantity: _quantity,
+        ),
+      ],
+      couponCode: code.isNotEmpty ? code : null,
+    );
+
+    final repo = ref.read(pricingRepositoryProvider);
+    final result = await repo.calculateCartPrice(request);
+
+    if (!mounted) return;
+
+    if (result is Success<Map<String, dynamic>>) {
+      setState(() {
+        _pricingData = result.data;
+        if (code.isNotEmpty) {
+           final couponInfo = result.data['coupon'];
+           if (couponInfo != null) {
+              _appliedCouponCode = code;
+              if (isApplyingCoupon) _couponMessage = 'Coupon applied successfully!';
+           } else {
+              _appliedCouponCode = null;
+              if (isApplyingCoupon) {
+                 _couponMessage = 'Invalid coupon code or does not apply.';
+              }
+           }
+        }
+      });
+    } else if (result is Failure<Map<String, dynamic>>) {
+      setState(() {
+        String errorMessage = result.error.message ?? 'Calculation failed';
+        if (errorMessage.toLowerCase().contains('coupon') || errorMessage.toLowerCase().contains('valid')) {
+          errorMessage = 'This coupon is no longer valid.';
+        } else if (errorMessage.toLowerCase().contains('stock') || errorMessage.toLowerCase().contains('expired') || errorMessage.toLowerCase().contains('not found')) {
+          errorMessage = 'Some items are out of stock. Please remove them.';
+        } else if (errorMessage.toLowerCase().contains('price') || errorMessage.toLowerCase().contains('changed')) {
+          errorMessage = 'Some prices have changed. Please review your cart.';
+        }
+
+        if (isApplyingCoupon) {
+          _couponMessage = errorMessage;
+          _appliedCouponCode = null;
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMessage)));
+        }
+      });
+    }
+
+    setState(() {
+      _isCalculating = false;
+    });
   }
 
   @override
@@ -125,6 +220,13 @@ class _ReservationReviewScreenState
   }
 
   Widget _buildContent(BuildContext context, DealDetail deal) {
+    if (_cachedDeal == null) {
+      _cachedDeal = deal;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _recalculatePrice();
+      });
+    }
+
     // Basic quantity constraint
     final maxQuantity = deal.inventory.availableQuantity > 0
         ? deal.inventory.availableQuantity
@@ -133,7 +235,9 @@ class _ReservationReviewScreenState
       _quantity = maxQuantity;
     }
 
-    final total = deal.offer.discountedPrice * _quantity;
+    if (_pricingData == null) {
+       return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+    }
 
     return Column(
       children: [
@@ -146,7 +250,9 @@ class _ReservationReviewScreenState
               const SizedBox(height: AppSpacing.xl),
               _buildQuantitySelector(maxQuantity).animate().fade(duration: AppAnimations.medium, delay: 100.ms).slideY(begin: 0.1, end: 0),
               const SizedBox(height: AppSpacing.xl),
-              _buildPriceSummary(deal, total).animate().fade(duration: AppAnimations.medium, delay: 200.ms).slideY(begin: 0.1, end: 0),
+              _buildCouponSection(deal).animate().fade(duration: AppAnimations.medium, delay: 150.ms).slideY(begin: 0.1, end: 0),
+              const SizedBox(height: AppSpacing.xl),
+              _buildPriceSummary().animate().fade(duration: AppAnimations.medium, delay: 200.ms).slideY(begin: 0.1, end: 0),
               const SizedBox(height: AppSpacing.xl),
               _buildStoreSummary(deal).animate().fade(duration: AppAnimations.medium, delay: 300.ms).slideY(begin: 0.1, end: 0),
               const SizedBox(height: AppSpacing.xl),
@@ -154,7 +260,7 @@ class _ReservationReviewScreenState
             ],
           ),
         ),
-        _buildStickyCTA(deal, total),
+        _buildStickyCTA(deal),
       ],
     );
   }
@@ -286,7 +392,65 @@ class _ReservationReviewScreenState
     );
   }
 
-  Widget _buildPriceSummary(DealDetail deal, double total) {
+  Widget _buildCouponSection(DealDetail deal, double total) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Have a coupon?', style: AppTypography.title),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _couponController,
+                  decoration: InputDecoration(
+                    hintText: 'Enter code',
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                      borderSide: BorderSide(color: AppColors.border),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              AppButton(
+                label: 'Apply',
+                isLoading: _isCalculating,
+                onPressed: () => _recalculatePrice(isApplyingCoupon: true),
+                variant: AppButtonVariant.primary,
+              ),
+            ],
+          ),
+          if (_couponMessage != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              _couponMessage!,
+              style: AppTypography.caption.copyWith(
+                color: _appliedCouponCode != null ? AppColors.primary : AppColors.error,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPriceSummary() {
+    final subtotal = _pricingData!['subtotal'];
+    final offerDiscount = _pricingData!['offerDiscount'];
+    final couponDiscount = _pricingData!['couponDiscount'];
+    final finalTotal = _pricingData!['total'];
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
@@ -306,23 +470,62 @@ class _ReservationReviewScreenState
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Unit Price', style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
+              Text('Items Total', style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
               Text(
-                '₹${deal.offer.discountedPrice.toStringAsFixed(2)}',
+                '₹${(subtotal as num).toStringAsFixed(2)}',
                 style: AppTypography.body,
               ),
             ],
           ),
+          if (offerDiscount > 0) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Offer Discounts', style: AppTypography.body.copyWith(color: AppColors.success)),
+                Text(
+                  '-₹${(offerDiscount as num).toStringAsFixed(2)}',
+                  style: AppTypography.body.copyWith(color: AppColors.success, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ],
+          if (couponDiscount > 0) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Coupon Discount', style: AppTypography.body.copyWith(color: AppColors.success)),
+                Text(
+                  '-₹${(couponDiscount as num).toStringAsFixed(2)}',
+                  style: AppTypography.body.copyWith(color: AppColors.success, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ],
+          if ((_pricingData!['deliveryFee'] ?? 0) > 0) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Delivery Fee', style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
+                Text(
+                  '₹${((_pricingData!['deliveryFee']) as num).toStringAsFixed(2)}',
+                  style: AppTypography.body,
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: AppSpacing.sm),
           Divider(color: AppColors.border.withValues(alpha: 0.5)),
           const SizedBox(height: AppSpacing.sm),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Total Price', style: AppTypography.title),
+              Text('Final Amount', style: AppTypography.headline),
               Text(
-                '₹${total.toStringAsFixed(2)}',
-                style: AppTypography.title.copyWith(color: AppColors.primary, fontSize: 20),
+                '₹${(finalTotal as num).toStringAsFixed(2)}',
+                style: AppTypography.headline.copyWith(color: AppColors.primary),
               ),
             ],
           ),
@@ -438,7 +641,7 @@ class _ReservationReviewScreenState
     );
   }
 
-  Widget _buildStickyCTA(DealDetail deal, double total) {
+  Widget _buildStickyCTA(DealDetail deal) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface.withValues(alpha: 0.9),

@@ -125,6 +125,9 @@ class AdminRepository {
       await _dio.patch('/categories/$categoryId', data: data);
     } on DioException catch (e) {
       throw Exception(e.response?.data?['message'] ?? e.message ?? 'Failed to update category');
+    }
+  }
+
   Future<Map<String, dynamic>> getProducts({int page = 1, int limit = 20}) async {
     try {
       final response = await _dio.get('/admin/products', queryParameters: {'page': page, 'limit': limit});

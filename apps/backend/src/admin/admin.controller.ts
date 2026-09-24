@@ -146,4 +146,64 @@ export class AdminController {
   updateContactRequestStatus(@Param('id') id: string, @Body('status') status: string, @Request() req: any) {
     return this.adminService.updateContactRequestStatus(id, status, req.user.userId);
   }
+
+  @Get('analytics/revenue')
+  getRevenueAnalytics(@Query('startDate') startDate: string, @Query('endDate') endDate: string) {
+    return this.adminService.getRevenueAnalytics(startDate, endDate);
+  }
+
+  @Get('analytics/orders')
+  getOrderAnalytics(@Query('startDate') startDate: string, @Query('endDate') endDate: string) {
+    return this.adminService.getOrderAnalytics(startDate, endDate);
+  }
+
+  @Get('analytics/discounts')
+  getDiscountAnalytics(@Query('startDate') startDate: string, @Query('endDate') endDate: string) {
+    return this.adminService.getDiscountAnalytics(startDate, endDate);
+  }
+
+  @Get('analytics/coupons')
+  getCouponAnalytics(@Query('startDate') startDate: string, @Query('endDate') endDate: string) {
+    return this.adminService.getCouponAnalytics(startDate, endDate);
+  }
+
+  @Get('analytics/ratings')
+  getRatingAnalytics(@Query('shopId') shopId: string) {
+    return this.adminService.getRatingAnalytics(shopId);
+  }
+
+  @Get('reviews')
+  getReviews(@Query('page') page: string, @Query('limit') limit: string, @Query('rating') rating: string, @Query('shopId') shopId: string) {
+    return this.adminService.getReviews(Number(page) || 1, Number(limit) || 20, rating ? Number(rating) : undefined, shopId);
+  }
+
+  @Patch('reviews/:id/moderate')
+  moderateReview(@Param('id') id: string, @Body('status') status: any, @Request() req: any) {
+    return this.adminService.moderateReview(id, status, req.user.userId);
+  }
+
+  @Get('coupons/:id')
+  getCouponDetails(@Param('id') id: string) {
+    return this.adminService.getCouponDetails(id);
+  }
+
+  @Post('coupons')
+  createCoupon(@Body() data: any, @Request() req: any) {
+    return this.adminService.createCoupon(data, req.user.userId);
+  }
+
+  @Patch('coupons/:id')
+  updateCoupon(@Param('id') id: string, @Body() data: any, @Request() req: any) {
+    return this.adminService.updateCoupon(id, data, req.user.userId);
+  }
+
+  @Post('offers')
+  createOffer(@Body() data: any, @Request() req: any) {
+    return this.adminService.createOffer(data, req.user.userId);
+  }
+
+  @Patch('offers/:id')
+  updateOffer(@Param('id') id: string, @Body() data: any, @Request() req: any) {
+    return this.adminService.updateOffer(id, data, req.user.userId);
+  }
 }

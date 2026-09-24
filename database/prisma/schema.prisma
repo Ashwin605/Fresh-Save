@@ -167,10 +167,10 @@ enum ReviewStatus {
   REJECTED
 }
 
-enum CouponStatus {
-  ACTIVE
-  INACTIVE
-  EXPIRED
+enum ShopRatingStatus {
+  VISIBLE
+  HIDDEN
+  FLAGGED
 }
 
 // --------------------------------------------------
@@ -207,6 +207,8 @@ model User {
   inventoryStockMovements InventoryStockMovement[]
   devices                 UserDevice[]
   notificationPreference  NotificationPreference?
+  shopRatings             ShopRating[]
+  couponUsages            CouponUsage[]
 
   @@index([email])
   @@index([phone])
@@ -264,6 +266,8 @@ model Store {
   inventory    Inventory[]
   reservations Reservation[]
   reviews      Review[]
+  shopRatings  ShopRating[]
+  coupons      Coupon[]
 
   @@index([businessId])
   @@index([status])
@@ -444,6 +448,7 @@ model Reservation {
   notes              String?
   cancellationReason String?
   rejectionReason    String?
+  appliedCouponId    String?           @map("applied_coupon_id")
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -452,8 +457,11 @@ model Reservation {
   // Relationships
   customer User              @relation(fields: [customerId], references: [id], onDelete: Restrict)
   store    Store             @relation(fields: [storeId], references: [id], onDelete: Restrict)
+  appliedCoupon Coupon?      @relation("AppliedCoupon", fields: [appliedCouponId], references: [id], onDelete: SetNull)
   items    ReservationItem[]
   reviews  Review[]
+  shopRatings ShopRating[]
+  couponUsages CouponUsage[]
 
   @@index([customerId])
   @@index([storeId])
@@ -671,25 +679,53 @@ model AIPrediction {
 }
 
 model Coupon {
-  id            String       @id @default(uuid())
-  code          String       @unique
-  description   String?
-  discountType  DiscountType
-  discountValue Decimal      @db.Decimal(10, 2)
-  minOrderValue Decimal?     @db.Decimal(10, 2)
-  maxDiscount   Decimal?     @db.Decimal(10, 2)
-  startDate     DateTime
-  endDate       DateTime
-  usageLimit    Int?
-  perUserLimit  Int?
-  status        CouponStatus @default(ACTIVE)
+  id                    String       @id @default(uuid())
+  code                  String       @unique
+  title                 String
+  description           String?
+  discountType          DiscountType
+  discountValue         Decimal      @db.Decimal(10, 2)
+  minimumOrderAmount    Decimal?     @db.Decimal(10, 2)
+  maximumDiscountAmount Decimal?     @db.Decimal(10, 2)
+  startDate             DateTime
+  expiryDate            DateTime
+  usageLimit            Int?
+  perUserLimit          Int?
+  usedCount             Int          @default(0)
+  shopId                String?
+  isActive              Boolean      @default(true)
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
+  // Relationships
+  shop       Store?        @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  usages     CouponUsage[]
+  appliedToReservations Reservation[] @relation("AppliedCoupon")
+
   @@index([code])
-  @@index([status])
+  @@index([isActive])
+  @@index([shopId])
+  @@map("coupons")
+}
+
+model CouponUsage {
+  id         String   @id @default(uuid())
+  couponId   String   @map("coupon_id")
+  customerId String   @map("customer_id")
+  orderId    String   @map("order_id")
+  usedAt     DateTime @default(now()) @map("used_at")
+
+  // Relationships
+  coupon     Coupon      @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  customer   User        @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  order      Reservation @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([couponId])
+  @@index([customerId])
+  @@index([orderId])
+  @@map("coupon_usages")
 }
 
 model AuditLog {
@@ -750,5 +786,29 @@ model ContactRequest {
   
   @@index([status])
   @@index([createdAt])
+}
+
+model ShopRating {
+  id         String   @id @default(uuid())
+  shopId     String   @map("shop_id")
+  customerId String   @map("customer_id")
+  orderId    String   @map("order_id")
+  rating     Int
+  review     String?
+  status     ShopRatingStatus @default(VISIBLE)
+  
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  // Relationships
+  shop       Store       @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer   User        @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  order      Reservation @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, orderId])
+  @@index([shopId])
+  @@index([customerId])
+  @@index([orderId])
+  @@map("shop_ratings")
 }
 

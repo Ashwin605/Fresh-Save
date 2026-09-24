@@ -22,8 +22,10 @@ import {
 } from './dto/reservation-query.dto';
 import { RESERVATION_CONSTANTS } from './constants/reservations.constants';
 import { Prisma, ReservationStatus } from '@prisma/client';
-import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
+import { ConfigService } from '@nestjs/config';
+import { CouponsService } from '../coupons/coupons.service';
+import { PricingService } from '../pricing/pricing.service';
 
 @Injectable()
 export class ReservationsService {
@@ -32,6 +34,8 @@ export class ReservationsService {
     private readonly txService: ReservationTransactionService,
     private readonly lifecycleService: ReservationLifecycleService,
     private readonly configService: ConfigService,
+    private readonly couponsService: CouponsService,
+    private readonly pricingService: PricingService,
   ) {}
 
   // ── CUSTOMER ACTIONS ───────────────────────────────────────────
@@ -57,94 +61,26 @@ export class ReservationsService {
       }
     }
 
-    // 2. Validate Store & Business
-    const store = await this.prisma.store.findUnique({
-      where: { id: dto.storeId },
-      include: { business: true },
+    // 2 & 3. Authoritative Pricing Calculation
+    // The PricingService handles loading DB prices, offers, validating coupons, limits and math.
+    const priceSnapshot = await this.pricingService.calculateCartPrice({
+      customerId,
+      storeId: dto.storeId,
+      items: dto.items,
+      couponCode: dto.couponCode,
     });
 
-    if (
-      !store ||
-      store.status !== 'ACTIVE' ||
-      store.verificationStatus !== 'VERIFIED'
-    ) {
-      throw new BadRequestException('Store is inactive or unverified.');
-    }
-    if (
-      store.business.status !== 'ACTIVE' ||
-      store.business.verificationStatus !== 'VERIFIED'
-    ) {
-      throw new BadRequestException('Business is inactive or unverified.');
-    }
-
-    // 3. Prevent duplicate inventory IDs in the request
-    const uniqueIds = new Set(dto.items.map((i) => i.inventoryId));
-    if (uniqueIds.size !== dto.items.length) {
-      throw new BadRequestException(
-        'Duplicate inventory items found in reservation request.',
-      );
-    }
-
-    // 4. Calculate prices and build params
-    const createItemParams: CreateReservationItemParam[] = [];
-    let totalSubtotal = new Prisma.Decimal(0);
-    let totalDiscount = new Prisma.Decimal(0);
-
-    for (const item of dto.items) {
-      const inventory = await this.prisma.inventory.findUnique({
-        where: { id: item.inventoryId },
-        include: { product: true },
-      });
-
-      if (!inventory) {
-        throw new BadRequestException(
-          `Inventory item ${item.inventoryId} not found.`,
-        );
-      }
-      if (inventory.storeId !== dto.storeId) {
-        throw new BadRequestException(
-          `Inventory ${item.inventoryId} does not belong to the requested store.`,
-        );
-      }
-      if (inventory.status !== 'ACTIVE' || inventory.expiryDate <= new Date()) {
-        throw new BadRequestException(
-          `Inventory ${item.inventoryId} is not active or has expired.`,
-        );
-      }
-
-      // Fetch active offer for price calculation
-      const now = new Date();
-      const offer = await this.prisma.offer.findFirst({
-        where: {
-          inventoryId: item.inventoryId,
-          status: 'ACTIVE',
-          startsAt: { lte: now },
-          endsAt: { gte: now },
-        },
-        orderBy: { discountValue: 'desc' },
-      });
-
-      const originalPrice = inventory.sellingPrice;
-      const discountedPrice = offer ? offer.discountedPrice : originalPrice;
-      const discountAmount = originalPrice.minus(discountedPrice);
-      const subtotal = discountedPrice.mul(item.quantity);
-
-      const itemDiscountTotal = discountAmount.mul(item.quantity);
-
-      totalSubtotal = totalSubtotal.plus(subtotal);
-      totalDiscount = totalDiscount.plus(itemDiscountTotal);
-
-      createItemParams.push({
-        inventoryId: item.inventoryId,
-        productId: inventory.productId,
-        offerId: offer ? offer.id : null,
-        quantity: item.quantity,
-        originalUnitPrice: originalPrice,
-        discountedUnitPrice: discountedPrice,
-        discountAmount: discountAmount,
-        subtotal: subtotal,
-      });
-    }
+    // 4. Map the calculated snapshot to ReservationItemParams for transaction
+    const createItemParams: CreateReservationItemParam[] = priceSnapshot.items.map(item => ({
+      inventoryId: item.inventoryId,
+      productId: item.productId,
+      offerId: item.offerId,
+      quantity: item.quantity,
+      originalUnitPrice: item._rawOriginalPrice,
+      discountedUnitPrice: item._rawDiscountedPrice,
+      discountAmount: item._rawOriginalPrice.minus(item._rawDiscountedPrice),
+      subtotal: item._rawSubtotal,
+    }));
 
     // 5. Generate Code & Expiry
     const reservationCode = this.generateReservationCode();
@@ -153,8 +89,8 @@ export class ReservationsService {
       RESERVATION_CONSTANTS.DEFAULT_HOLD_MINUTES;
     const expiresAt = new Date(Date.now() + holdMinutes * 60000);
 
-    // 6. Execute Transaction
-    return this.txService.createReservation({
+    // 6. Execute Transaction using EXACT snapshot from PricingService
+    const reservation = await this.txService.createReservation({
       customerId,
       storeId: dto.storeId,
       reservationCode,
@@ -162,10 +98,32 @@ export class ReservationsService {
       expiresAt,
       notes: dto.notes,
       items: createItemParams,
-      subtotal: totalSubtotal,
-      totalDiscount,
-      totalAmount: totalSubtotal, // amount to pay is the discounted subtotal
+      subtotal: priceSnapshot._raw.totalSubtotal,
+      totalDiscount: priceSnapshot._raw.totalDiscount,
+      totalAmount: priceSnapshot._raw.finalTotal,
     });
+
+    if (priceSnapshot._raw.appliedCouponId) {
+      await this.prisma.reservation.update({
+        where: { id: reservation.id },
+        data: { appliedCouponId: priceSnapshot._raw.appliedCouponId }
+      });
+      
+      await this.prisma.couponUsage.create({
+        data: {
+          couponId: priceSnapshot._raw.appliedCouponId,
+          customerId: customerId,
+          orderId: reservation.id,
+        }
+      });
+
+      await this.prisma.coupon.update({
+        where: { id: priceSnapshot._raw.appliedCouponId },
+        data: { usedCount: { increment: 1 } }
+      });
+    }
+
+    return reservation;
   }
 
   async cancelReservation(

@@ -60,4 +60,12 @@ export class CreateReservationDto {
   @IsString()
   @IsOptional()
   notes?: string;
+
+  @ApiPropertyOptional({
+    description: 'Coupon code to apply',
+    example: 'SAVE50',
+  })
+  @IsString()
+  @IsOptional()
+  couponCode?: string;
 }

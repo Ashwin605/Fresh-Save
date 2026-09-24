@@ -1,8 +1,9 @@
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
 import '../providers/admin_offers_provider.dart';
+import 'package:go_router/go_router.dart';
 
 class AdminDiscountsScreen extends ConsumerWidget {
   const AdminDiscountsScreen({super.key});
@@ -52,8 +53,10 @@ class AdminDiscountsScreen extends ConsumerWidget {
           margin: const EdgeInsets.only(bottom: AppSpacing.md),
           color: AppColors.surface,
           child: ListTile(
-            title: Text(item['name'] ?? item['id'] ?? item['date'] ?? 'Item $index', style: const TextStyle(color: AppColors.textPrimary)),
-            subtitle: Text(item.toString(), maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textSecondary)),
+            title: Text(item['title'] ?? item['id'] ?? 'Offer', style: const TextStyle(color: AppColors.textPrimary)),
+            subtitle: Text('Status: ${item['status']} | Discount: ${item['discountValue']}', style: const TextStyle(color: AppColors.textSecondary)),
+            trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+            onTap: () => context.push('/admin/offers/${item['id']}'),
           ),
         );
       },

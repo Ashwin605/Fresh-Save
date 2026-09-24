@@ -236,10 +236,53 @@ class _ReservationDetailScreenState extends ConsumerState<ReservationDetailScree
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Total', style: AppTypography.headline),
+                          Text('Items', style: AppTypography.body),
+                          Text('\$${reservation.subtotal.toStringAsFixed(2)}', style: AppTypography.body),
+                        ],
+                      ),
+                      if (reservation.items.any((i) => i.discountAmount > 0)) ...[
+                        const SizedBox(height: AppSpacing.xs),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Offer discount', style: AppTypography.body),
+                            Text('-\$${reservation.items.fold<double>(0, (sum, i) => sum + i.discountAmount).toStringAsFixed(2)}', 
+                                 style: AppTypography.body.copyWith(color: AppColors.success)),
+                          ],
+                        ),
+                      ],
+                      if (reservation.totalDiscount > reservation.items.fold<double>(0, (sum, i) => sum + i.discountAmount)) ...[
+                        const SizedBox(height: AppSpacing.xs),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Coupon discount', style: AppTypography.body),
+                            Text('-\$${(reservation.totalDiscount - reservation.items.fold<double>(0, (sum, i) => sum + i.discountAmount)).toStringAsFixed(2)}', 
+                                 style: AppTypography.body.copyWith(color: AppColors.success)),
+                          ],
+                        ),
+                      ],
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                        child: Divider(color: AppColors.border.withValues(alpha: 0.5)),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Total paid', style: AppTypography.headline),
                           Text('\$${reservation.totalAmount.toStringAsFixed(2)}', style: AppTypography.headline.copyWith(color: AppColors.primary)),
                         ],
                       ),
+                      if (reservation.totalDiscount > 0) ...[
+                        const SizedBox(height: AppSpacing.xs),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Savings', style: AppTypography.bodySmall.copyWith(color: AppColors.success)),
+                            Text('\$${reservation.totalDiscount.toStringAsFixed(2)}', style: AppTypography.bodySmall.copyWith(color: AppColors.success, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ).animate().fade(duration: AppAnimations.medium, delay: 250.ms).slideY(begin: 0.1, end: 0),
@@ -260,11 +303,82 @@ class _ReservationDetailScreenState extends ConsumerState<ReservationDetailScree
                     isLoading: _isCancelling,
                     onPressed: () => _cancelReservation(reservation),
                   ).animate().fade(duration: AppAnimations.medium, delay: 400.ms).slideY(begin: 0.1, end: 0),
+                ],
+
+                if (reservation.status == ReservationStatus.completed) ...[
+                  const SizedBox(height: AppSpacing.xxl),
+                  _buildRatingSection(reservation.storeId, reservation.id).animate().fade(duration: AppAnimations.medium, delay: 400.ms).slideY(begin: 0.1, end: 0),
                 ]
               ],
             ),
           );
         },
+      ),
+    );
+  }
+
+  int _submittedRating = 0;
+
+  Widget _buildRatingSection(String shopId, String orderId) {
+    if (_submittedRating > 0) {
+      return Container(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          children: [
+            Text('Rated', style: AppTypography.title.copyWith(color: AppColors.primary)),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(5, (index) {
+                return Icon(
+                  index < _submittedRating ? Icons.star : Icons.star_border,
+                  color: Colors.amber,
+                );
+              }),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        children: [
+          Text('Rate this shop', style: AppTypography.title),
+          const SizedBox(height: AppSpacing.sm),
+          InkWell(
+            onTap: () async {
+              import('submit_rating_screen.dart').then((m) async {
+                final result = await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    fullscreenDialog: true,
+                    builder: (_) => m.SubmitRatingScreen(orderId: orderId, shopId: shopId),
+                  ),
+                );
+                if (result is int && mounted) {
+                  setState(() => _submittedRating = result);
+                }
+              });
+            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(5, (index) {
+                return const Icon(Icons.star_border, color: Colors.amber, size: 32);
+              }),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -16,6 +16,8 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { OutboxModule } from './common/outbox/outbox.module';
 import { AiModule } from './ai/ai.module';
 import { AdminModule } from './admin/admin.module';
+import { ShopRatingsModule } from './shop-ratings/shop-ratings.module';
+import { CouponsModule } from './coupons/coupons.module';
 import { MailModule } from './mail/mail.module';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
@@ -58,6 +60,8 @@ import { APP_GUARD } from '@nestjs/core';
     OutboxModule,
     AiModule,
     MailModule,
+    ShopRatingsModule,
+    CouponsModule,
   ],
   providers: [
     {

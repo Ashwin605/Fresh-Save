@@ -1,7 +1,7 @@
+﻿import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
 import '../providers/admin_reservations_provider.dart';
 
 class AdminPackagesScreen extends ConsumerWidget {

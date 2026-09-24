@@ -8,6 +8,7 @@ import '../widgets/categories_section.dart';
 import '../widgets/promotional_banner_carousel.dart';
 import '../widgets/product_catalogue_section.dart';
 import '../widgets/nearby_stores_section.dart';
+import '../widgets/coupons_section.dart';
 import '../providers/home_providers.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -49,6 +50,8 @@ class HomeScreen extends ConsumerWidget {
                   const CategoriesSection(),
                   const SizedBox(height: AppSpacing.lg),
                   const PromotionalBannerCarousel(),
+                  const SizedBox(height: AppSpacing.xl),
+                  const CouponsSection(),
                   const SizedBox(height: AppSpacing.xl),
                   const NearbyStoresSection(),
                   const SizedBox(height: AppSpacing.xl),

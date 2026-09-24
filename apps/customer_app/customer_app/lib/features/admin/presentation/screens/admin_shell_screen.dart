@@ -1,3 +1,5 @@
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -130,6 +132,13 @@ class _AdminSideNav extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 _NavItem(
+                  title: 'Analytics',
+                  icon: Icons.analytics_outlined,
+                  route: '/admin/analytics',
+                  isSelected: currentRoute == '/admin/analytics',
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                _NavItem(
                   title: 'Users',
                   icon: Icons.people_outline,
                   route: '/admin/users',
@@ -204,6 +213,13 @@ class _AdminSideNav extends ConsumerWidget {
                   icon: Icons.card_giftcard_outlined,
                   route: '/admin/coupons',
                   isSelected: currentRoute == '/admin/coupons',
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                _NavItem(
+                  title: 'Reviews',
+                  icon: Icons.star_rate_outlined,
+                  route: '/admin/reviews',
+                  isSelected: currentRoute == '/admin/reviews',
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 _NavItem(

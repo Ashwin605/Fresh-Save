@@ -1,3 +1,5 @@
+import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_colors.dart';
@@ -53,60 +55,88 @@ class AdminDashboardScreen extends ConsumerWidget {
                     
                     final cards = [
                       _AnimatedKpiCard(
-                        title: 'Total Users',
-                        value: '${metrics['totalUsers'] ?? 0}',
-                        trend: 'Real-time',
-                        icon: Icons.people_outline,
+                        title: 'Total Orders',
+                        value: '${metrics['orders']?['total'] ?? 0}',
+                        trend: 'All time',
+                        icon: Icons.receipt_long_outlined,
                         color: const Color(0xFF3B82F6), // Blue
                         delay: 0,
-                        width: isNarrow ? constraints.maxWidth / 2 - 8 : null,
                       ),
                       _AnimatedKpiCard(
-                        title: 'Active Stores',
-                        value: '${metrics['registeredStores'] ?? 0}',
-                        trend: 'Real-time',
-                        icon: Icons.storefront_outlined,
+                        title: 'Net Revenue',
+                        value: '₹${metrics['revenue']?['net'] ?? 0}',
+                        trend: 'All time',
+                        icon: Icons.currency_rupee,
                         color: const Color(0xFF10B981), // Emerald
                         delay: 100,
-                        width: isNarrow ? constraints.maxWidth / 2 - 8 : null,
                       ),
                       _AnimatedKpiCard(
-                        title: 'Active Offers',
-                        value: '${metrics['activeOffers'] ?? 0}',
-                        trend: 'Real-time',
-                        icon: Icons.local_offer_outlined,
+                        title: 'Discounts Given',
+                        value: '₹${metrics['revenue']?['discounts'] ?? 0}',
+                        trend: 'All time',
+                        icon: Icons.money_off,
                         color: const Color(0xFFF59E0B), // Amber
                         delay: 200,
-                        width: isNarrow ? constraints.maxWidth / 2 - 8 : null,
                       ),
                       _AnimatedKpiCard(
-                        title: 'Total Reservations',
-                        value: '${metrics['totalReservations'] ?? 0}',
-                        trend: 'Real-time',
-                        icon: Icons.receipt_long_outlined,
+                        title: 'Coupon Usage',
+                        value: '${metrics['coupons']?['usage'] ?? 0}',
+                        trend: 'All time',
+                        icon: Icons.discount_outlined,
                         color: const Color(0xFF8B5CF6), // Purple
                         delay: 300,
-                        width: isNarrow ? constraints.maxWidth / 2 - 8 : null,
+                      ),
+                      _AnimatedKpiCard(
+                        title: 'Average Rating',
+                        value: '${metrics['ratings']?['average'] ?? 0} ⭐',
+                        trend: '(${metrics['ratings']?['total'] ?? 0} reviews)',
+                        icon: Icons.star_outline,
+                        color: const Color(0xFFEC4899), // Pink
+                        delay: 400,
+                      ),
+                      _AnimatedKpiCard(
+                        title: 'Active Coupons',
+                        value: '${metrics['coupons']?['active'] ?? 0}',
+                        trend: 'Current',
+                        icon: Icons.local_activity_outlined,
+                        color: const Color(0xFF06B6D4), // Cyan
+                        delay: 500,
                       ),
                     ];
                     
                     if (isNarrow) {
-                      return Wrap(
-                        spacing: 16,
-                        runSpacing: 16,
-                        children: cards,
+                      return Column(
+                        children: [
+                          Row(children: [Expanded(child: cards[0]), const SizedBox(width: 16), Expanded(child: cards[1])]),
+                          const SizedBox(height: 16),
+                          Row(children: [Expanded(child: cards[2]), const SizedBox(width: 16), Expanded(child: cards[3])]),
+                          const SizedBox(height: 16),
+                          Row(children: [Expanded(child: cards[4]), const SizedBox(width: 16), Expanded(child: cards[5])]),
+                        ],
                       );
                     }
                     
-                    return Row(
+                    return Column(
                       children: [
-                        Expanded(child: cards[0]),
-                        const SizedBox(width: AppSpacing.lg),
-                        Expanded(child: cards[1]),
-                        const SizedBox(width: AppSpacing.lg),
-                        Expanded(child: cards[2]),
-                        const SizedBox(width: AppSpacing.lg),
-                        Expanded(child: cards[3]),
+                        Row(
+                          children: [
+                            Expanded(child: cards[0]),
+                            const SizedBox(width: AppSpacing.lg),
+                            Expanded(child: cards[1]),
+                            const SizedBox(width: AppSpacing.lg),
+                            Expanded(child: cards[2]),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        Row(
+                          children: [
+                            Expanded(child: cards[3]),
+                            const SizedBox(width: AppSpacing.lg),
+                            Expanded(child: cards[4]),
+                            const SizedBox(width: AppSpacing.lg),
+                            Expanded(child: cards[5]),
+                          ],
+                        ),
                       ],
                     );
                   },

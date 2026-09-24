@@ -143,6 +143,7 @@ class Store {
   final String name;
   final String? logoUrl;
   final double rating;
+  final int? ratingCount;
   final double? distance;
   final int activeOffers;
 
@@ -151,6 +152,7 @@ class Store {
     required this.name,
     this.logoUrl,
     required this.rating,
+    this.ratingCount,
     this.distance,
     required this.activeOffers,
   });
@@ -164,6 +166,7 @@ class Store {
       rating:
           (json['rating'] as num?)?.toDouble() ??
           4.0, // Backend might not send rating yet
+      ratingCount: json['ratingCount'] as int?,
       distance: (distanceObj['value'] as num?)?.toDouble(),
       activeOffers: (json['activeDealCount'] as int?) ?? (json['activeOffers'] as int?) ?? 0,
     );

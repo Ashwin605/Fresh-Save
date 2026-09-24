@@ -69,6 +69,20 @@ class _PromotionalBannerCarouselState
 
         return Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('🔥 Offers for you', style: AppTypography.title),
+                  TextButton(
+                    onPressed: () => context.push('/deals/nearby'),
+                    child: Text('View all', style: AppTypography.button.copyWith(color: AppColors.primary)),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
             SizedBox(
               height: 200,
               child: GestureDetector(

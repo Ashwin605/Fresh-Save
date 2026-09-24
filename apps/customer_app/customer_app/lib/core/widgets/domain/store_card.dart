@@ -12,6 +12,7 @@ class StoreCard extends StatelessWidget {
   final String? imageUrl;
   final String distance;
   final double rating;
+  final int? ratingCount;
   final VoidCallback? onTap;
 
   const StoreCard({
@@ -20,6 +21,7 @@ class StoreCard extends StatelessWidget {
     this.imageUrl,
     required this.distance,
     required this.rating,
+    this.ratingCount,
     this.onTap,
   });
 
@@ -86,7 +88,12 @@ class StoreCard extends StatelessWidget {
                     const Spacer(),
                     Icon(Icons.star_rounded, size: 16, color: AppColors.warning),
                     const SizedBox(width: 4),
-                    Text(rating.toStringAsFixed(1), style: AppTypography.label),
+                    Text(
+                      ratingCount != null 
+                          ? '${rating.toStringAsFixed(1)} · $ratingCount ratings' 
+                          : rating.toStringAsFixed(1), 
+                      style: AppTypography.label
+                    ),
                   ],
                 ),
               ],

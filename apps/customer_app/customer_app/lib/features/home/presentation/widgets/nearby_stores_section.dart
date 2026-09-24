@@ -66,6 +66,7 @@ class NearbyStoresSection extends ConsumerWidget {
                           ? '${store.distance!.toStringAsFixed(1)} km'
                           : 'Nearby',
                       rating: store.rating,
+                      ratingCount: store.ratingCount,
                       onTap: () => context.push('/store/${store.id}'),
                     ),
                   ).animate().fade(

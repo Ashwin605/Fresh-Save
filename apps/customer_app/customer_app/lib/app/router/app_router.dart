@@ -68,6 +68,7 @@ import '../../features/owner/presentation/screens/owner_notification_preferences
 // Admin Screens
 import '../../features/admin/presentation/screens/admin_shell_screen.dart';
 import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
+import '../../features/admin/presentation/screens/admin_analytics_screen.dart';
 import '../../features/admin/presentation/screens/admin_users_screen.dart';
 import '../../features/admin/presentation/screens/admin_stores_screen.dart';
 import '../../features/admin/presentation/screens/admin_audit_logs_screen.dart';
@@ -79,8 +80,11 @@ import '../../features/admin/presentation/screens/admin_packages_screen.dart';
 import '../../features/admin/presentation/screens/admin_user_logins_screen.dart';
 import '../../features/admin/presentation/screens/admin_shopkeepers_screen.dart';
 import '../../features/admin/presentation/screens/admin_discounts_screen.dart';
+import '../../features/admin/presentation/screens/admin_offer_detail_screen.dart';
 import '../../features/admin/presentation/screens/admin_coupons_screen.dart';
+import '../../features/admin/presentation/screens/admin_coupon_detail_screen.dart';
 import '../../features/admin/presentation/screens/admin_contacts_screen.dart';
+import '../../features/admin/presentation/screens/admin_reviews_screen.dart';
 
 /// A [ChangeNotifier] that bridges Riverpod state changes to GoRouter's
 /// [refreshListenable]. This ensures the GoRouter instance is created ONCE
@@ -397,6 +401,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const AdminDashboardScreen(),
           ),
           GoRoute(
+            path: '/admin/analytics',
+            builder: (context, state) => const AdminAnalyticsScreen(),
+          ),
+          GoRoute(
             path: '/admin/users',
             builder: (context, state) => const AdminUsersScreen(),
           ),
@@ -425,8 +433,16 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const AdminInventoryScreen(),
           ),
           GoRoute(
-            path: '/admin/stock-transfers',
-            builder: (context, state) => const AdminStockTransfersScreen(),
+            path: '/admin/coupons',
+            builder: (context, state) => const AdminCouponsScreen(),
+          ),
+          GoRoute(
+            path: '/admin/coupons/:id',
+            builder: (context, state) => AdminCouponDetailScreen(id: state.pathParameters['id']!),
+          ),
+          GoRoute(
+            path: '/admin/reviews',
+            builder: (context, state) => const AdminReviewsScreen(),
           ),
           GoRoute(
             path: '/admin/packages',
@@ -443,6 +459,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/admin/discounts',
             builder: (context, state) => const AdminDiscountsScreen(),
+          ),
+          GoRoute(
+            path: '/admin/offers/:id',
+            builder: (context, state) => AdminOfferDetailScreen(id: state.pathParameters['id']!),
           ),
           GoRoute(
             path: '/admin/coupons',

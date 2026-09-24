@@ -21,6 +21,9 @@ import '../../../location/presentation/providers/location_provider.dart';
 import '../../../location/domain/models/location_models.dart';
 import '../../../../core/network/result.dart';
 import '../../../home/domain/models/home_models.dart';
+import '../../domain/models/rating_models.dart';
+import '../../data/repositories/shop_ratings_repository.dart';
+import '../../../home/presentation/widgets/coupons_section.dart';
 
 class StoreDetailsScreen extends ConsumerStatefulWidget {
   final String storeId;
@@ -39,11 +42,36 @@ class _StoreDetailsScreenState extends ConsumerState<StoreDetailsScreen> {
   int _lastRequestId = 0;
   static const int _limit = 20;
 
+  ShopRatingSummary? _ratingSummary;
+  List<ShopRating> _recentReviews = [];
+  bool _isLoadingRatings = true;
+
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    Future.microtask(() => _fetchPage(1));
+    Future.microtask(() {
+      _fetchPage(1);
+      _fetchRatings();
+    });
+  }
+
+  Future<void> _fetchRatings() async {
+    final repo = ref.read(shopRatingsRepositoryProvider);
+    final summaryResult = await repo.getRatingSummary(widget.storeId);
+    final reviewsResult = await repo.getRatings(widget.storeId, page: 1, limit: 3);
+
+    if (mounted) {
+      setState(() {
+        _isLoadingRatings = false;
+        if (summaryResult is Success<ShopRatingSummary>) {
+          _ratingSummary = summaryResult.data;
+        }
+        if (reviewsResult is Success<List<ShopRating>>) {
+          _recentReviews = reviewsResult.data;
+        }
+      });
+    }
   }
 
   @override
@@ -69,8 +97,12 @@ class _StoreDetailsScreenState extends ConsumerState<StoreDetailsScreen> {
   Future<void> _refresh() async {
     setState(() {
       _state = _state.copyWith(currentPage: 1, hasMore: true);
+      _isLoadingRatings = true;
     });
-    await _fetchPage(1);
+    await Future.wait([
+      _fetchPage(1),
+      _fetchRatings(),
+    ]);
   }
 
   Future<void> _fetchPage(int page) async {
@@ -177,8 +209,19 @@ class _StoreDetailsScreenState extends ConsumerState<StoreDetailsScreen> {
                         _state.storeMetadata,
                         _state.storeDistance,
                       ).animate().fade(duration: AppAnimations.medium).slideY(begin: 0.2, end: 0),
+                      const SizedBox(height: AppSpacing.lg),
+                      if (_isLoadingRatings)
+                        AppSkeleton(width: 150, height: 24, borderRadius: AppRadius.sm)
+                      else if (_ratingSummary != null && _ratingSummary!.totalRatings > 0)
+                        _buildRatingSummary(),
                       const SizedBox(height: AppSpacing.xxl),
-                      Text('FreshSave Deals', style: AppTypography.title).animate().fade(duration: AppAnimations.medium, delay: 100.ms).slideY(begin: 0.2, end: 0),
+                      if (!_isLoadingRatings && _recentReviews.isNotEmpty) ...[
+                        _buildReviewsSection(),
+                        const SizedBox(height: AppSpacing.xxl),
+                      ],
+                      const CouponsSection(),
+                      const SizedBox(height: AppSpacing.xxl),
+                      Text('Offers', style: AppTypography.title).animate().fade(duration: AppAnimations.medium, delay: 100.ms).slideY(begin: 0.2, end: 0),
                       const SizedBox(height: AppSpacing.md),
                     ],
                   ),
@@ -395,5 +438,76 @@ class _StoreDetailsScreenState extends ConsumerState<StoreDetailsScreen> {
         ),
       ],
     );
+  }
+
+  Widget _buildRatingSummary() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const Icon(Icons.star, color: Colors.amber, size: 24),
+        const SizedBox(width: AppSpacing.xs),
+        Text('${_ratingSummary!.averageRating}', style: AppTypography.headline.copyWith(fontSize: 20)),
+        const SizedBox(width: AppSpacing.sm),
+        Text('(${_ratingSummary!.totalRatings} ratings)', style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
+      ],
+    ).animate().fade(duration: AppAnimations.medium);
+  }
+
+  Widget _buildReviewsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Customer Reviews', style: AppTypography.title),
+        const SizedBox(height: AppSpacing.md),
+        ..._recentReviews.take(2).map((review) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.md),
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceVariant.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: List.generate(5, (i) {
+                      return Icon(
+                        i < review.rating ? Icons.star : Icons.star_border,
+                        color: Colors.amber,
+                        size: 16,
+                      );
+                    }),
+                  ),
+                  if (review.review != null && review.review!.isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      '"${review.review}"',
+                      style: AppTypography.body.copyWith(fontStyle: FontStyle.italic),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          );
+        }),
+        Center(
+          child: TextButton(
+            onPressed: () {
+              // Note: using go_router, requires route setup or push
+              import('store_reviews_screen.dart').then((m) {
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => m.StoreReviewsScreen(storeId: widget.storeId),
+                ));
+              });
+            },
+            child: Text('View all reviews', style: AppTypography.button.copyWith(color: AppColors.primary)),
+          ),
+        ),
+      ],
+    ).animate().fade(duration: AppAnimations.medium);
   }
 }
