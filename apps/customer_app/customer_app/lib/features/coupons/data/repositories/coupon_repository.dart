@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/network/result.dart';
 import '../../../../core/network/app_error.dart';
-import '../domain/models/coupon.dart';
+import '../../domain/models/coupon.dart';
 
 abstract class CouponRepository {
   Future<Result<List<Coupon>>> getAvailableCoupons();

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/network/result.dart';
 import '../../../../core/network/app_error.dart';
-import '../domain/models/rating_models.dart';
+import '../../domain/models/rating_models.dart';
 
 abstract class ShopRatingsRepository {
   Future<Result<void>> createRating(String shopId, String orderId, int rating, String? review);

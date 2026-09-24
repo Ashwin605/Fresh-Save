@@ -39,6 +39,7 @@ abstract class CreateReservationRequest with _$CreateReservationRequest {
     required String storeId,
     required List<ReservationItemRequest> items,
     String? notes,
+    String? couponCode,
   }) = _CreateReservationRequest;
 
   factory CreateReservationRequest.fromJson(Map<String, dynamic> json) =>

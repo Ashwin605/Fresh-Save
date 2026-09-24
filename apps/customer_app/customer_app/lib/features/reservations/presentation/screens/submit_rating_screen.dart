@@ -101,7 +101,7 @@ class _SubmitRatingScreenState extends ConsumerState<SubmitRatingScreen> {
               }),
             ),
             const SizedBox(height: AppSpacing.xxl),
-            Text('Tell us about your experience (Optional)', style: AppTypography.subtitle),
+            Text('Tell us about your experience (Optional)', style: AppTypography.body),
             const SizedBox(height: AppSpacing.sm),
             TextField(
               controller: _reviewController,

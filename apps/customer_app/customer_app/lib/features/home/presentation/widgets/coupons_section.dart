@@ -6,6 +6,7 @@ import '../../../../app/theme/app_typography.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../coupons/presentation/providers/coupon_providers.dart';
+import '../../../coupons/presentation/screens/coupons_screen.dart';
 
 class CouponsSection extends ConsumerWidget {
   const CouponsSection({super.key});
@@ -29,11 +30,9 @@ class CouponsSection extends ConsumerWidget {
                   Text('🎟️ Available Coupons', style: AppTypography.title),
                   TextButton(
                     onPressed: () {
-                      import('../../../coupons/presentation/screens/coupons_screen.dart').then((m) {
-                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const m.CouponsScreen()));
-                      });
+                      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CouponsScreen()));
                     },
-                    child: Text('View All', style: AppTypography.button.copyWith(color: AppColors.primary)),
+                    child: Text('View All', style: AppTypography.label.copyWith(color: AppColors.primary)),
                   ),
                 ],
               ),
@@ -62,7 +61,7 @@ class CouponsSection extends ConsumerWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(coupon.code, style: AppTypography.subtitle.copyWith(fontWeight: FontWeight.bold, color: AppColors.primary)),
+                            Text(coupon.code, style: AppTypography.body.copyWith(fontWeight: FontWeight.bold, color: AppColors.primary)),
                             if (coupon.shop != null)
                               Text(coupon.shop!.name, style: AppTypography.caption),
                           ],

@@ -7,8 +7,9 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_radius.dart';
 import '../../../../core/widgets/buttons/app_button.dart';
 import '../../../../core/network/result.dart';
-import '../data/repositories/coupon_repository.dart';
-import '../domain/models/coupon.dart';
+import '../../data/repositories/coupon_repository.dart';
+import '../../domain/models/coupon.dart';
+import '../providers/coupon_providers.dart';
 import 'package:intl/intl.dart';
 
 class CouponsScreen extends ConsumerStatefulWidget {
@@ -88,7 +89,7 @@ class _CouponsScreenState extends ConsumerState<CouponsScreen> {
                 Text('Maximum discount: ₹${coupon.maximumDiscountAmount!.toStringAsFixed(0)}', style: AppTypography.body),
               Text('Valid until: ${DateFormat.yMMMd().format(coupon.expiryDate)}', style: AppTypography.body),
               const SizedBox(height: AppSpacing.lg),
-              Text('Terms & Conditions:', style: AppTypography.subtitle),
+              Text('Terms & Conditions:', style: AppTypography.body),
               const SizedBox(height: AppSpacing.xs),
               Text('• Valid on eligible orders.\n• One use per customer (if restricted).\n• Cannot be combined with incompatible promotions.', style: AppTypography.caption),
               const SizedBox(height: AppSpacing.xxl),
@@ -129,7 +130,7 @@ class _CouponsScreenState extends ConsumerState<CouponsScreen> {
                         children: [
                           const Text('🎟️', style: TextStyle(fontSize: 48)),
                           const SizedBox(height: AppSpacing.md),
-                          Text('No coupons available right now.', style: AppTypography.subtitle),
+                          Text('No coupons available right now.', style: AppTypography.body),
                           const SizedBox(height: AppSpacing.xs),
                           Text('Check back later for new offers.', style: AppTypography.body.copyWith(color: AppColors.textSecondary)),
                         ],
@@ -157,7 +158,7 @@ class _CouponsScreenState extends ConsumerState<CouponsScreen> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text('🎟 ${coupon.code}', style: AppTypography.subtitle.copyWith(fontWeight: FontWeight.bold)),
+                                    Text('🎟 ${coupon.code}', style: AppTypography.body.copyWith(fontWeight: FontWeight.bold)),
                                     if (coupon.shop != null)
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

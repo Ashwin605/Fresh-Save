@@ -392,7 +392,7 @@ class _ReservationReviewScreenState
     );
   }
 
-  Widget _buildCouponSection(DealDetail deal, double total) {
+  Widget _buildCouponSection(DealDetail deal) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(

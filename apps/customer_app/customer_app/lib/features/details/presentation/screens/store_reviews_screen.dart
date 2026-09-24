@@ -208,7 +208,7 @@ class _StoreReviewsScreenState extends ConsumerState<StoreReviewsScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(review.customerName, style: AppTypography.subtitle),
+                              Text(review.customerName, style: AppTypography.body),
                               Text(DateFormat.yMMMd().format(review.createdAt), style: AppTypography.caption),
                             ],
                           ),

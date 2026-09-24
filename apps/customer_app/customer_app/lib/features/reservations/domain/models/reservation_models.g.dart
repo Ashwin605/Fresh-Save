@@ -28,6 +28,7 @@ _CreateReservationRequest _$CreateReservationRequestFromJson(
       .map((e) => ReservationItemRequest.fromJson(e as Map<String, dynamic>))
       .toList(),
   notes: json['notes'] as String?,
+  couponCode: json['couponCode'] as String?,
 );
 
 Map<String, dynamic> _$CreateReservationRequestToJson(
@@ -36,6 +37,7 @@ Map<String, dynamic> _$CreateReservationRequestToJson(
   'storeId': instance.storeId,
   'items': instance.items,
   'notes': instance.notes,
+  'couponCode': instance.couponCode,
 };
 
 _Reservation _$ReservationFromJson(Map<String, dynamic> json) => _Reservation(

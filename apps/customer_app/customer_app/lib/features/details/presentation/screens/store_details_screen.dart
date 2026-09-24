@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'store_reviews_screen.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../app/theme/app_spacing.dart';
@@ -497,14 +498,11 @@ class _StoreDetailsScreenState extends ConsumerState<StoreDetailsScreen> {
         Center(
           child: TextButton(
             onPressed: () {
-              // Note: using go_router, requires route setup or push
-              import('store_reviews_screen.dart').then((m) {
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => m.StoreReviewsScreen(storeId: widget.storeId),
-                ));
-              });
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => StoreReviewsScreen(storeId: widget.storeId),
+              ));
             },
-            child: Text('View all reviews', style: AppTypography.button.copyWith(color: AppColors.primary)),
+            child: Text('View all reviews', style: AppTypography.label.copyWith(color: AppColors.primary)),
           ),
         ),
       ],

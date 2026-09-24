@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'submit_rating_screen.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
@@ -359,17 +360,15 @@ class _ReservationDetailScreenState extends ConsumerState<ReservationDetailScree
           const SizedBox(height: AppSpacing.sm),
           InkWell(
             onTap: () async {
-              import('submit_rating_screen.dart').then((m) async {
-                final result = await Navigator.of(context).push(
-                  MaterialPageRoute(
-                    fullscreenDialog: true,
-                    builder: (_) => m.SubmitRatingScreen(orderId: orderId, shopId: shopId),
-                  ),
-                );
-                if (result is int && mounted) {
-                  setState(() => _submittedRating = result);
-                }
-              });
+              final result = await Navigator.of(context).push(
+                MaterialPageRoute(
+                  fullscreenDialog: true,
+                  builder: (_) => SubmitRatingScreen(orderId: orderId, shopId: shopId),
+                ),
+              );
+              if (result is int && mounted) {
+                setState(() => _submittedRating = result);
+              }
             },
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,

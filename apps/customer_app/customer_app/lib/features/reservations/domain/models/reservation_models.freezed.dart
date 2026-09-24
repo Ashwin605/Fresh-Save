@@ -281,7 +281,7 @@ as int,
 /// @nodoc
 mixin _$CreateReservationRequest {
 
- String get storeId; List<ReservationItemRequest> get items; String? get notes;
+ String get storeId; List<ReservationItemRequest> get items; String? get notes; String? get couponCode;
 /// Create a copy of CreateReservationRequest
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -294,16 +294,16 @@ $CreateReservationRequestCopyWith<CreateReservationRequest> get copyWith => _$Cr
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CreateReservationRequest&&(identical(other.storeId, storeId) || other.storeId == storeId)&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.notes, notes) || other.notes == notes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CreateReservationRequest&&(identical(other.storeId, storeId) || other.storeId == storeId)&&const DeepCollectionEquality().equals(other.items, items)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.couponCode, couponCode) || other.couponCode == couponCode));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,storeId,const DeepCollectionEquality().hash(items),notes);
+int get hashCode => Object.hash(runtimeType,storeId,const DeepCollectionEquality().hash(items),notes,couponCode);
 
 @override
 String toString() {
-  return 'CreateReservationRequest(storeId: $storeId, items: $items, notes: $notes)';
+  return 'CreateReservationRequest(storeId: $storeId, items: $items, notes: $notes, couponCode: $couponCode)';
 }
 
 
@@ -314,7 +314,7 @@ abstract mixin class $CreateReservationRequestCopyWith<$Res>  {
   factory $CreateReservationRequestCopyWith(CreateReservationRequest value, $Res Function(CreateReservationRequest) _then) = _$CreateReservationRequestCopyWithImpl;
 @useResult
 $Res call({
- String storeId, List<ReservationItemRequest> items, String? notes
+ String storeId, List<ReservationItemRequest> items, String? notes, String? couponCode
 });
 
 
@@ -331,11 +331,12 @@ class _$CreateReservationRequestCopyWithImpl<$Res>
 
 /// Create a copy of CreateReservationRequest
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? storeId = null,Object? items = null,Object? notes = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? storeId = null,Object? items = null,Object? notes = freezed,Object? couponCode = freezed,}) {
   return _then(_self.copyWith(
 storeId: null == storeId ? _self.storeId : storeId // ignore: cast_nullable_to_non_nullable
 as String,items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
 as List<ReservationItemRequest>,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
+as String?,couponCode: freezed == couponCode ? _self.couponCode : couponCode // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -421,10 +422,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String storeId,  List<ReservationItemRequest> items,  String? notes)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String storeId,  List<ReservationItemRequest> items,  String? notes,  String? couponCode)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CreateReservationRequest() when $default != null:
-return $default(_that.storeId,_that.items,_that.notes);case _:
+return $default(_that.storeId,_that.items,_that.notes,_that.couponCode);case _:
   return orElse();
 
 }
@@ -442,10 +443,10 @@ return $default(_that.storeId,_that.items,_that.notes);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String storeId,  List<ReservationItemRequest> items,  String? notes)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String storeId,  List<ReservationItemRequest> items,  String? notes,  String? couponCode)  $default,) {final _that = this;
 switch (_that) {
 case _CreateReservationRequest():
-return $default(_that.storeId,_that.items,_that.notes);case _:
+return $default(_that.storeId,_that.items,_that.notes,_that.couponCode);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -462,10 +463,10 @@ return $default(_that.storeId,_that.items,_that.notes);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String storeId,  List<ReservationItemRequest> items,  String? notes)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String storeId,  List<ReservationItemRequest> items,  String? notes,  String? couponCode)?  $default,) {final _that = this;
 switch (_that) {
 case _CreateReservationRequest() when $default != null:
-return $default(_that.storeId,_that.items,_that.notes);case _:
+return $default(_that.storeId,_that.items,_that.notes,_that.couponCode);case _:
   return null;
 
 }
@@ -477,7 +478,7 @@ return $default(_that.storeId,_that.items,_that.notes);case _:
 @JsonSerializable()
 
 class _CreateReservationRequest implements CreateReservationRequest {
-  const _CreateReservationRequest({required this.storeId, required final  List<ReservationItemRequest> items, this.notes}): _items = items;
+  const _CreateReservationRequest({required this.storeId, required final  List<ReservationItemRequest> items, this.notes, this.couponCode}): _items = items;
   factory _CreateReservationRequest.fromJson(Map<String, dynamic> json) => _$CreateReservationRequestFromJson(json);
 
 @override final  String storeId;
@@ -489,6 +490,7 @@ class _CreateReservationRequest implements CreateReservationRequest {
 }
 
 @override final  String? notes;
+@override final  String? couponCode;
 
 /// Create a copy of CreateReservationRequest
 /// with the given fields replaced by the non-null parameter values.
@@ -503,16 +505,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CreateReservationRequest&&(identical(other.storeId, storeId) || other.storeId == storeId)&&const DeepCollectionEquality().equals(other._items, _items)&&(identical(other.notes, notes) || other.notes == notes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CreateReservationRequest&&(identical(other.storeId, storeId) || other.storeId == storeId)&&const DeepCollectionEquality().equals(other._items, _items)&&(identical(other.notes, notes) || other.notes == notes)&&(identical(other.couponCode, couponCode) || other.couponCode == couponCode));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,storeId,const DeepCollectionEquality().hash(_items),notes);
+int get hashCode => Object.hash(runtimeType,storeId,const DeepCollectionEquality().hash(_items),notes,couponCode);
 
 @override
 String toString() {
-  return 'CreateReservationRequest(storeId: $storeId, items: $items, notes: $notes)';
+  return 'CreateReservationRequest(storeId: $storeId, items: $items, notes: $notes, couponCode: $couponCode)';
 }
 
 
@@ -523,7 +525,7 @@ abstract mixin class _$CreateReservationRequestCopyWith<$Res> implements $Create
   factory _$CreateReservationRequestCopyWith(_CreateReservationRequest value, $Res Function(_CreateReservationRequest) _then) = __$CreateReservationRequestCopyWithImpl;
 @override @useResult
 $Res call({
- String storeId, List<ReservationItemRequest> items, String? notes
+ String storeId, List<ReservationItemRequest> items, String? notes, String? couponCode
 });
 
 
@@ -540,11 +542,12 @@ class __$CreateReservationRequestCopyWithImpl<$Res>
 
 /// Create a copy of CreateReservationRequest
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? storeId = null,Object? items = null,Object? notes = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? storeId = null,Object? items = null,Object? notes = freezed,Object? couponCode = freezed,}) {
   return _then(_CreateReservationRequest(
 storeId: null == storeId ? _self.storeId : storeId // ignore: cast_nullable_to_non_nullable
 as String,items: null == items ? _self._items : items // ignore: cast_nullable_to_non_nullable
 as List<ReservationItemRequest>,notes: freezed == notes ? _self.notes : notes // ignore: cast_nullable_to_non_nullable
+as String?,couponCode: freezed == couponCode ? _self.couponCode : couponCode // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

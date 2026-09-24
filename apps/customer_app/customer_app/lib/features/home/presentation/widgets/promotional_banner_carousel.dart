@@ -77,7 +77,7 @@ class _PromotionalBannerCarouselState
                   Text('🔥 Offers for you', style: AppTypography.title),
                   TextButton(
                     onPressed: () => context.push('/deals/nearby'),
-                    child: Text('View all', style: AppTypography.button.copyWith(color: AppColors.primary)),
+                    child: Text('View all', style: AppTypography.label.copyWith(color: AppColors.primary)),
                   ),
                 ],
               ),
