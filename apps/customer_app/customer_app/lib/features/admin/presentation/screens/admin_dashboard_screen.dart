@@ -156,22 +156,22 @@ class AdminDashboardScreen extends ConsumerWidget {
                     Widget contentSection;
                     if (isMobile || isTablet) {
                       contentSection = Column(
-                        children: const [
-                          _MockChartSection(),
-                          SizedBox(height: AppSpacing.xl),
-                          _RecentActivitySection(),
+                        children: [
+                          const _MockChartSection(),
+                          const SizedBox(height: AppSpacing.xl),
+                          const _RecentActivitySection(),
                         ],
                       );
                     } else {
                       contentSection = Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Expanded(
+                        children: [
+                          const Expanded(
                             flex: 2,
                             child: _MockChartSection(),
                           ),
-                          SizedBox(width: AppSpacing.xl),
-                          Expanded(
+                          const SizedBox(width: AppSpacing.xl),
+                          const Expanded(
                             flex: 1,
                             child: _RecentActivitySection(),
                           ),
