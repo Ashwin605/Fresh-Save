@@ -7,12 +7,15 @@ import { DatabaseModule } from '../database/database.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { MailModule } from '../mail/mail.module';
 
+import { RedisModule } from '../redis/redis.module';
+
 @Module({
   imports: [
     DatabaseModule,
     PassportModule,
     JwtModule.register({}), // Secrets are loaded via config in JwtStrategy/AuthService
     MailModule,
+    RedisModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

@@ -63,14 +63,14 @@ class AdminRepository {
     }
   }
 
-  Future<void> createStore({
+  Future<String?> createStore({
     required String name,
     required String address,
     required String ownerEmail,
     required bool verifyInstantly,
   }) async {
     try {
-      await _dio.post('/admin/stores', data: {
+      final response = await _dio.post('/admin/stores', data: {
         'ownerEmail': ownerEmail,
         'storeData': {
           'name': name,
@@ -78,6 +78,7 @@ class AdminRepository {
         },
         'verifyInstantly': verifyInstantly,
       });
+      return response.data['temporaryPassword'] as String?;
     } on DioException catch (e) {
       throw Exception(e.response?.data?['message'] ?? e.message ?? 'Failed to create store');
     }

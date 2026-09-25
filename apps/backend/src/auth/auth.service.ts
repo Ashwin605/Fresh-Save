@@ -18,6 +18,7 @@ import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { UserRole, UserStatus } from '@prisma/client';
+import { RedisService } from '../redis/redis.service';
 
 export interface JwtPayload {
   sub: string; // userId
@@ -38,6 +39,7 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private mailService: MailService,
+    private redisService: RedisService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -113,7 +115,6 @@ export class AuthService {
         data: {
           ownerId: newUser.id,
           businessName: businessName,
-          verificationStatus: 'VERIFIED',
         },
       });
 
@@ -125,7 +126,6 @@ export class AuthService {
           address: storeAddress,
           latitude: dto.latitude,
           longitude: dto.longitude,
-          verificationStatus: 'VERIFIED',
         },
       });
 
@@ -348,6 +348,15 @@ export class AuthService {
 
   async forgotPassword(email: string) {
     const normalizedEmail = email.toLowerCase().trim();
+
+    // 1. Enforce 60-second cooldown per email
+    const cooldownKey = `forgot-password:cooldown:${normalizedEmail}`;
+    // NX: Set only if it does not exist. EX: Expire after 60 seconds.
+    const isCooldown = await this.redisService.getClient().set(cooldownKey, '1', 'EX', 60, 'NX');
+    if (!isCooldown) {
+      return { message: 'If an account exists, a reset link was sent.' };
+    }
+
     const user = await this.prisma.user.findUnique({
       where: { email: normalizedEmail },
     });
@@ -373,6 +382,10 @@ export class AuthService {
       },
     });
 
+    // Reset failed attempt counter for the new cycle
+    const attemptKey = `reset-password:attempts:${user.id}`;
+    await this.redisService.getClient().del(attemptKey);
+
     await this.mailService.sendPasswordResetEmail(user.email, otp);
 
     return { message: 'If an account exists, a reset link was sent.' };
@@ -392,10 +405,34 @@ export class AuthService {
       throw new UnauthorizedException('Reset token has expired');
     }
 
+    const attemptKey = `reset-password:attempts:${user.id}`;
     const isValid = await argon2.verify(user.resetPasswordToken, otp);
+    
     if (!isValid) {
+      const attempts = await this.redisService.getClient().incr(attemptKey);
+      if (attempts === 1) {
+        // Set TTL to 15 minutes, matching the maximum OTP lifetime
+        await this.redisService.getClient().expire(attemptKey, 900);
+      }
+      
+      if (attempts >= 5) {
+        // Lockout: Invalidate OTP in DB
+        await this.prisma.user.update({
+          where: { id: user.id },
+          data: {
+            resetPasswordToken: null,
+            resetPasswordExpires: null,
+          }
+        });
+        await this.redisService.getClient().del(attemptKey);
+        throw new UnauthorizedException('Maximum attempts reached. Token invalidated.');
+      }
+      
       throw new UnauthorizedException('Invalid reset token');
     }
+    
+    // Clear attempt counter on success
+    await this.redisService.getClient().del(attemptKey);
 
     const newHashedPassword = await argon2.hash(newPassword);
 

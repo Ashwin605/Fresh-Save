@@ -35,6 +35,7 @@ export interface CreateReservationParam {
   subtotal: Prisma.Decimal;
   totalDiscount: Prisma.Decimal;
   totalAmount: Prisma.Decimal;
+  appliedCouponId?: string | null;
 }
 
 @Injectable()
@@ -54,6 +55,65 @@ export class ReservationTransactionService {
    */
   async createReservation(params: CreateReservationParam) {
     return this.prisma.$transaction(async (tx) => {
+      // 0. Process Coupon (Lock and Validate)
+      if (params.appliedCouponId) {
+        const lockedCoupons = await tx.$queryRawUnsafe<
+          { 
+            id: string;
+            isActive: boolean;
+            startDate: Date;
+            expiryDate: Date;
+            usageLimit: number | null;
+            perUserLimit: number | null;
+            usedCount: number;
+            shopId: string | null;
+          }[]
+        >(
+          `
+          SELECT "id", "isActive", "startDate", "expiryDate", "usageLimit", "perUserLimit", "usedCount", "shopId"
+          FROM "coupons"
+          WHERE "id" = $1
+          FOR UPDATE
+        `,
+          params.appliedCouponId,
+        );
+
+        const coupon = lockedCoupons[0];
+        if (!coupon) {
+          throw new BadRequestException('Coupon not found');
+        }
+
+        if (!coupon.isActive) {
+          throw new BadRequestException('This coupon is currently unavailable.');
+        }
+
+        const now = new Date();
+        if (coupon.startDate > now) {
+          throw new BadRequestException('This coupon is not active yet.');
+        }
+
+        if (coupon.expiryDate < now) {
+          throw new BadRequestException('This coupon has expired.');
+        }
+
+        if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
+          throw new BadRequestException('This coupon has reached its usage limit.');
+        }
+
+        if (coupon.shopId && coupon.shopId !== params.storeId) {
+          throw new BadRequestException('This coupon is not valid for this shop.');
+        }
+
+        if (coupon.perUserLimit) {
+          const userUsageCount = await tx.couponUsage.count({
+            where: { couponId: coupon.id, customerId: params.customerId },
+          });
+          if (userUsageCount >= coupon.perUserLimit) {
+            throw new BadRequestException('You have already used this coupon.');
+          }
+        }
+      }
+
       // 1. Sort inventory IDs to prevent deadlocks when locking multiple rows
       const sortedInventoryIds = [...params.items]
         .map((i) => i.inventoryId)
@@ -131,6 +191,7 @@ export class ReservationTransactionService {
           subtotal: params.subtotal,
           totalDiscount: params.totalDiscount,
           totalAmount: params.totalAmount,
+          appliedCouponId: params.appliedCouponId || undefined,
           items: {
             create: params.items.map((item) => ({
               inventoryId: item.inventoryId,
@@ -148,6 +209,22 @@ export class ReservationTransactionService {
           items: true,
         },
       });
+
+      // 6.2 Record Coupon Usage
+      if (params.appliedCouponId) {
+        await tx.couponUsage.create({
+          data: {
+            couponId: params.appliedCouponId,
+            customerId: params.customerId,
+            orderId: reservation.id,
+          },
+        });
+
+        await tx.coupon.update({
+          where: { id: params.appliedCouponId },
+          data: { usedCount: { increment: 1 } },
+        });
+      }
 
       // 6.5 Outbox event
       await this.outboxService.createEvent(

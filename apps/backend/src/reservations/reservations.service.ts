@@ -7,6 +7,7 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { PrismaService } from '../database/prisma/prisma.service';
 import {
@@ -82,48 +83,52 @@ export class ReservationsService {
       subtotal: item._rawSubtotal,
     }));
 
-    // 5. Generate Code & Expiry
-    const reservationCode = this.generateReservationCode();
+    // 5. Generate Expiry
     const holdMinutes =
       this.configService.get<number>('RESERVATION_HOLD_MINUTES') ||
       RESERVATION_CONSTANTS.DEFAULT_HOLD_MINUTES;
     const expiresAt = new Date(Date.now() + holdMinutes * 60000);
 
-    // 6. Execute Transaction using EXACT snapshot from PricingService
-    const reservation = await this.txService.createReservation({
-      customerId,
-      storeId: dto.storeId,
-      reservationCode,
-      idempotencyKey,
-      expiresAt,
-      notes: dto.notes,
-      items: createItemParams,
-      subtotal: priceSnapshot._raw.totalSubtotal,
-      totalDiscount: priceSnapshot._raw.totalDiscount,
-      totalAmount: priceSnapshot._raw.finalTotal,
-    });
+    // 6. Execute Transaction with Retry for Code Collision
+    const MAX_RETRIES = 3;
+    let attempts = 0;
 
-    if (priceSnapshot._raw.appliedCouponId) {
-      await this.prisma.reservation.update({
-        where: { id: reservation.id },
-        data: { appliedCouponId: priceSnapshot._raw.appliedCouponId }
-      });
-      
-      await this.prisma.couponUsage.create({
-        data: {
-          couponId: priceSnapshot._raw.appliedCouponId,
-          customerId: customerId,
-          orderId: reservation.id,
+    while (attempts < MAX_RETRIES) {
+      try {
+        const reservationCode = this.generateReservationCode();
+        
+        const reservation = await this.txService.createReservation({
+          customerId,
+          storeId: dto.storeId,
+          reservationCode,
+          idempotencyKey,
+          expiresAt,
+          notes: dto.notes,
+          items: createItemParams,
+          subtotal: priceSnapshot._raw.totalSubtotal,
+          totalDiscount: priceSnapshot._raw.totalDiscount,
+          totalAmount: priceSnapshot._raw.finalTotal,
+          appliedCouponId: priceSnapshot._raw.appliedCouponId,
+        });
+
+        return reservation;
+      } catch (error: any) {
+        if (
+          error.code === 'P2002' &&
+          error.meta &&
+          Array.isArray(error.meta.target) &&
+          error.meta.target.includes('reservationCode')
+        ) {
+          attempts++;
+          continue;
         }
-      });
-
-      await this.prisma.coupon.update({
-        where: { id: priceSnapshot._raw.appliedCouponId },
-        data: { usedCount: { increment: 1 } }
-      });
+        throw error;
+      }
     }
 
-    return reservation;
+    throw new InternalServerErrorException(
+      'Failed to generate a unique reservation code after multiple attempts',
+    );
   }
 
   async cancelReservation(

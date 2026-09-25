@@ -30,7 +30,58 @@ export class CouponsService {
     if (data.code) {
       data.code = data.code.trim().toUpperCase();
     }
-    return this.prisma.coupon.update({ where: { id }, data });
+
+    const immutableFields = [
+      'code',
+      'discountType',
+      'discountValue',
+      'minimumOrderAmount',
+      'maximumDiscountAmount',
+      'shopId',
+    ];
+
+    const attemptedEdits = Object.keys(data).filter(
+      (key) => immutableFields.includes(key) && data[key as keyof UpdateCouponDto] !== undefined
+    );
+
+    if (attemptedEdits.length > 0) {
+      return this.prisma.$transaction(async (tx) => {
+        const lockedCoupons = await tx.$queryRawUnsafe<
+          { id: string; usedCount: number }[]
+        >(
+          `SELECT "id", "usedCount" FROM "coupons" WHERE "id" = $1 FOR UPDATE`,
+          id,
+        );
+
+        if (lockedCoupons.length === 0) {
+          throw new NotFoundException('Coupon not found');
+        }
+
+        const coupon = lockedCoupons[0];
+        if (coupon.usedCount > 0) {
+          throw new BadRequestException(
+            `Cannot edit ${attemptedEdits.join(', ')} on a coupon that has already been used.`,
+          );
+        }
+
+        return tx.coupon.update({
+          where: { id },
+          data,
+        });
+      });
+    }
+
+    try {
+      return await this.prisma.coupon.update({
+        where: { id },
+        data,
+      });
+    } catch (error: any) {
+      if (error.code === 'P2025') {
+        throw new NotFoundException('Coupon not found');
+      }
+      throw error;
+    }
   }
 
   async remove(id: string) {

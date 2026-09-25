@@ -1,6 +1,7 @@
-﻿import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../app/theme/app_colors.dart';
@@ -233,7 +234,7 @@ class _AddStoreDialogState extends ConsumerState<AddStoreDialog> {
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(adminRepositoryProvider).createStore(
+      final tempPassword = await ref.read(adminRepositoryProvider).createStore(
             name: _name,
             address: _address,
             ownerEmail: _ownerEmail,
@@ -241,9 +242,18 @@ class _AddStoreDialogState extends ConsumerState<AddStoreDialog> {
           );
       
       if (!mounted) return;
-      AppSnackbar.show(context, message: 'Store created successfully!');
       widget.onSuccess();
       Navigator.of(context).pop();
+
+      if (tempPassword != null) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => _TemporaryPasswordDialog(password: tempPassword),
+        );
+      } else {
+        AppSnackbar.show(context, message: 'Store created successfully!');
+      }
     } catch (e) {
       if (!mounted) return;
       AppSnackbar.show(context, message: e.toString(), variant: SnackbarVariant.error);
@@ -405,6 +415,56 @@ class _EditStoreDialogState extends ConsumerState<EditStoreDialog> {
           child: _isLoading 
             ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
             : const Text('Save Changes', style: TextStyle(color: Colors.white)),
+        ),
+      ],
+    );
+  }
+}
+
+class _TemporaryPasswordDialog extends StatelessWidget {
+  final String password;
+  const _TemporaryPasswordDialog({required this.password});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Text('Store Created Successfully', style: AppTypography.headline.copyWith(color: AppColors.textPrimary)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('The store and owner account were created successfully.'),
+          const SizedBox(height: AppSpacing.md),
+          const Text('Temporary Owner Password', style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: AppSpacing.sm),
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceVariant,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(password, style: const TextStyle(letterSpacing: 2, fontWeight: FontWeight.w600)),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          const Text('Please provide this password to the store owner.'),
+          const SizedBox(height: AppSpacing.sm),
+          const Text('This password will not be shown again after closing this dialog.', style: TextStyle(color: Colors.redAccent, fontSize: 12)),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Clipboard.setData(ClipboardData(text: password));
+            AppSnackbar.show(context, message: 'Password copied');
+          },
+          child: const Text('Copy Password'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.of(context).pop(),
+          style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+          child: const Text('Done', style: TextStyle(color: Colors.white)),
         ),
       ],
     );

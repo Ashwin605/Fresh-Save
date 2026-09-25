@@ -4,7 +4,9 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../database/prisma/prisma.service';
-import { UserRole } from '@prisma/client';
+import { UserRole, UserStatus } from '@prisma/client';
+import * as crypto from 'crypto';
+import * as argon2 from 'argon2';
 
 @Injectable()
 export class AdminService {
@@ -114,8 +116,10 @@ export class AdminService {
     if (user.role === UserRole.SUPER_ADMIN)
       throw new ForbiddenException('Cannot suspend SUPER_ADMIN');
 
-    // In a real system, you might have an 'isActive' or 'status' field on User.
-    // For now we just log to AuditLog.
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { status: UserStatus.SUSPENDED },
+    });
 
     await this.prisma.auditLog.create({
       data: {
@@ -170,74 +174,84 @@ export class AdminService {
     storeData: any,
     verifyInstantly: boolean,
   ) {
-    // 1. Find user by email, or create them if they don't exist
-    let owner = await this.prisma.user.findUnique({
-      where: { email: ownerEmail },
-    });
-    
-    if (!owner) {
-      const defaultName = ownerEmail.split('@')[0];
-      owner = await this.prisma.user.create({
-        data: {
-          email: ownerEmail,
-          name: defaultName,
-          role: UserRole.SHOP_OWNER,
-        },
+    return this.prisma.$transaction(async (tx) => {
+      let tempPassword = null;
+
+      // 1. Find user by email, or create them if they don't exist
+      let owner = await tx.user.findUnique({
+        where: { email: ownerEmail },
       });
-    }
+      
+      if (!owner) {
+        tempPassword = crypto.randomBytes(6).toString('hex');
+        const hashedPassword = await argon2.hash(tempPassword);
+        const defaultName = ownerEmail.split('@')[0];
+        owner = await tx.user.create({
+          data: {
+            email: ownerEmail,
+            name: defaultName,
+            password: hashedPassword,
+            role: UserRole.SHOP_OWNER,
+          },
+        });
+      }
 
-    // Elevate to SHOP_OWNER if needed
-    if (owner.role === UserRole.CUSTOMER) {
-      await this.prisma.user.update({
-        where: { id: owner.id },
-        data: { role: UserRole.SHOP_OWNER },
+      // Elevate to SHOP_OWNER if needed
+      if (owner.role === UserRole.CUSTOMER) {
+        await tx.user.update({
+          where: { id: owner.id },
+          data: { role: UserRole.SHOP_OWNER },
+        });
+      }
+
+      // 2. Find or create Business
+      let business = await tx.business.findFirst({
+        where: { ownerId: owner.id },
       });
-    }
 
-    // 2. Find or create Business
-    let business = await this.prisma.business.findFirst({
-      where: { ownerId: owner.id },
-    });
+      if (!business) {
+        business = await tx.business.create({
+          data: {
+            businessName: `${owner.name}'s Business`,
+            ownerId: owner.id,
+            verificationStatus: verifyInstantly ? 'VERIFIED' : 'PENDING',
+          },
+        });
+      } else if (verifyInstantly && business.verificationStatus !== 'VERIFIED') {
+        await tx.business.update({
+          where: { id: business.id },
+          data: { verificationStatus: 'VERIFIED' },
+        });
+      }
 
-    if (!business) {
-      business = await this.prisma.business.create({
+      // 3. Create Store
+      const store = await tx.store.create({
         data: {
-          businessName: `${owner.name}'s Business`,
-          ownerId: owner.id,
+          businessId: business.id,
+          name: storeData.name,
+          address: storeData.address,
+          phone: storeData.phone,
+          email: storeData.email,
+          description: storeData.description,
           verificationStatus: verifyInstantly ? 'VERIFIED' : 'PENDING',
         },
       });
-    } else if (verifyInstantly && business.verificationStatus !== 'VERIFIED') {
-      await this.prisma.business.update({
-        where: { id: business.id },
-        data: { verificationStatus: 'VERIFIED' },
+
+      // 4. Log audit action
+      await tx.auditLog.create({
+        data: {
+          actorId: adminId,
+          action: 'ADMIN_CREATE_STORE',
+          entityType: 'Store',
+          entityId: store.id,
+        },
       });
-    }
 
-    // 3. Create Store
-    const store = await this.prisma.store.create({
-      data: {
-        businessId: business.id,
-        name: storeData.name,
-        address: storeData.address,
-        phone: storeData.phone,
-        email: storeData.email,
-        description: storeData.description,
-        verificationStatus: verifyInstantly ? 'VERIFIED' : 'PENDING',
-      },
+      return {
+        ...store,
+        temporaryPassword: tempPassword,
+      };
     });
-
-    // 4. Log audit action
-    await this.prisma.auditLog.create({
-      data: {
-        actorId: adminId,
-        action: 'ADMIN_CREATE_STORE',
-        entityType: 'Store',
-        entityId: store.id,
-      },
-    });
-
-    return store;
   }
 
   async updateStore(adminId: string, storeId: string, storeData: any) {
