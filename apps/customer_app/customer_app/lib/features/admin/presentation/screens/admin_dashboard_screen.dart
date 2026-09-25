@@ -156,22 +156,22 @@ class AdminDashboardScreen extends ConsumerWidget {
                     Widget contentSection;
                     if (isMobile || isTablet) {
                       contentSection = Column(
-                        children: [
-                          const _MockChartSection(),
-                          const SizedBox(height: AppSpacing.xl),
-                          const _RecentActivitySection(),
+                        children: const [
+                          _MockChartSection(),
+                          SizedBox(height: AppSpacing.xl),
+                          _RecentActivitySection(),
                         ],
                       );
                     } else {
                       contentSection = Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Expanded(
+                        children: const [
+                          Expanded(
                             flex: 2,
                             child: _MockChartSection(),
                           ),
-                          const SizedBox(width: AppSpacing.xl),
-                          const Expanded(
+                          SizedBox(width: AppSpacing.xl),
+                          Expanded(
                             flex: 1,
                             child: _RecentActivitySection(),
                           ),
@@ -283,6 +283,7 @@ class _AnimatedKpiCard extends StatelessWidget {
 }
 
 class _MockChartSection extends StatelessWidget {
+  const _MockChartSection({super.key});
   @override
   Widget build(BuildContext context) {
     return GlassSurface(
@@ -362,6 +363,7 @@ class _ChartBar extends StatelessWidget {
 }
 
 class _RecentActivitySection extends StatelessWidget {
+  const _RecentActivitySection({super.key});
   @override
   Widget build(BuildContext context) {
     return GlassSurface(
