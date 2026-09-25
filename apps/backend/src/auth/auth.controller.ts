@@ -50,6 +50,14 @@ export class AuthController {
     return this.authService.registerBusiness(registerBusinessDto);
   }
 
+  /**
+   * POST /auth/login
+   * Authenticates the user and returns an access token + refresh token.
+   * Uses rate-limiting to prevent brute force attacks.
+   * 
+   * @param loginDto - User email and password.
+   * @param userAgent - Passed automatically from request headers to track session origin.
+   */
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 5, ttl: 60000 } })
@@ -63,6 +71,13 @@ export class AuthController {
     return this.authService.login(loginDto, userAgent);
   }
 
+  /**
+   * POST /auth/refresh
+   * Exchanges a valid refresh token for a new set of tokens (access + refresh).
+   * Used when the access token expires to maintain the user's session seamlessly.
+   * 
+   * @param refreshTokenDto - The current refresh token.
+   */
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 5, ttl: 60000 } })
@@ -76,6 +91,11 @@ export class AuthController {
     return this.authService.refresh(refreshTokenDto, userAgent);
   }
 
+  /**
+   * POST /auth/logout
+   * Revokes the current session so the refresh token cannot be used again.
+   * Requires a valid Bearer token in the Authorization header.
+   */
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Post('logout')

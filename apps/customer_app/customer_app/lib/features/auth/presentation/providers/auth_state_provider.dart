@@ -6,6 +6,9 @@ import '../../../../core/storage/token_storage.dart';
 
 enum AuthStatus { unknown, unauthenticated, authenticated }
 
+/// Represents the current authentication state of the application.
+/// Used to drive navigation (e.g., redirecting unauthenticated users to the Login screen)
+/// and conditionally render UI elements based on the [user]'s role.
 class AuthState {
   final AuthStatus status;
   final User? user;
@@ -27,15 +30,20 @@ class AuthState {
   }
 }
 
+/// Manages the [AuthState] across the entire app.
+/// This Notifier handles restoring sessions on app startup,
+/// logging in/out, and responding to token expiration events.
 class AuthNotifier extends Notifier<AuthState> {
   @override
   AuthState build() {
-    // Listen to token cleared events (e.g. from 401 interceptor)
+    // Listens to global token clear events triggered by the Dio network interceptor.
+    // If a 401 Unauthorized occurs and the refresh token fails, the interceptor
+    // clears the local storage. This listener catches that event and automatically
+    // forces the UI back to the unauthenticated state.
     ref.listen(
       tokenStorageProvider.select((ts) => ts.onTokensCleared),
       (previous, next) {
         next.listen((_) {
-          // Tokens were cleared (e.g. refresh failed), log out UI state
           state = state.copyWith(
             status: AuthStatus.unauthenticated,
             user: null,
@@ -45,6 +53,7 @@ class AuthNotifier extends Notifier<AuthState> {
       fireImmediately: true,
     );
 
+    // Attempt to restore the user's session from secure storage on startup.
     Future.microtask(() => _restoreSession());
     return const AuthState();
   }

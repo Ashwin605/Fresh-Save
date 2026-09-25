@@ -51,7 +51,8 @@ class AdminDashboardScreen extends ConsumerWidget {
               data: (metrics) {
                 return LayoutBuilder(
                   builder: (context, constraints) {
-                    final isNarrow = constraints.maxWidth < 1000;
+                    final isMobile = constraints.maxWidth < 600;
+                    final isTablet = constraints.maxWidth < 1000 && constraints.maxWidth >= 600;
                     
                     final cards = [
                       _AnimatedKpiCard(
@@ -104,8 +105,20 @@ class AdminDashboardScreen extends ConsumerWidget {
                       ),
                     ];
                     
-                    if (isNarrow) {
-                      return Column(
+                    Widget kpiSection;
+                    if (isMobile) {
+                      kpiSection = Column(
+                        children: [
+                          cards[0], const SizedBox(height: 16),
+                          cards[1], const SizedBox(height: 16),
+                          cards[2], const SizedBox(height: 16),
+                          cards[3], const SizedBox(height: 16),
+                          cards[4], const SizedBox(height: 16),
+                          cards[5],
+                        ],
+                      );
+                    } else if (isTablet) {
+                      kpiSection = Column(
                         children: [
                           Row(children: [Expanded(child: cards[0]), const SizedBox(width: 16), Expanded(child: cards[1])]),
                           const SizedBox(height: 16),
@@ -114,53 +127,70 @@ class AdminDashboardScreen extends ConsumerWidget {
                           Row(children: [Expanded(child: cards[4]), const SizedBox(width: 16), Expanded(child: cards[5])]),
                         ],
                       );
+                    } else {
+                      kpiSection = Column(
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(child: cards[0]),
+                              const SizedBox(width: AppSpacing.lg),
+                              Expanded(child: cards[1]),
+                              const SizedBox(width: AppSpacing.lg),
+                              Expanded(child: cards[2]),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          Row(
+                            children: [
+                              Expanded(child: cards[3]),
+                              const SizedBox(width: AppSpacing.lg),
+                              Expanded(child: cards[4]),
+                              const SizedBox(width: AppSpacing.lg),
+                              Expanded(child: cards[5]),
+                            ],
+                          ),
+                        ],
+                      );
                     }
-                    
+
+                    Widget contentSection;
+                    if (isMobile || isTablet) {
+                      contentSection = Column(
+                        children: const [
+                          _MockChartSection(),
+                          SizedBox(height: AppSpacing.xl),
+                          _RecentActivitySection(),
+                        ],
+                      );
+                    } else {
+                      contentSection = Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Expanded(
+                            flex: 2,
+                            child: _MockChartSection(),
+                          ),
+                          SizedBox(width: AppSpacing.xl),
+                          Expanded(
+                            flex: 1,
+                            child: _RecentActivitySection(),
+                          ),
+                        ],
+                      );
+                    }
+
                     return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Expanded(child: cards[0]),
-                            const SizedBox(width: AppSpacing.lg),
-                            Expanded(child: cards[1]),
-                            const SizedBox(width: AppSpacing.lg),
-                            Expanded(child: cards[2]),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-                        Row(
-                          children: [
-                            Expanded(child: cards[3]),
-                            const SizedBox(width: AppSpacing.lg),
-                            Expanded(child: cards[4]),
-                            const SizedBox(width: AppSpacing.lg),
-                            Expanded(child: cards[5]),
-                          ],
-                        ),
+                        kpiSection,
+                        const SizedBox(height: AppSpacing.xxl),
+                        contentSection,
                       ],
                     );
                   },
                 );
               },
             ),
-            const SizedBox(height: AppSpacing.xxl),
-
-            // Charts and Activity Area
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: _MockChartSection(),
-                ),
-                const SizedBox(width: AppSpacing.xl),
-                Expanded(
-                  flex: 1,
-                  child: _RecentActivitySection(),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.xxl),
           ],
         ),
       ),

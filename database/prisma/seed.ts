@@ -1,6 +1,7 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as dotenv from 'dotenv';
+import * as argon2 from 'argon2';
 dotenv.config();
 
 const connectionString = process.env.DATABASE_URL;
@@ -12,6 +13,7 @@ const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log('Starting seed...');
+  const defaultPassword = await argon2.hash('Admin@123');
 
   // --- Cleanup ---
   await prisma.offer.deleteMany();
@@ -25,23 +27,23 @@ async function main() {
 
   // --- Users ---
   const admin = await prisma.user.create({
-    data: { name: 'System Admin', email: 'admin@freshsave.local', role: 'SUPER_ADMIN' },
+    data: { name: 'System Admin', email: 'admin@freshsave.local', role: 'SUPER_ADMIN', password: defaultPassword },
   });
 
   const shopOwner = await prisma.user.create({
-    data: { name: 'Jane Owner', email: 'jane.owner@freshsave.local', role: 'SHOP_OWNER' },
+    data: { name: 'Jane Owner', email: 'jane.owner@freshsave.local', role: 'SHOP_OWNER', password: defaultPassword },
   });
 
   const shopStaff = await prisma.user.create({
-    data: { name: 'Bob Staff', email: 'bob.staff@freshsave.local', role: 'SHOP_STAFF' },
+    data: { name: 'Bob Staff', email: 'bob.staff@freshsave.local', role: 'SHOP_STAFF', password: defaultPassword },
   });
 
   const customer1 = await prisma.user.create({
-    data: { name: 'Alice Customer', email: 'alice@example.com', role: 'CUSTOMER' },
+    data: { name: 'Alice Customer', email: 'alice@example.com', role: 'CUSTOMER', password: defaultPassword },
   });
 
   const customer2 = await prisma.user.create({
-    data: { name: 'Charlie Customer', email: 'charlie@example.com', role: 'CUSTOMER' },
+    data: { name: 'Charlie Customer', email: 'charlie@example.com', role: 'CUSTOMER', password: defaultPassword },
   });
 
   // --- Businesses & Stores ---

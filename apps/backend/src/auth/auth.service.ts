@@ -25,6 +25,10 @@ export interface JwtPayload {
   sessionId: string;
 }
 
+/**
+ * AuthService handles all business logic related to user authentication,
+ * including verifying credentials, generating JWT tokens, and managing refresh tokens.
+ */
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -142,6 +146,21 @@ export class AuthService {
     return userWithoutPassword;
   }
 
+  /**
+   * Authenticates a user based on their email and password.
+   * 
+   * Authentication Flow:
+   * 1. Finds the user by their normalized email address.
+   * 2. Checks if the user is suspended or deleted.
+   * 3. Uses argon2 to verify the provided password against the hashed password.
+   * 4. Generates new access and refresh tokens.
+   * 5. Saves the new refresh token (session) in the database.
+   * 
+   * @param loginDto - Contains the email, password, and optional deviceInfo.
+   * @param userAgent - User agent string for session tracking.
+   * @returns An object containing the user profile (without password) and tokens.
+   * @throws UnauthorizedException if credentials are invalid.
+   */
   async login(loginDto: LoginDto, userAgent?: string) {
     const startTime = Date.now();
     this.logger.debug(`[AUTH] Login request received for email: ${loginDto.email}`);
@@ -183,6 +202,22 @@ export class AuthService {
     };
   }
 
+  /**
+   * Refreshes a user's access token using a valid refresh token.
+   * 
+   * Rotation Flow:
+   * 1. Validates the provided refresh token's signature and expiry.
+   * 2. Extracts the userId and sessionId from the token payload.
+   * 3. Finds the active session in the database.
+   * 4. If the session is already revoked, ALL user sessions are revoked (security measure against reuse).
+   * 5. Revokes the old session to prevent reuse.
+   * 6. Generates new access and refresh tokens.
+   * 
+   * @param refreshTokenDto - Contains the refresh token sent by the client.
+   * @param userAgent - Optional device information for the new session.
+   * @returns An object containing the user profile and the new tokens.
+   * @throws UnauthorizedException if the token is invalid, expired, or revoked.
+   */
   async refresh(refreshTokenDto: RefreshTokenDto, userAgent?: string) {
     const { refreshToken } = refreshTokenDto;
 
@@ -256,6 +291,15 @@ export class AuthService {
     }
   }
 
+  /**
+   * Logs out a user by revoking their current session.
+   * 
+   * Flow:
+   * 1. Marks the session associated with the provided ID as revoked in the database.
+   * This ensures the refresh token can no longer be used to generate new access tokens.
+   * 
+   * @param sessionId - The ID of the session to revoke.
+   */
   async logout(sessionId: string) {
     if (!sessionId) return;
     try {

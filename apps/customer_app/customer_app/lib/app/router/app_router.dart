@@ -465,8 +465,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => AdminOfferDetailScreen(id: state.pathParameters['id']!),
           ),
           GoRoute(
-            path: '/admin/coupons',
-            builder: (context, state) => const AdminCouponsScreen(),
+            path: '/admin/stock-transfers',
+            builder: (context, state) => const AdminStockTransfersScreen(),
           ),
           GoRoute(
             path: '/admin/contacts',

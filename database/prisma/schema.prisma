@@ -177,7 +177,12 @@ enum ShopRatingStatus {
 // MODELS
 // --------------------------------------------------
 
+/// The User model represents an individual entity that interacts with the FreshSave platform.
+/// This includes customers, shop owners, staff members, and administrators.
+/// The `role` field determines the level of access and available actions.
+/// Relationships are established with businesses, reservations, and other entities to track user activities.
 model User {
+  /// Unique identifier for the user (Primary Key). Generated as a UUID.
   id           String     @id @default(uuid())
   name         String
   email        String     @unique
@@ -239,7 +244,11 @@ model Business {
   @@index([verificationStatus])
 }
 
+/// The Store model represents a physical or digital storefront belonging to a Business.
+/// It contains location data (PostGIS), contact information, and operational hours.
+/// Stores are linked to inventory, reservations, and staff.
 model Store {
+  /// Unique identifier for the store (Primary Key).
   id                 String                                 @id @default(uuid())
   businessId         String
   name               String
@@ -427,7 +436,12 @@ model Offer {
   @@index([status])
 }
 
+/// The Reservation model (Order) tracks a customer's purchase or booking of inventory items.
+/// It tracks the lifecycle of an order from PENDING to COMPLETED or CANCELLED.
+/// It contains critical financial data (subtotal, discounts, total) which must be calculated
+/// authoritatively by the backend discount calculation engine.
 model Reservation {
+  /// Unique identifier for the reservation/order (Primary Key).
   id                 String            @id @default(uuid())
   customerId         String
   storeId            String
@@ -678,7 +692,11 @@ model AIPrediction {
   @@index([modelVersion])
 }
 
+/// The Coupon model represents a promotional code that provides a discount on a reservation.
+/// Coupons can be platform-wide or tied to a specific store (`shopId`).
+/// They enforce business rules such as usage limits, expiry dates, and minimum order amounts.
 model Coupon {
+  /// Unique identifier for the coupon (Primary Key).
   id                    String       @id @default(uuid())
   code                  String       @unique
   title                 String
@@ -788,7 +806,11 @@ model ContactRequest {
   @@index([createdAt])
 }
 
+/// The ShopRating model stores customer feedback for a specific store after completing an order.
+/// This data is used to calculate the average rating for a store and display reviews.
+/// It links a specific Customer to a specific Store and the completed Order.
 model ShopRating {
+  /// Unique identifier for the rating (Primary Key).
   id         String   @id @default(uuid())
   shopId     String   @map("shop_id")
   customerId String   @map("customer_id")

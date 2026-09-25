@@ -16,19 +16,22 @@ class AdminShellScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDesktop = MediaQuery.of(context).size.width >= 800;
+
     return Scaffold(
       backgroundColor: AppColors.background,
+      drawer: isDesktop ? null : Drawer(child: _AdminSideNav()),
       body: Row(
         children: [
-          _AdminSideNav(),
+          if (isDesktop) _AdminSideNav(),
           Expanded(
             child: Column(
               children: [
-                _AdminAppBar(),
+                _AdminAppBar(isDesktop: isDesktop),
                 Expanded(
                   child: ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(24),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(isDesktop ? 24 : 0),
                     ),
                     child: Container(
                       color: AppColors.surface,
@@ -46,20 +49,36 @@ class AdminShellScreen extends ConsumerWidget {
 }
 
 class _AdminAppBar extends ConsumerWidget {
+  final bool isDesktop;
+  
+  const _AdminAppBar({required this.isDesktop});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       height: 72,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+      padding: EdgeInsets.symmetric(horizontal: isDesktop ? AppSpacing.xl : AppSpacing.md),
       color: AppColors.background,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            'FreshSave Platform',
-            style: AppTypography.headline.copyWith(
-              color: AppColors.textPrimary,
-            ),
+          Row(
+            children: [
+              if (!isDesktop) ...[
+                IconButton(
+                  icon: const Icon(Icons.menu, color: AppColors.textPrimary),
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+              ],
+              Text(
+                'FreshSave',
+                style: AppTypography.headline.copyWith(
+                  color: AppColors.textPrimary,
+                  fontSize: isDesktop ? 24 : 20,
+                ),
+              ),
+            ],
           ),
           Row(
             children: [
@@ -330,7 +349,12 @@ class _NavItemState extends State<_NavItem> {
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: InkWell(
-        onTap: () => context.go(widget.route),
+        onTap: () {
+          context.go(widget.route);
+          if (Scaffold.of(context).hasDrawer && Scaffold.of(context).isDrawerOpen) {
+            Navigator.of(context).pop();
+          }
+        },
         borderRadius: BorderRadius.circular(12),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
