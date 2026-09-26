@@ -199,7 +199,7 @@ class _CategoryDiscoveryScreenState
               children: [
                 _buildFilterChip('Sort', Icons.sort_rounded),
                 const SizedBox(width: AppSpacing.sm),
-                _buildFilterChip('Price', Icons.attach_money_rounded),
+                _buildFilterChip('Price', Icons.currency_rupee_rounded),
                 const SizedBox(width: AppSpacing.sm),
                 _buildFilterChip('Offers', Icons.local_offer_outlined),
               ],
@@ -256,6 +256,14 @@ class _CategoryDiscoveryScreenState
     );
   }
 
+  String _getCategoryNameWithEmoji(String name) {
+    if (name.contains('Snacks')) return '$name 🍿';
+    if (name.contains('Chips')) return '$name 🍟';
+    if (name.contains('Cookies')) return '$name 🍪';
+    if (name.contains('Candy')) return '$name 🍬';
+    return name;
+  }
+
   Widget _buildFilterChip(String label, IconData icon) {
     return InteractiveContainer(
       onTap: () {},
@@ -307,7 +315,7 @@ class _CategoryDiscoveryScreenState
         ),
         child: Center(
           child: Text(
-            name,
+            _getCategoryNameWithEmoji(name),
             style: AppTypography.label.copyWith(
               color: isSelected ? Colors.white : AppColors.textPrimary,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
