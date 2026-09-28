@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../database/database.module';
 import { OffersModule } from '../offers/offers.module';
+import { CouponsModule } from '../coupons/coupons.module';
+import { PricingModule } from '../pricing/pricing.module';
 import { ReservationsService } from './reservations.service';
 import { ReservationTransactionService } from './services/reservation-transaction.service';
 import { ReservationLifecycleService } from './services/reservation-lifecycle.service';
@@ -10,7 +12,7 @@ import { StoreReservationsController } from './store-reservations.controller';
 import { AdminReservationsController } from './admin-reservations.controller';
 
 @Module({
-  imports: [DatabaseModule, OffersModule],
+  imports: [DatabaseModule, OffersModule, CouponsModule, PricingModule],
   controllers: [
     ReservationsController,
     StoreReservationsController,
