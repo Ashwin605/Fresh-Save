@@ -16,34 +16,38 @@ class AdminShellScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDesktop = MediaQuery.of(context).size.width >= 800;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isDesktop = constraints.maxWidth >= 800;
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      drawer: isDesktop ? null : Drawer(child: _AdminSideNav()),
-      body: Row(
-        children: [
-          if (isDesktop) _AdminSideNav(),
-          Expanded(
-            child: Column(
-              children: [
-                _AdminAppBar(isDesktop: isDesktop),
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(isDesktop ? 24 : 0),
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          drawer: isDesktop ? null : Drawer(child: _AdminSideNav()),
+          body: Row(
+            children: [
+              if (isDesktop) _AdminSideNav(),
+              Expanded(
+                child: Column(
+                  children: [
+                    _AdminAppBar(isDesktop: isDesktop),
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(isDesktop ? 24 : 0),
+                        ),
+                        child: Container(
+                          color: AppColors.surface,
+                          child: child,
+                        ),
+                      ),
                     ),
-                    child: Container(
-                      color: AppColors.surface,
-                      child: child,
-                    ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
