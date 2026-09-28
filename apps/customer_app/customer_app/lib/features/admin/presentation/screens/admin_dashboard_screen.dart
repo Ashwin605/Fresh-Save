@@ -1,14 +1,10 @@
-import '../../../../app/theme/app_colors.dart';
-import '../../../../app/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../app/theme/app_spacing.dart';
-import '../../../../core/widgets/layout/app_card.dart';
-import '../../../../core/widgets/glass_surface.dart';
 import '../providers/admin_dashboard_provider.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 class AdminDashboardScreen extends ConsumerWidget {
   const AdminDashboardScreen({super.key});
@@ -16,29 +12,15 @@ class AdminDashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.background,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.xxl),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Dashboard Overview',
-              style: AppTypography.display.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Welcome back! Here is what\'s happening on FreshSave today.',
-              style: AppTypography.body.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
+            _buildPageHeader(context),
             const SizedBox(height: AppSpacing.xxl),
             
-            // KPI Cards Row
             ref.watch(adminDashboardMetricsProvider).when(
               loading: () => const Padding(
                 padding: EdgeInsets.symmetric(vertical: 40),
@@ -52,56 +34,41 @@ class AdminDashboardScreen extends ConsumerWidget {
                 return LayoutBuilder(
                   builder: (context, constraints) {
                     final isMobile = constraints.maxWidth < 600;
-                    final isTablet = constraints.maxWidth < 1000 && constraints.maxWidth >= 600;
+                    final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 1000;
+                    final isDesktop = constraints.maxWidth >= 1000;
                     
                     final cards = [
-                      _AnimatedKpiCard(
+                      _CompactKpiCard(
                         title: 'Total Orders',
                         value: '${metrics['orders']?['total'] ?? 0}',
                         trend: 'All time',
                         icon: Icons.receipt_long_outlined,
-                        color: const Color(0xFF3B82F6), // Blue
+                        color: const Color(0xFF3B82F6), // Soft Blue
                         delay: 0,
                       ),
-                      _AnimatedKpiCard(
+                      _CompactKpiCard(
                         title: 'Net Revenue',
                         value: '₹${metrics['revenue']?['net'] ?? 0}',
                         trend: 'All time',
                         icon: Icons.currency_rupee,
-                        color: const Color(0xFF10B981), // Emerald
-                        delay: 100,
+                        color: const Color(0xFF10B981), // Soft Green
+                        delay: 50,
                       ),
-                      _AnimatedKpiCard(
+                      _CompactKpiCard(
                         title: 'Discounts Given',
                         value: '₹${metrics['revenue']?['discounts'] ?? 0}',
                         trend: 'All time',
                         icon: Icons.money_off,
-                        color: const Color(0xFFF59E0B), // Amber
-                        delay: 200,
+                        color: const Color(0xFFF59E0B), // Soft Amber
+                        delay: 100,
                       ),
-                      _AnimatedKpiCard(
+                      _CompactKpiCard(
                         title: 'Coupon Usage',
                         value: '${metrics['coupons']?['usage'] ?? 0}',
                         trend: 'All time',
                         icon: Icons.discount_outlined,
-                        color: const Color(0xFF8B5CF6), // Purple
-                        delay: 300,
-                      ),
-                      _AnimatedKpiCard(
-                        title: 'Average Rating',
-                        value: '${metrics['ratings']?['average'] ?? 0} ⭐',
-                        trend: '(${metrics['ratings']?['total'] ?? 0} reviews)',
-                        icon: Icons.star_outline,
-                        color: const Color(0xFFEC4899), // Pink
-                        delay: 400,
-                      ),
-                      _AnimatedKpiCard(
-                        title: 'Active Coupons',
-                        value: '${metrics['coupons']?['active'] ?? 0}',
-                        trend: 'Current',
-                        icon: Icons.local_activity_outlined,
-                        color: const Color(0xFF06B6D4), // Cyan
-                        delay: 500,
+                        color: const Color(0xFF8B5CF6), // Soft Purple
+                        delay: 150,
                       ),
                     ];
                     
@@ -109,81 +76,62 @@ class AdminDashboardScreen extends ConsumerWidget {
                     if (isMobile) {
                       kpiSection = Column(
                         children: [
-                          cards[0], const SizedBox(height: 16),
-                          cards[1], const SizedBox(height: 16),
-                          cards[2], const SizedBox(height: 16),
-                          cards[3], const SizedBox(height: 16),
-                          cards[4], const SizedBox(height: 16),
-                          cards[5],
+                          Row(children: [Expanded(child: cards[0]), const SizedBox(width: AppSpacing.md), Expanded(child: cards[1])]),
+                          const SizedBox(height: AppSpacing.md),
+                          Row(children: [Expanded(child: cards[2]), const SizedBox(width: AppSpacing.md), Expanded(child: cards[3])]),
                         ],
                       );
                     } else if (isTablet) {
                       kpiSection = Column(
                         children: [
-                          Row(children: [Expanded(child: cards[0]), const SizedBox(width: 16), Expanded(child: cards[1])]),
-                          const SizedBox(height: 16),
-                          Row(children: [Expanded(child: cards[2]), const SizedBox(width: 16), Expanded(child: cards[3])]),
-                          const SizedBox(height: 16),
-                          Row(children: [Expanded(child: cards[4]), const SizedBox(width: 16), Expanded(child: cards[5])]),
+                          Row(children: [Expanded(child: cards[0]), const SizedBox(width: AppSpacing.lg), Expanded(child: cards[1])]),
+                          const SizedBox(height: AppSpacing.lg),
+                          Row(children: [Expanded(child: cards[2]), const SizedBox(width: AppSpacing.lg), Expanded(child: cards[3])]),
                         ],
                       );
                     } else {
-                      kpiSection = Column(
+                      kpiSection = Row(
                         children: [
-                          Row(
-                            children: [
-                              Expanded(child: cards[0]),
-                              const SizedBox(width: AppSpacing.lg),
-                              Expanded(child: cards[1]),
-                              const SizedBox(width: AppSpacing.lg),
-                              Expanded(child: cards[2]),
-                            ],
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          Row(
-                            children: [
-                              Expanded(child: cards[3]),
-                              const SizedBox(width: AppSpacing.lg),
-                              Expanded(child: cards[4]),
-                              const SizedBox(width: AppSpacing.lg),
-                              Expanded(child: cards[5]),
-                            ],
-                          ),
+                          Expanded(child: cards[0]), const SizedBox(width: AppSpacing.lg),
+                          Expanded(child: cards[1]), const SizedBox(width: AppSpacing.lg),
+                          Expanded(child: cards[2]), const SizedBox(width: AppSpacing.lg),
+                          Expanded(child: cards[3]),
                         ],
                       );
                     }
 
                     Widget contentSection;
-                    if (isMobile || isTablet) {
-                      contentSection = Column(
-                        children: const [
-                          _MockChartSection(),
-                          SizedBox(height: AppSpacing.xl),
-                          _RecentActivitySection(),
-                        ],
-                      );
-                    } else {
+                    if (isDesktop) {
                       contentSection = Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: const [
                           Expanded(
-                            flex: 2,
-                            child: _MockChartSection(),
+                            flex: 7,
+                            child: _PerformanceSection(),
                           ),
                           SizedBox(width: AppSpacing.xl),
                           Expanded(
-                            flex: 1,
-                            child: _RecentActivitySection(),
+                            flex: 4,
+                            child: _RecentOrdersSection(),
                           ),
+                        ],
+                      );
+                    } else {
+                      contentSection = Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: const [
+                          _PerformanceSection(),
+                          SizedBox(height: AppSpacing.xl),
+                          _RecentOrdersSection(),
                         ],
                       );
                     }
 
                     return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         kpiSection,
-                        const SizedBox(height: AppSpacing.xxl),
+                        const SizedBox(height: AppSpacing.xl),
                         contentSection,
                       ],
                     );
@@ -196,210 +144,354 @@ class AdminDashboardScreen extends ConsumerWidget {
       ),
     );
   }
+
+  Widget _buildPageHeader(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (isMobile) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Dashboard',
+                style: AppTypography.headline.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 28,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Overview of your FreshSave business performance',
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              _buildDateFilter(),
+            ],
+          );
+        }
+        
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Dashboard',
+                    style: AppTypography.headline.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 32,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Overview of your FreshSave business performance',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            _buildDateFilter(),
+          ],
+        );
+      }
+    );
+  }
+
+  Widget _buildDateFilter() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('All time', style: AppTypography.label.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w500)),
+          const SizedBox(width: 8),
+          const Icon(Icons.keyboard_arrow_down, size: 16, color: AppColors.textSecondary),
+        ],
+      ),
+    );
+  }
 }
 
-class _AnimatedKpiCard extends StatelessWidget {
+class _CompactKpiCard extends StatelessWidget {
   final String title;
   final String value;
   final String trend;
   final IconData icon;
   final Color color;
   final int delay;
-  final double? width;
 
-  const _AnimatedKpiCard({
+  const _CompactKpiCard({
     required this.title,
     required this.value,
     required this.trend,
     required this.icon,
     required this.color,
     required this.delay,
-    this.width,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: width,
-      child: AppCard(
-        variant: AppCardVariant.elevated,
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: AppTypography.body.copyWith(
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(icon, color: color, size: 20),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              value,
-              style: AppTypography.display.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Row(
-              children: [
-                Icon(Icons.trending_up, color: AppColors.success, size: 16),
-                const SizedBox(width: 4),
-                Text(
-                  trend,
-                  style: AppTypography.label.copyWith(
-                    color: AppColors.success,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    ).animate(delay: delay.ms).fade(duration: 600.ms).slideY(begin: 0.2, end: 0, curve: Curves.easeOutCubic);
-  }
-}
-
-class _MockChartSection extends StatelessWidget {
-  const _MockChartSection({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return GlassSurface(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Platform Growth',
-            style: AppTypography.headline.copyWith(color: AppColors.textPrimary),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            'New users and reservations over the last 7 days.',
-            style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          SizedBox(
-            height: 300,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                _ChartBar(height: 0, label: 'Mon'),
-                _ChartBar(height: 0, label: 'Tue'),
-                _ChartBar(height: 0, label: 'Wed'),
-                _ChartBar(height: 0, label: 'Thu'),
-                _ChartBar(height: 0, label: 'Fri'),
-                _ChartBar(height: 0, label: 'Sat'),
-                _ChartBar(height: 0, label: 'Sun'),
-              ],
-            ),
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-    ).animate().fade(duration: 600.ms, delay: 400.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutCubic);
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: color, size: 16),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            value,
+            style: AppTypography.display.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.bold,
+              fontSize: 28,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Icon(Icons.call_made, color: AppColors.textSecondary, size: 12),
+              const SizedBox(width: 4),
+              Text(
+                trend,
+                style: AppTypography.label.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ).animate(delay: delay.ms).fade(duration: 400.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutCubic);
   }
 }
 
-class _ChartBar extends StatelessWidget {
-  final double height;
-  final String label;
-
-  const _ChartBar({
-    required this.height,
-    required this.label,
-  });
+class _PerformanceSection extends StatelessWidget {
+  const _PerformanceSection();
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Container(
-          width: 40,
-          height: height,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.bottomCenter,
-              end: Alignment.topCenter,
-              colors: [AppColors.surfaceVariant, AppColors.border],
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (isMobile) ...[
+            Text('Performance Overview', style: AppTypography.title.copyWith(fontWeight: FontWeight.bold)),
+            const SizedBox(height: AppSpacing.md),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: const [
+                  _FilterTab('Revenue', true),
+                  SizedBox(width: 8),
+                  _FilterTab('Orders', false),
+                  SizedBox(width: 8),
+                  _FilterTab('Discounts', false),
+                ]
+              ),
             ),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+          ] else ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text('Performance Overview', style: AppTypography.title.copyWith(fontWeight: FontWeight.bold)),
+                Row(
+                  children: const [
+                    _FilterTab('Revenue', true),
+                    SizedBox(width: 8),
+                    _FilterTab('Orders', false),
+                    SizedBox(width: 8),
+                    _FilterTab('Discounts', false),
+                  ]
+                )
+              ],
+            ),
+          ],
+          const SizedBox(height: 32),
+          Center(
+            child: Column(
+              children: [
+                Icon(Icons.bar_chart, size: 48, color: AppColors.textSecondary.withValues(alpha: 0.2)),
+                const SizedBox(height: 16),
+                Text('No activity yet', style: AppTypography.body.copyWith(fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                const SizedBox(height: 4),
+                Text(
+                  'Your performance data will appear here once customers start placing orders.', 
+                  style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                  textAlign: TextAlign.center,
+                ),
+              ]
+            )
           ),
+          const SizedBox(height: 32),
+        ],
+      ),
+    ).animate().fade(duration: 400.ms, delay: 200.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutCubic);
+  }
+}
+
+class _FilterTab extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  
+  const _FilterTab(this.label, this.isSelected);
+  
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isSelected ? AppColors.primary.withValues(alpha: 0.2) : AppColors.border.withValues(alpha: 0.5),
         ),
-        const SizedBox(height: AppSpacing.sm),
-        Text(
-          label,
-          style: AppTypography.label.copyWith(
-            color: AppColors.textSecondary,
-            fontWeight: FontWeight.normal,
-          ),
+      ),
+      child: Text(
+        label,
+        style: AppTypography.label.copyWith(
+          color: isSelected ? AppColors.primary : AppColors.textSecondary,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
         ),
-      ],
+      ),
     );
   }
 }
 
-class _RecentActivitySection extends StatelessWidget {
-  const _RecentActivitySection({super.key});
+class _RecentOrdersSection extends StatelessWidget {
+  const _RecentOrdersSection();
+  
   @override
   Widget build(BuildContext context) {
-    return GlassSurface(
+    return Container(
       padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Recent Activity',
-            style: AppTypography.headline.copyWith(color: AppColors.textPrimary),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Recent Orders', style: AppTypography.title.copyWith(fontWeight: FontWeight.bold)),
+              Icon(Icons.more_horiz, color: AppColors.textSecondary),
+            ],
           ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            'Live updates from the platform.',
-            style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.xxl),
           Center(
             child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.xl),
+              padding: const EdgeInsets.symmetric(vertical: 40),
               child: Column(
                 children: [
-                  Icon(Icons.inbox_outlined, size: 48, color: AppColors.textSecondary),
-                  const SizedBox(height: AppSpacing.md),
+                  Icon(Icons.receipt_long_outlined, size: 40, color: AppColors.textSecondary.withValues(alpha: 0.3)),
+                  const SizedBox(height: 16),
+                  Text('No orders yet', style: AppTypography.body.copyWith(fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                  const SizedBox(height: 4),
                   Text(
-                    'No recent activity',
-                    style: AppTypography.body.copyWith(color: AppColors.textSecondary),
+                    'New customer orders will appear here.', 
+                    style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
             ),
           ),
+          const SizedBox(height: AppSpacing.xl),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () {},
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                side: BorderSide(color: AppColors.border),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: const Text('View All Orders'),
+            ),
+          ),
         ],
       ),
-    );
+    ).animate().fade(duration: 400.ms, delay: 300.ms).slideY(begin: 0.1, end: 0, curve: Curves.easeOutCubic);
   }
 }
-
-
