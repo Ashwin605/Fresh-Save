@@ -66,9 +66,12 @@ class AuthController extends Notifier<AsyncValue<void>> {
 
     switch (result) {
       case Success():
-        // Do not auto login because email verification is required.
+        // CRITICAL: Force the global auth state to unauthenticated.
+        // This ensures the router won't redirect to /home even if
+        // there was a stale authenticated state.
+        ref.read(authStateProvider.notifier).logout();
         state = AsyncError(
-          'Registration successful. Please check your email to verify your account before logging in.',
+          'Registration successful! Please check your email to verify your account before logging in.',
           StackTrace.empty,
         );
       case Failure(:final error):

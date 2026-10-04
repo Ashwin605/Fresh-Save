@@ -86,6 +86,12 @@ class AuthRepositoryImpl implements AuthRepository {
     String? phone,
   }) async {
     try {
+      // CRITICAL: Clear any stale tokens BEFORE creating the account.
+      // This prevents _restoreSession from finding old tokens and
+      // auto-authenticating the user during the brief window when
+      // createUserWithEmailAndPassword signs them into Firebase.
+      await tokenStorage.clearTokens();
+
       final credential = await firebaseAuth.createUserWithEmailAndPassword(
         email: email,
         password: password,
@@ -95,7 +101,11 @@ class AuthRepositoryImpl implements AuthRepository {
 
       await user.updateDisplayName(name);
       await user.sendEmailVerification();
+
+      // CRITICAL: Sign out IMMEDIATELY and clear tokens again.
+      // This ensures no race condition can allow the unverified user through.
       await firebaseAuth.signOut();
+      await tokenStorage.clearTokens();
 
       final ourUser = User(
         id: user.uid,
@@ -105,7 +115,6 @@ class AuthRepositoryImpl implements AuthRepository {
         phone: phone,
       );
       
-      // Notify backend if necessary, or just rely on Firebase
       return Result.success(ourUser);
     } catch (e) {
       return Result.failure(ApiErrorHandler.handle(e));
