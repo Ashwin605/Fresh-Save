@@ -32,6 +32,23 @@ class AuthController extends Notifier<AsyncValue<void>> {
     }
   }
 
+  Future<void> signInWithGoogle() async {
+    state = const AsyncLoading();
+    final repo = ref.read(authRepositoryProvider);
+    final result = await repo.signInWithGoogle();
+
+    switch (result) {
+      case Success(:final data):
+        ref.read(authStateProvider.notifier).login(data.user);
+        state = const AsyncData(null);
+      case Failure(:final error):
+        state = AsyncError(
+          _errorMessage(error),
+          StackTrace.current,
+        );
+    }
+  }
+
   Future<void> register({
     required String name,
     required String email,
@@ -49,7 +66,11 @@ class AuthController extends Notifier<AsyncValue<void>> {
 
     switch (result) {
       case Success():
-        login(email, password);
+        // Do not auto login because email verification is required.
+        state = AsyncError(
+          'Registration successful. Please check your email to verify your account before logging in.',
+          StackTrace.empty,
+        );
       case Failure(:final error):
         state = AsyncError(
           _errorMessage(error),

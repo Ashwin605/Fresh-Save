@@ -238,6 +238,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 onPressed: _submit,
                               ),
                             ).animate().fade(duration: AppAnimations.medium, delay: 600.ms).scaleXY(begin: 0.9, end: 1.0),
+                            const SizedBox(height: AppSpacing.lg),
+                            Row(
+                              children: [
+                                const Expanded(child: Divider()),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                                  child: Text('OR', style: AppTypography.label.copyWith(color: AppColors.textSecondary)),
+                                ),
+                                const Expanded(child: Divider()),
+                              ],
+                            ).animate().fade(duration: AppAnimations.medium, delay: 650.ms),
+                            const SizedBox(height: AppSpacing.lg),
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton.icon(
+                                onPressed: authState.isLoading
+                                    ? null
+                                    : () => ref.read(authControllerProvider.notifier).signInWithGoogle(),
+                                icon: const Icon(Icons.g_mobiledata, size: 28),
+                                label: const Text('Sign in with Google'),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+                                ),
+                              ),
+                            ).animate().fade(duration: AppAnimations.medium, delay: 700.ms).scaleXY(begin: 0.9, end: 1.0),
                           ],
                         ),
                       ).animate().fade(duration: AppAnimations.medium, delay: 300.ms).slideY(begin: 0.1, end: 0),

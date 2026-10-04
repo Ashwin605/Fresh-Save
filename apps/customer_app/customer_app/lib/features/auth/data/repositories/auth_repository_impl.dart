@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
+import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/network/result.dart';
 import '../../domain/models/auth_models.dart';
@@ -12,6 +13,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
     dio: ref.watch(dioProvider),
     tokenStorage: ref.watch(tokenStorageProvider),
     firebaseAuth: firebase.FirebaseAuth.instance,
+    googleSignIn: GoogleSignIn(),
   );
 });
 
@@ -19,11 +21,13 @@ class AuthRepositoryImpl implements AuthRepository {
   final Dio dio;
   final TokenStorage tokenStorage;
   final firebase.FirebaseAuth firebaseAuth;
+  final GoogleSignIn googleSignIn;
 
   AuthRepositoryImpl({
     required this.dio,
     required this.tokenStorage,
     required this.firebaseAuth,
+    required this.googleSignIn,
   });
 
   User _mapFirebaseUser(firebase.User user) {
@@ -48,6 +52,11 @@ class AuthRepositoryImpl implements AuthRepository {
       );
       final user = credential.user;
       if (user == null) throw Exception('Login failed');
+
+      if (!user.emailVerified) {
+        await firebaseAuth.signOut();
+        throw Exception('Please verify your email address before logging in.');
+      }
 
       final token = await user.getIdToken() ?? '';
       final ourUser = _mapFirebaseUser(user);
@@ -85,6 +94,8 @@ class AuthRepositoryImpl implements AuthRepository {
       if (user == null) throw Exception('Registration failed');
 
       await user.updateDisplayName(name);
+      await user.sendEmailVerification();
+      await firebaseAuth.signOut();
 
       final ourUser = User(
         id: user.uid,
@@ -212,5 +223,42 @@ class AuthRepositoryImpl implements AuthRepository {
     // If the UI relies on OTP, we might need a custom backend or Firebase Extensions.
     // For now, we simulate success or throw an error indicating email link should be used.
     throw Exception('Please use the link sent to your email to reset your password.');
+  }
+
+  @override
+  Future<Result<LoginResponse>> signInWithGoogle() async {
+    try {
+      final googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        throw Exception('Google Sign-In aborted by user.');
+      }
+
+      final googleAuth = await googleUser.authentication;
+      final credential = firebase.GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final userCredential = await firebaseAuth.signInWithCredential(credential);
+      final user = userCredential.user;
+      if (user == null) throw Exception('Google Sign-In failed');
+
+      final token = await user.getIdToken() ?? '';
+      final ourUser = _mapFirebaseUser(user);
+
+      final loginResponse = LoginResponse(
+        user: ourUser,
+        tokens: AuthTokens(accessToken: token, refreshToken: ''),
+      );
+
+      await tokenStorage.saveTokens(
+        accessToken: token,
+        refreshToken: '',
+      );
+
+      return Result.success(loginResponse);
+    } catch (e) {
+      return Result.failure(ApiErrorHandler.handle(e));
+    }
   }
 }
