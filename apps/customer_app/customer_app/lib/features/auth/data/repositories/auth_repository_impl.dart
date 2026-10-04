@@ -133,6 +133,8 @@ class AuthRepositoryImpl implements AuthRepository {
       if (user == null) throw Exception('Registration failed');
 
       await user.updateDisplayName(ownerName);
+      await user.sendEmailVerification();
+      await firebaseAuth.signOut();
 
       // A backend call would typically happen here to save the business profile.
       // We will mock this response for now as we transition to Firebase Auth.
@@ -156,14 +158,26 @@ class AuthRepositoryImpl implements AuthRepository {
       final user = firebaseAuth.currentUser;
       if (user == null) throw Exception('Not authenticated');
       
+      // Force reload to get the latest user status from Firebase
+      await user.reload();
+      final reloadedUser = firebaseAuth.currentUser;
+      if (reloadedUser == null) throw Exception('User not found after reload');
+
+      // Enforce email verification for returning sessions
+      if (!reloadedUser.emailVerified) {
+        await firebaseAuth.signOut();
+        await tokenStorage.clearTokens();
+        throw Exception('Please verify your email address.');
+      }
+      
       // Refresh token if necessary to ensure it's valid
-      final token = await user.getIdToken() ?? '';
+      final token = await reloadedUser.getIdToken() ?? '';
       await tokenStorage.saveTokens(
         accessToken: token,
         refreshToken: '',
       );
       
-      return Result.success(_mapFirebaseUser(user));
+      return Result.success(_mapFirebaseUser(reloadedUser));
     } catch (e) {
       return Result.failure(ApiErrorHandler.handle(e));
     }
