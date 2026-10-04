@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "495728944082",
+    "project_id": "fresh-save-main",
+    "storage_bucket": "fresh-save-main.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:495728944082:android:7bd92e0a09e82d18e8de0b",
+        "android_client_info": {
+          "package_name": "com.example.customer_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "495728944082-bp12b52a98e7k7l1rn4k1m2cmk461chc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCcpE7kwdyKtCg_0wRRghETrwjROO-dnfg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "495728944082-bp12b52a98e7k7l1rn4k1m2cmk461chc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

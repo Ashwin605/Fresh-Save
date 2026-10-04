@@ -1,4 +1,4 @@
-﻿import '../../../../app/theme/app_colors.dart';
+import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -48,9 +48,10 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> {
           children: [
             Text(
               'User Management',
-              style: AppTypography.display.copyWith(
+              style: AppTypography.headline.copyWith(
                 color: AppColors.textPrimary,
                 fontWeight: FontWeight.bold,
+                fontSize: 28,
               ),
             ),
             const SizedBox(height: AppSpacing.xxl),

@@ -94,7 +94,7 @@ class _ReservationReviewScreenState
     if (!mounted) return;
 
     if (result is Success<Reservation>) {
-      context.go('/reservation/success/${result.data.id}');
+      context.go('/payment/${result.data.id}');
     } else if (result is Failure<Reservation>) {
       setState(() => _isSubmitting = false);
       String errorMessage = result.error.message ?? 'Failed to reserve. Please try again.';
@@ -651,7 +651,7 @@ class _ReservationReviewScreenState
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
           child: AppButton(
-            label: _isSubmitting ? 'Confirming...' : 'Confirm Reservation',
+            label: _isSubmitting ? 'Processing...' : 'Proceed to Payment',
             variant: AppButtonVariant.primary,
             isLoading: _isSubmitting,
             onPressed: () => _submitReservation(deal),

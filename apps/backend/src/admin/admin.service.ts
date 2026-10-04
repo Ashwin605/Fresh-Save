@@ -709,4 +709,127 @@ export class AdminService {
     });
     return offer;
   }
+
+  async getPaymentStats() {
+    const payments = await this.prisma.payment.findMany();
+    
+    let total = 0;
+    let successful = 0;
+    let pending = 0;
+    let failed = 0;
+    let cancelled = 0;
+    let totalValue = 0;
+
+    for (const p of payments) {
+      total++;
+      if (p.status === 'SUCCESS') {
+        successful++;
+        totalValue += Number(p.amount);
+      } else if (p.status === 'PENDING' || p.status === 'PROCESSING') {
+        pending++;
+      } else if (p.status === 'FAILED') {
+        failed++;
+      } else if (p.status === 'CANCELLED') {
+        cancelled++;
+      }
+    }
+
+    return {
+      success: true,
+      data: {
+        totalPayments: total,
+        successfulPayments: successful,
+        pendingPayments: pending,
+        failedPayments: failed,
+        cancelledPayments: cancelled,
+        totalSuccessfulValue: totalValue,
+      },
+    };
+  }
+
+  async getPayments(page: number, limit: number, status?: string, search?: string) {
+    const skip = (page - 1) * limit;
+
+    let whereClause: any = {};
+    if (status && status !== 'ALL') {
+      whereClause.status = status;
+    }
+
+    if (search) {
+      whereClause.OR = [
+        { id: { contains: search, mode: 'insensitive' } },
+        { reservationId: { contains: search, mode: 'insensitive' } },
+        { providerPaymentId: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [payments, total] = await Promise.all([
+      this.prisma.payment.findMany({
+        where: whereClause,
+        include: {
+          reservation: {
+            include: {
+              customer: {
+                select: { id: true, name: true, email: true },
+              },
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.payment.count({ where: whereClause }),
+    ]);
+
+    return {
+      success: true,
+      data: {
+        items: payments.map((p) => ({
+          id: p.id,
+          orderId: p.reservationId,
+          customer: p.reservation.customer,
+          amount: p.amount,
+          currency: p.currency,
+          provider: p.provider,
+          status: p.status,
+          createdAt: p.createdAt,
+          updatedAt: p.updatedAt,
+        })),
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+        },
+      },
+    };
+  }
+
+  async getPaymentDetails(id: string) {
+    const payment = await this.prisma.payment.findUnique({
+      where: { id },
+      include: {
+        reservation: {
+          include: {
+            customer: {
+              select: { id: true, name: true, email: true, phone: true },
+            },
+            store: {
+              select: { id: true, name: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!payment) {
+      throw new NotFoundException('Payment not found');
+    }
+
+    return {
+      success: true,
+      data: { payment },
+    };
+  }
 }

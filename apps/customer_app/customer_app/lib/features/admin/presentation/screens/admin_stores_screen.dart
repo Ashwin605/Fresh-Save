@@ -92,9 +92,10 @@ class _AdminStoresScreenState extends ConsumerState<AdminStoresScreen> {
           children: [
             Text(
               'Store Management',
-              style: AppTypography.display.copyWith(
+              style: AppTypography.headline.copyWith(
                 color: AppColors.textPrimary,
                 fontWeight: FontWeight.bold,
+                fontSize: 28,
               ),
             ),
             const SizedBox(height: AppSpacing.xxl),

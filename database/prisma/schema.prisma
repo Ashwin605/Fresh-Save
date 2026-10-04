@@ -173,6 +173,15 @@ enum ShopRatingStatus {
   FLAGGED
 }
 
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
 // --------------------------------------------------
 // MODELS
 // --------------------------------------------------
@@ -476,6 +485,7 @@ model Reservation {
   reviews  Review[]
   shopRatings ShopRating[]
   couponUsages CouponUsage[]
+  payments Payment[]
 
   @@index([customerId])
   @@index([storeId])
@@ -832,5 +842,25 @@ model ShopRating {
   @@index([customerId])
   @@index([orderId])
   @@map("shop_ratings")
+}
+
+model Payment {
+  id                String        @id @default(uuid())
+  reservationId     String        @map("reservation_id")
+  amount            Decimal       @db.Decimal(10, 2)
+  currency          String        @default("USD")
+  status            PaymentStatus @default(PENDING)
+  provider          String
+  providerPaymentId String?       @map("provider_payment_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relationships
+  reservation Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  @@index([reservationId])
+  @@index([status])
+  @@map("payments")
 }
 

@@ -206,4 +206,24 @@ export class AdminController {
   updateOffer(@Param('id') id: string, @Body() data: any, @Request() req: any) {
     return this.adminService.updateOffer(id, data, req.user.userId);
   }
+
+  @Get('payments/stats')
+  getPaymentStats() {
+    return this.adminService.getPaymentStats();
+  }
+
+  @Get('payments')
+  getPayments(
+    @Query('page') page: string, 
+    @Query('limit') limit: string,
+    @Query('status') status?: string,
+    @Query('search') search?: string,
+  ) {
+    return this.adminService.getPayments(Number(page) || 1, Number(limit) || 20, status, search);
+  }
+
+  @Get('payments/:id')
+  getPaymentDetails(@Param('id') id: string) {
+    return this.adminService.getPaymentDetails(id);
+  }
 }

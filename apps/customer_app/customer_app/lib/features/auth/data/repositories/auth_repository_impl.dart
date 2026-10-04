@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/network/result.dart';
 import '../../domain/models/auth_models.dart';
@@ -10,14 +11,30 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepositoryImpl(
     dio: ref.watch(dioProvider),
     tokenStorage: ref.watch(tokenStorageProvider),
+    firebaseAuth: firebase.FirebaseAuth.instance,
   );
 });
 
 class AuthRepositoryImpl implements AuthRepository {
   final Dio dio;
   final TokenStorage tokenStorage;
+  final firebase.FirebaseAuth firebaseAuth;
 
-  AuthRepositoryImpl({required this.dio, required this.tokenStorage});
+  AuthRepositoryImpl({
+    required this.dio,
+    required this.tokenStorage,
+    required this.firebaseAuth,
+  });
+
+  User _mapFirebaseUser(firebase.User user) {
+    return User(
+      id: user.uid,
+      email: user.email ?? '',
+      name: user.displayName ?? 'User',
+      role: 'customer', // Default role
+      phone: user.phoneNumber,
+    );
+  }
 
   @override
   Future<Result<LoginResponse>> login({
@@ -25,15 +42,27 @@ class AuthRepositoryImpl implements AuthRepository {
     required String password,
   }) async {
     try {
-      final response = await dio.post(
-        '/auth/login',
-        data: {'email': email, 'password': password},
+      final credential = await firebaseAuth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
       );
-      final loginResponse = LoginResponse.fromJson(response.data as Map<String, dynamic>);
+      final user = credential.user;
+      if (user == null) throw Exception('Login failed');
+
+      final token = await user.getIdToken() ?? '';
+      final ourUser = _mapFirebaseUser(user);
+      
+      final loginResponse = LoginResponse(
+        user: ourUser,
+        tokens: AuthTokens(accessToken: token, refreshToken: ''),
+      );
+
       await tokenStorage.saveTokens(
-        accessToken: loginResponse.tokens.accessToken,
-        refreshToken: loginResponse.tokens.refreshToken,
+        accessToken: token,
+        refreshToken: '',
       );
+      
+      // Optionally notify backend here if needed, but for now we just use Firebase auth.
       return Result.success(loginResponse);
     } catch (e) {
       return Result.failure(ApiErrorHandler.handle(e));
@@ -48,13 +77,25 @@ class AuthRepositoryImpl implements AuthRepository {
     String? phone,
   }) async {
     try {
-      final data = {'name': name, 'email': email, 'password': password};
-      if (phone != null && phone.isNotEmpty) {
-        data['phone'] = phone;
-      }
+      final credential = await firebaseAuth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      final user = credential.user;
+      if (user == null) throw Exception('Registration failed');
 
-      final response = await dio.post('/auth/register', data: data);
-      return Result.success(User.fromJson(response.data as Map<String, dynamic>));
+      await user.updateDisplayName(name);
+
+      final ourUser = User(
+        id: user.uid,
+        email: user.email ?? email,
+        name: name,
+        role: 'customer',
+        phone: phone,
+      );
+      
+      // Notify backend if necessary, or just rely on Firebase
+      return Result.success(ourUser);
     } catch (e) {
       return Result.failure(ApiErrorHandler.handle(e));
     }
@@ -73,22 +114,26 @@ class AuthRepositoryImpl implements AuthRepository {
     double? longitude,
   }) async {
     try {
-      final data = {
-        'ownerName': ownerName,
-        'email': email,
-        'password': password,
-        'businessName': businessName,
-        'storeName': storeName,
-        'storeAddress': storeAddress,
-        'latitude': ?latitude,
-        'longitude': ?longitude,
-      };
-      if (phone != null && phone.isNotEmpty) {
-        data['phone'] = phone;
-      }
+      final credential = await firebaseAuth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      final user = credential.user;
+      if (user == null) throw Exception('Registration failed');
 
-      final response = await dio.post('/auth/register-business', data: data);
-      return Result.success(User.fromJson(response.data as Map<String, dynamic>));
+      await user.updateDisplayName(ownerName);
+
+      // A backend call would typically happen here to save the business profile.
+      // We will mock this response for now as we transition to Firebase Auth.
+      final ourUser = User(
+        id: user.uid,
+        email: user.email ?? email,
+        name: ownerName,
+        role: 'owner',
+        phone: phone,
+      );
+      
+      return Result.success(ourUser);
     } catch (e) {
       return Result.failure(ApiErrorHandler.handle(e));
     }
@@ -97,8 +142,17 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Result<User>> getCurrentUser() async {
     try {
-      final response = await dio.get('/auth/me');
-      return Result.success(User.fromJson(response.data as Map<String, dynamic>));
+      final user = firebaseAuth.currentUser;
+      if (user == null) throw Exception('Not authenticated');
+      
+      // Refresh token if necessary to ensure it's valid
+      final token = await user.getIdToken() ?? '';
+      await tokenStorage.saveTokens(
+        accessToken: token,
+        refreshToken: '',
+      );
+      
+      return Result.success(_mapFirebaseUser(user));
     } catch (e) {
       return Result.failure(ApiErrorHandler.handle(e));
     }
@@ -107,9 +161,9 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Result<void>> logout() async {
     try {
-      await dio.post('/auth/logout');
+      await firebaseAuth.signOut();
     } catch (e) {
-      // Ignore network errors on logout, we still clear local session
+      // Ignore
     } finally {
       await tokenStorage.clearTokens();
     }
@@ -122,10 +176,16 @@ class AuthRepositoryImpl implements AuthRepository {
     required String newPassword,
   }) async {
     try {
-      await dio.post(
-        '/auth/change-password',
-        data: {'oldPassword': currentPassword, 'newPassword': newPassword},
+      final user = firebaseAuth.currentUser;
+      if (user == null) throw Exception('Not authenticated');
+      
+      final cred = firebase.EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
       );
+      await user.reauthenticateWithCredential(cred);
+      await user.updatePassword(newPassword);
+      
       return const Result.success(null);
     } catch (e) {
       return Result.failure(ApiErrorHandler.handle(e));
@@ -135,7 +195,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Result<void>> forgotPassword({required String email}) async {
     try {
-      await dio.post('/auth/forgot-password', data: {'email': email});
+      await firebaseAuth.sendPasswordResetEmail(email: email);
       return const Result.success(null);
     } catch (e) {
       return Result.failure(ApiErrorHandler.handle(e));
@@ -148,14 +208,9 @@ class AuthRepositoryImpl implements AuthRepository {
     required String otp,
     required String newPassword,
   }) async {
-    try {
-      await dio.post(
-        '/auth/reset-password',
-        data: {'email': email, 'otp': otp, 'newPassword': newPassword},
-      );
-      return const Result.success(null);
-    } catch (e) {
-      return Result.failure(ApiErrorHandler.handle(e));
-    }
+    // Firebase handles password resets via email links.
+    // If the UI relies on OTP, we might need a custom backend or Firebase Extensions.
+    // For now, we simulate success or throw an error indicating email link should be used.
+    throw Exception('Please use the link sent to your email to reset your password.');
   }
 }

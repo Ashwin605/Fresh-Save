@@ -59,9 +59,14 @@ class _AdminAppBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final topPadding = MediaQuery.of(context).padding.top;
     return Container(
-      height: 72,
-      padding: EdgeInsets.symmetric(horizontal: isDesktop ? AppSpacing.xl : AppSpacing.md),
+      padding: EdgeInsets.only(
+        top: topPadding + 12,
+        bottom: 12,
+        left: isDesktop ? AppSpacing.xl : AppSpacing.md,
+        right: isDesktop ? AppSpacing.xl : AppSpacing.md,
+      ),
       color: AppColors.background,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -222,6 +227,13 @@ class _AdminSideNav extends ConsumerWidget {
                   icon: Icons.local_shipping_outlined,
                   route: '/admin/packages',
                   isSelected: currentRoute == '/admin/packages',
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                _NavItem(
+                  title: 'Payments',
+                  icon: Icons.payment_outlined,
+                  route: '/admin/payments',
+                  isSelected: currentRoute == '/admin/payments',
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 _NavItem(

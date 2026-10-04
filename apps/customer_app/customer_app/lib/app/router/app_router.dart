@@ -23,6 +23,8 @@ import '../../features/reservations/presentation/screens/reservation_review_scre
 import '../../features/reservations/presentation/screens/reservation_confirmation_screen.dart';
 import '../../features/reservations/presentation/screens/reservation_history_screen.dart';
 import '../../features/reservations/presentation/screens/reservation_detail_screen.dart';
+import '../../features/payment/presentation/screens/payment_screen.dart';
+import '../../features/payment/presentation/screens/payment_result_screen.dart';
 import '../../features/notifications/presentation/screens/notification_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/profile/presentation/screens/notification_preferences_screen.dart';
@@ -73,6 +75,8 @@ import '../../features/admin/presentation/screens/admin_users_screen.dart';
 import '../../features/admin/presentation/screens/admin_stores_screen.dart';
 import '../../features/admin/presentation/screens/admin_audit_logs_screen.dart';
 import '../../features/admin/presentation/screens/admin_categories_screen.dart';
+import '../../features/admin/presentation/screens/admin_payments_screen.dart';
+import '../../features/admin/presentation/screens/admin_payment_detail_screen.dart';
 import '../../features/admin/presentation/screens/admin_products_screen.dart';
 import '../../features/admin/presentation/screens/admin_inventory_screen.dart';
 import '../../features/admin/presentation/screens/admin_stock_transfers_screen.dart';
@@ -472,6 +476,16 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/admin/contacts',
             builder: (context, state) => const AdminContactsScreen(),
           ),
+          GoRoute(
+            path: '/admin/payments',
+            builder: (context, state) => const AdminPaymentsScreen(),
+          ),
+          GoRoute(
+            path: '/admin/payments/:id',
+            builder: (context, state) => AdminPaymentDetailScreen(
+              paymentId: state.pathParameters['id']!,
+            ),
+          ),
         ],
       ),
       // --- App Routes (Customer) ---
@@ -626,6 +640,20 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/reservation/success/:id',
         builder: (context, state) => ReservationConfirmationScreen(
           reservationId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '/payment/:reservationId',
+        builder: (context, state) => PaymentScreen(
+          reservationId: state.pathParameters['reservationId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/payment/result/:status',
+        builder: (context, state) => PaymentResultScreen(
+          status: state.pathParameters['status']!,
+          reservationId: state.uri.queryParameters['reservationId']!,
+          paymentId: state.uri.queryParameters['paymentId'],
         ),
       ),
       GoRoute(
