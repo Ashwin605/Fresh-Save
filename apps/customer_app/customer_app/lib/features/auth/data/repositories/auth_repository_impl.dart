@@ -13,7 +13,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
     dio: ref.watch(dioProvider),
     tokenStorage: ref.watch(tokenStorageProvider),
     firebaseAuth: firebase.FirebaseAuth.instance,
-    googleSignIn: GoogleSignIn.instance,
+    googleSignIn: GoogleSignIn(),
   );
 });
 
@@ -228,10 +228,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Result<LoginResponse>> signInWithGoogle() async {
     try {
-      // For v7.x+, ensure it's initialized before usage.
-      await googleSignIn.initialize();
-
-      final googleUser = await googleSignIn.authenticate();
+      final googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
         throw Exception('Google Sign-In aborted by user.');
       }
