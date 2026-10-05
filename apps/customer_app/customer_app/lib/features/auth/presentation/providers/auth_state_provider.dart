@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import '../../../../core/network/result.dart';
 import '../../domain/models/auth_models.dart';
 import '../../data/repositories/auth_repository_impl.dart';
@@ -80,6 +81,28 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   void login(User user) {
+    // ULTIMATE BACKSTOP: Check Firebase directly before EVER setting authenticated.
+    // This catches ALL bypass paths — customer login, owner login, owner register,
+    // Google sign-in, or any future code that calls this method.
+    final fbUser = firebase.FirebaseAuth.instance.currentUser;
+    if (fbUser == null) {
+      // No Firebase user at all — refuse to authenticate
+      state = state.copyWith(status: AuthStatus.unauthenticated, user: null);
+      return;
+    }
+
+    // Google Sign-In users are inherently verified by Google
+    final isGoogleUser = fbUser.providerData.any(
+      (info) => info.providerId == 'google.com',
+    );
+
+    if (!fbUser.emailVerified && !isGoogleUser) {
+      // UNVERIFIED email user — kick them out immediately
+      firebase.FirebaseAuth.instance.signOut();
+      state = state.copyWith(status: AuthStatus.unauthenticated, user: null);
+      return;
+    }
+
     state = state.copyWith(status: AuthStatus.authenticated, user: user);
   }
 

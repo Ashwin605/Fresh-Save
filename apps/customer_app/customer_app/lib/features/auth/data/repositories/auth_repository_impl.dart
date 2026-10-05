@@ -134,6 +134,9 @@ class AuthRepositoryImpl implements AuthRepository {
     double? longitude,
   }) async {
     try {
+      // CRITICAL: Clear stale tokens before creating account
+      await tokenStorage.clearTokens();
+
       final credential = await firebaseAuth.createUserWithEmailAndPassword(
         email: email,
         password: password,
@@ -143,10 +146,11 @@ class AuthRepositoryImpl implements AuthRepository {
 
       await user.updateDisplayName(ownerName);
       await user.sendEmailVerification();
-      await firebaseAuth.signOut();
 
-      // A backend call would typically happen here to save the business profile.
-      // We will mock this response for now as we transition to Firebase Auth.
+      // CRITICAL: Sign out and clear tokens immediately
+      await firebaseAuth.signOut();
+      await tokenStorage.clearTokens();
+
       final ourUser = User(
         id: user.uid,
         email: user.email ?? email,

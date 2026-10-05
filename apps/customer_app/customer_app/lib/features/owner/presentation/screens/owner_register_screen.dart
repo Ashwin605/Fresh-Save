@@ -176,8 +176,17 @@ class _OwnerRegisterScreenState extends ConsumerState<OwnerRegisterScreen> {
 
       if (!mounted) return;
       if (result) {
-        // Await the login so we don't race with the router redirect
-        await ref.read(authControllerProvider.notifier).login(email, password);
+        // Do NOT auto-login. The user must verify their email first.
+        AppSnackbar.show(
+          context,
+          message: 'Registration successful! Please check your email to verify your account before logging in.',
+          variant: SnackbarVariant.success,
+        );
+        if (mounted) {
+          setState(() => _isLoading = false);
+          // Navigate back to the login screen
+          context.pushReplacement('/owner/login');
+        }
       } else {
         final errorMessage = ref.read(authStateProvider).error ?? 'Registration failed';
         AppSnackbar.show(context, message: errorMessage, variant: SnackbarVariant.error);
