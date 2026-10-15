@@ -66,11 +66,6 @@ class AuthRepositoryImpl implements AuthRepository {
         tokens: AuthTokens(accessToken: token, refreshToken: ''),
       );
 
-      await tokenStorage.saveTokens(
-        accessToken: token,
-        refreshToken: '',
-      );
-      
       // Optionally notify backend here if needed, but for now we just use Firebase auth.
       return Result.success(loginResponse);
     } catch (e) {
@@ -86,11 +81,8 @@ class AuthRepositoryImpl implements AuthRepository {
     String? phone,
   }) async {
     try {
-      // CRITICAL: Clear any stale tokens BEFORE creating the account.
-      // This prevents _restoreSession from finding old tokens and
-      // auto-authenticating the user during the brief window when
-      // createUserWithEmailAndPassword signs them into Firebase.
-      await tokenStorage.clearTokens();
+      // Note: We don't need to manually clear tokens since Firebase is the source of truth.
+
 
       final credential = await firebaseAuth.createUserWithEmailAndPassword(
         email: email,
@@ -102,10 +94,10 @@ class AuthRepositoryImpl implements AuthRepository {
       await user.updateDisplayName(name);
       await user.sendEmailVerification();
 
-      // CRITICAL: Sign out IMMEDIATELY and clear tokens again.
+      // CRITICAL: Sign out IMMEDIATELY.
       // This ensures no race condition can allow the unverified user through.
       await firebaseAuth.signOut();
-      await tokenStorage.clearTokens();
+
 
       final ourUser = User(
         id: user.uid,
@@ -134,8 +126,7 @@ class AuthRepositoryImpl implements AuthRepository {
     double? longitude,
   }) async {
     try {
-      // CRITICAL: Clear stale tokens before creating account
-      await tokenStorage.clearTokens();
+      // Note: We don't need to manually clear tokens since Firebase is the source of truth.
 
       final credential = await firebaseAuth.createUserWithEmailAndPassword(
         email: email,
@@ -147,9 +138,9 @@ class AuthRepositoryImpl implements AuthRepository {
       await user.updateDisplayName(ownerName);
       await user.sendEmailVerification();
 
-      // CRITICAL: Sign out and clear tokens immediately
+      // CRITICAL: Sign out immediately
       await firebaseAuth.signOut();
-      await tokenStorage.clearTokens();
+
 
       final ourUser = User(
         id: user.uid,
@@ -170,27 +161,17 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final user = firebaseAuth.currentUser;
       if (user == null) throw Exception('Not authenticated');
-      
-      // Force reload to get the latest user status from Firebase
-      await user.reload();
-      final reloadedUser = firebaseAuth.currentUser;
-      if (reloadedUser == null) throw Exception('User not found after reload');
 
       // Enforce email verification for returning sessions
-      if (!reloadedUser.emailVerified) {
-        await firebaseAuth.signOut();
-        await tokenStorage.clearTokens();
-        throw Exception('Please verify your email address.');
+      if (!user.emailVerified) {
+        final isGoogleUser = user.providerData.any((info) => info.providerId == 'google.com');
+        if (!isGoogleUser) {
+          await firebaseAuth.signOut();
+          throw Exception('Please verify your email address.');
+        }
       }
       
-      // Refresh token if necessary to ensure it's valid
-      final token = await reloadedUser.getIdToken() ?? '';
-      await tokenStorage.saveTokens(
-        accessToken: token,
-        refreshToken: '',
-      );
-      
-      return Result.success(_mapFirebaseUser(reloadedUser));
+      return Result.success(_mapFirebaseUser(user));
     } catch (e) {
       return Result.failure(ApiErrorHandler.handle(e));
     }
@@ -202,8 +183,6 @@ class AuthRepositoryImpl implements AuthRepository {
       await firebaseAuth.signOut();
     } catch (e) {
       // Ignore
-    } finally {
-      await tokenStorage.clearTokens();
     }
     return const Result.success(null);
   }
@@ -276,11 +255,6 @@ class AuthRepositoryImpl implements AuthRepository {
       final loginResponse = LoginResponse(
         user: ourUser,
         tokens: AuthTokens(accessToken: token, refreshToken: ''),
-      );
-
-      await tokenStorage.saveTokens(
-        accessToken: token,
-        refreshToken: '',
       );
 
       return Result.success(loginResponse);

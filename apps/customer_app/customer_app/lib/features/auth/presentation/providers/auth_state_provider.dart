@@ -37,78 +37,50 @@ class AuthState {
 class AuthNotifier extends Notifier<AuthState> {
   @override
   AuthState build() {
-    // Listens to global token clear events triggered by the Dio network interceptor.
-    // If a 401 Unauthorized occurs and the refresh token fails, the interceptor
-    // clears the local storage. This listener catches that event and automatically
-    // forces the UI back to the unauthenticated state.
-    ref.listen(
-      tokenStorageProvider.select((ts) => ts.onTokensCleared),
-      (previous, next) {
-        next.listen((_) {
-          state = state.copyWith(
-            status: AuthStatus.unauthenticated,
-            user: null,
-          );
-        });
-      },
-      fireImmediately: true,
-    );
-
-    // Attempt to restore the user's session from secure storage on startup.
-    Future.microtask(() => _restoreSession());
+    // Listen to Firebase Auth state directly. This ensures synchronization.
+    firebase.FirebaseAuth.instance.userChanges().listen((fbUser) {
+      if (fbUser == null) {
+        state = state.copyWith(status: AuthStatus.unauthenticated, user: null);
+      } else {
+        _handleFirebaseUser(fbUser);
+      }
+    });
+    
+    // We start as unknown, let the listener above populate the state.
     return const AuthState();
   }
 
-  Future<void> _restoreSession() async {
-    final tokenStorage = ref.read(tokenStorageProvider);
-    final accessToken = await tokenStorage.getAccessToken();
-
-    if (accessToken == null) {
-      state = state.copyWith(status: AuthStatus.unauthenticated);
-      return;
-    }
-
-    final repo = ref.read(authRepositoryProvider);
-    final result = await repo.getCurrentUser();
-
-    switch (result) {
-      case Success(:final data):
-        state = state.copyWith(status: AuthStatus.authenticated, user: data);
-      case Failure():
-        await repo.logout();
-        state = state.copyWith(status: AuthStatus.unauthenticated, user: null);
-    }
-  }
-
-  void login(User user) {
-    // ULTIMATE BACKSTOP: Check Firebase directly before EVER setting authenticated.
-    // This catches ALL bypass paths — customer login, owner login, owner register,
-    // Google sign-in, or any future code that calls this method.
-    final fbUser = firebase.FirebaseAuth.instance.currentUser;
-    if (fbUser == null) {
-      // No Firebase user at all — refuse to authenticate
-      state = state.copyWith(status: AuthStatus.unauthenticated, user: null);
-      return;
-    }
-
-    // Google Sign-In users are inherently verified by Google
+  Future<void> _handleFirebaseUser(firebase.User fbUser) async {
     final isGoogleUser = fbUser.providerData.any(
       (info) => info.providerId == 'google.com',
     );
 
     if (!fbUser.emailVerified && !isGoogleUser) {
-      // UNVERIFIED email user — kick them out immediately
-      firebase.FirebaseAuth.instance.signOut();
+      await firebase.FirebaseAuth.instance.signOut();
       state = state.copyWith(status: AuthStatus.unauthenticated, user: null);
       return;
     }
 
+    final repo = ref.read(authRepositoryProvider);
+    final result = await repo.getCurrentUser();
+    
+    if (result is Success<User>) {
+      state = state.copyWith(status: AuthStatus.authenticated, user: result.data);
+    } else {
+      await firebase.FirebaseAuth.instance.signOut();
+      state = state.copyWith(status: AuthStatus.unauthenticated, user: null);
+    }
+  }
+
+  void login(User user) {
+    // We no longer manually manage state here, as the userChanges listener will catch the sign in.
+    // However, if we need to optimistic UI update, we can update it here.
     state = state.copyWith(status: AuthStatus.authenticated, user: user);
   }
 
   Future<void> logout() async {
     await ref.read(authRepositoryProvider).logout();
-    state = state.copyWith(status: AuthStatus.unauthenticated, user: null);
+    // userChanges listener will catch this and update state automatically.
   }
 
   Future<bool> changePassword({

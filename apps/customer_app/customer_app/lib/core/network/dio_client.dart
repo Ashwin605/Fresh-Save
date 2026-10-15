@@ -114,7 +114,7 @@ final dioProvider = Provider<Dio>((ref) {
     ),
   );
 
-  dio.interceptors.add(AuthInterceptor(tokenStorage, dio));
+  dio.interceptors.add(AuthInterceptor(dio));
   dio.interceptors.add(RetryInterceptor(dio: dio, ref: ref));
   dio.interceptors.add(UnwrapInterceptor());
 
