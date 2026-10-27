@@ -37,68 +37,113 @@ class AdminDashboardScreen extends ConsumerWidget {
                     final isTablet = constraints.maxWidth >= 600 && constraints.maxWidth < 1000;
                     final isDesktop = constraints.maxWidth >= 1000;
                     
-                    final cards = [
+                    final opCards = [
+                      _CompactKpiCard(
+                        title: 'Total Stores',
+                        value: '${metrics['stores']?['total'] ?? 0}',
+                        trend: '${metrics['stores']?['active'] ?? 0} Active • ${metrics['stores']?['pendingVerification'] ?? 0} Pending',
+                        icon: Icons.storefront_outlined,
+                        color: const Color(0xFF2563EB),
+                        delay: 0,
+                      ),
+                      _CompactKpiCard(
+                        title: 'Registered Shopkeepers',
+                        value: '${metrics['shopkeepers']?['total'] ?? 0}',
+                        trend: '${metrics['shopkeepers']?['active'] ?? 0} Active Accounts',
+                        icon: Icons.person_outline,
+                        color: const Color(0xFF0D9488),
+                        delay: 50,
+                      ),
+                      _CompactKpiCard(
+                        title: 'Published Products',
+                        value: '${metrics['products']?['active'] ?? 0}',
+                        trend: '${metrics['products']?['total'] ?? 0} Total (${metrics['products']?['inactive'] ?? 0} Inactive)',
+                        icon: Icons.inventory_2_outlined,
+                        color: const Color(0xFF7C3AED),
+                        delay: 100,
+                      ),
+                      _CompactKpiCard(
+                        title: 'Active Promotions',
+                        value: '${(metrics['offers']?['active'] ?? 0) + (metrics['coupons']?['active'] ?? 0)}',
+                        trend: '${metrics['offers']?['active'] ?? 0} Offers • ${metrics['coupons']?['active'] ?? 0} Coupons',
+                        icon: Icons.local_offer_outlined,
+                        color: const Color(0xFFEA580C),
+                        delay: 150,
+                      ),
+                    ];
+
+                    final finCards = [
                       _CompactKpiCard(
                         title: 'Total Orders',
                         value: '${metrics['orders']?['total'] ?? 0}',
-                        trend: 'All time',
+                        trend: '${metrics['orders']?['completed'] ?? 0} Completed',
                         icon: Icons.receipt_long_outlined,
-                        color: const Color(0xFF3B82F6), // Soft Blue
-                        delay: 0,
+                        color: const Color(0xFF3B82F6),
+                        delay: 200,
                       ),
                       _CompactKpiCard(
                         title: 'Net Revenue',
                         value: '₹${metrics['revenue']?['net'] ?? 0}',
-                        trend: 'All time',
+                        trend: 'Gross: ₹${metrics['revenue']?['gross'] ?? 0}',
                         icon: Icons.currency_rupee,
-                        color: const Color(0xFF10B981), // Soft Green
-                        delay: 50,
+                        color: const Color(0xFF10B981),
+                        delay: 250,
                       ),
                       _CompactKpiCard(
                         title: 'Discounts Given',
                         value: '₹${metrics['revenue']?['discounts'] ?? 0}',
-                        trend: 'All time',
+                        trend: '${metrics['coupons']?['usage'] ?? 0} Coupon Usages',
                         icon: Icons.money_off,
-                        color: const Color(0xFFF59E0B), // Soft Amber
-                        delay: 100,
+                        color: const Color(0xFFF59E0B),
+                        delay: 300,
                       ),
                       _CompactKpiCard(
-                        title: 'Coupon Usage',
-                        value: '${metrics['coupons']?['usage'] ?? 0}',
-                        trend: 'All time',
-                        icon: Icons.discount_outlined,
-                        color: const Color(0xFF8B5CF6), // Soft Purple
-                        delay: 150,
+                        title: 'Customer Ratings',
+                        value: '${metrics['ratings']?['average'] ?? '0.0'} ★',
+                        trend: '${metrics['ratings']?['total'] ?? 0} Verified Reviews',
+                        icon: Icons.star_rate_rounded,
+                        color: const Color(0xFFEAB308),
+                        delay: 350,
                       ),
                     ];
-                    
-                    Widget kpiSection;
-                    if (isMobile) {
-                      kpiSection = Column(
-                        children: [
-                          Row(children: [Expanded(child: cards[0]), const SizedBox(width: AppSpacing.md), Expanded(child: cards[1])]),
-                          const SizedBox(height: AppSpacing.md),
-                          Row(children: [Expanded(child: cards[2]), const SizedBox(width: AppSpacing.md), Expanded(child: cards[3])]),
-                        ],
-                      );
-                    } else if (isTablet) {
-                      kpiSection = Column(
-                        children: [
-                          Row(children: [Expanded(child: cards[0]), const SizedBox(width: AppSpacing.lg), Expanded(child: cards[1])]),
-                          const SizedBox(height: AppSpacing.lg),
-                          Row(children: [Expanded(child: cards[2]), const SizedBox(width: AppSpacing.lg), Expanded(child: cards[3])]),
-                        ],
-                      );
-                    } else {
-                      kpiSection = Row(
-                        children: [
-                          Expanded(child: cards[0]), const SizedBox(width: AppSpacing.lg),
-                          Expanded(child: cards[1]), const SizedBox(width: AppSpacing.lg),
-                          Expanded(child: cards[2]), const SizedBox(width: AppSpacing.lg),
-                          Expanded(child: cards[3]),
-                        ],
-                      );
+
+                    Widget buildCardRow(List<Widget> rowCards) {
+                      if (isMobile) {
+                        return Column(
+                          children: [
+                            Row(children: [Expanded(child: rowCards[0]), const SizedBox(width: AppSpacing.md), Expanded(child: rowCards[1])]),
+                            const SizedBox(height: AppSpacing.md),
+                            Row(children: [Expanded(child: rowCards[2]), const SizedBox(width: AppSpacing.md), Expanded(child: rowCards[3])]),
+                          ],
+                        );
+                      } else if (isTablet) {
+                        return Column(
+                          children: [
+                            Row(children: [Expanded(child: rowCards[0]), const SizedBox(width: AppSpacing.lg), Expanded(child: rowCards[1])]),
+                            const SizedBox(height: AppSpacing.lg),
+                            Row(children: [Expanded(child: rowCards[2]), const SizedBox(width: AppSpacing.lg), Expanded(child: rowCards[3])]),
+                          ],
+                        );
+                      } else {
+                        return Row(
+                          children: [
+                            Expanded(child: rowCards[0]), const SizedBox(width: AppSpacing.lg),
+                            Expanded(child: rowCards[1]), const SizedBox(width: AppSpacing.lg),
+                            Expanded(child: rowCards[2]), const SizedBox(width: AppSpacing.lg),
+                            Expanded(child: rowCards[3]),
+                          ],
+                        );
+                      }
                     }
+
+                    Widget kpiSection = Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        buildCardRow(opCards),
+                        const SizedBox(height: AppSpacing.lg),
+                        buildCardRow(finCards),
+                      ],
+                    );
 
                     Widget contentSection;
                     if (isDesktop) {
@@ -327,8 +372,6 @@ class _PerformanceSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 600;
-    
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
@@ -346,39 +389,25 @@ class _PerformanceSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (isMobile) ...[
-            Text('Performance Overview', style: AppTypography.title.copyWith(fontWeight: FontWeight.bold)),
-            const SizedBox(height: AppSpacing.md),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: AppSpacing.md,
+            runSpacing: AppSpacing.sm,
+            children: [
+              Text('Performance Overview', style: AppTypography.title.copyWith(fontWeight: FontWeight.bold)),
+              Row(
+                mainAxisSize: MainAxisSize.min,
                 children: const [
                   _FilterTab('Revenue', true),
                   SizedBox(width: 8),
                   _FilterTab('Orders', false),
                   SizedBox(width: 8),
                   _FilterTab('Discounts', false),
-                ]
+                ],
               ),
-            ),
-          ] else ...[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text('Performance Overview', style: AppTypography.title.copyWith(fontWeight: FontWeight.bold)),
-                Row(
-                  children: const [
-                    _FilterTab('Revenue', true),
-                    SizedBox(width: 8),
-                    _FilterTab('Orders', false),
-                    SizedBox(width: 8),
-                    _FilterTab('Discounts', false),
-                  ]
-                )
-              ],
-            ),
-          ],
+            ],
+          ),
           const SizedBox(height: 32),
           Center(
             child: Column(

@@ -4,6 +4,7 @@ import '../../../../core/network/dio_client.dart';
 import '../../../../core/network/result.dart';
 import '../../../../core/network/app_error.dart';
 import '../../domain/models/details_models.dart';
+import '../../domain/models/customer_product_detail.dart';
 
 abstract class DetailsRepository {
   Future<Result<DealDetail>> getDealDetail(
@@ -12,6 +13,7 @@ abstract class DetailsRepository {
     double? lng,
   });
   Future<Result<ProductDetail>> getProductDetail(String productId);
+  Future<Result<CustomerProductDetail>> getCustomerProductDetail(String productId);
 }
 
 class DetailsRepositoryImpl implements DetailsRepository {
@@ -56,6 +58,21 @@ class DetailsRepositoryImpl implements DetailsRepository {
     try {
       final response = await _dio.get('/products/$productId');
       return Success(ProductDetail.fromJson(response.data));
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return Failure(AppError.notFound(message: 'Product not found'));
+      }
+      return Failure(AppError.network(message: e.message));
+    } catch (e) {
+      return Failure(AppError.unknown(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Result<CustomerProductDetail>> getCustomerProductDetail(String productId) async {
+    try {
+      final response = await _dio.get('/products/$productId');
+      return Success(CustomerProductDetail.fromJson(response.data));
     } on DioException catch (e) {
       if (e.response?.statusCode == 404) {
         return Failure(AppError.notFound(message: 'Product not found'));

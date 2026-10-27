@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/admin_coupons_provider.dart';
 import '../../../../core/network/dio_client.dart';
+import '../../../../core/widgets/feedback/app_snackbar.dart';
 import 'package:go_router/go_router.dart';
 
 class AdminCouponsScreen extends ConsumerWidget {
@@ -58,35 +59,45 @@ class AdminCouponsScreen extends ConsumerWidget {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: codeCtrl, decoration: const InputDecoration(labelText: 'Code')),
-            TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Title')),
-            TextField(controller: valCtrl, decoration: const InputDecoration(labelText: 'Discount Value')),
+            TextField(controller: codeCtrl, decoration: const InputDecoration(labelText: 'Code *', border: OutlineInputBorder())),
+            const SizedBox(height: 12),
+            TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Title *', border: OutlineInputBorder())),
+            const SizedBox(height: 12),
+            TextField(controller: valCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Discount Value (₹) *', border: OutlineInputBorder())),
           ],
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          TextButton(
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             onPressed: () async {
+              if (codeCtrl.text.trim().isEmpty || titleCtrl.text.trim().isEmpty) {
+                AppSnackbar.show(ctx, message: 'Please fill in all required fields', variant: SnackbarVariant.warning);
+                return;
+              }
               try {
                 final dio = ref.read(dioProvider);
                 await dio.post('/admin/coupons', data: {
-                  'code': codeCtrl.text,
-                  'title': titleCtrl.text,
+                  'code': codeCtrl.text.trim().toUpperCase(),
+                  'title': titleCtrl.text.trim(),
                   'discountType': 'FIXED_AMOUNT',
-                  'discountValue': double.tryParse(valCtrl.text) ?? 10.0,
+                  'discountValue': double.tryParse(valCtrl.text.trim()) ?? 10.0,
                   'startDate': DateTime.now().toIso8601String(),
                   'expiryDate': DateTime.now().add(const Duration(days: 30)).toIso8601String(),
                   'isActive': true,
                 });
                 if (ctx.mounted) {
                   Navigator.pop(ctx);
+                  AppSnackbar.show(context, message: 'Coupon created successfully', variant: SnackbarVariant.success);
                   ref.invalidate(adminCouponsProvider(const {'page': 1, 'limit': 20}));
                 }
               } catch (e) {
-                // ignore
+                if (ctx.mounted) {
+                  AppSnackbar.show(ctx, message: e.toString(), variant: SnackbarVariant.error);
+                }
               }
             },
-            child: const Text('Create'),
+            child: const Text('Create', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -94,23 +105,43 @@ class AdminCouponsScreen extends ConsumerWidget {
   }
 
   Widget _buildDataView(dynamic data) {
-    // Extract list based on response type (Stats is a List, others are Map with 'data' array)
     final List items = data is List ? data : (data['data'] as List? ?? []);
     
     if (items.isEmpty) {
-      return const Center(child: Text('No data found'));
+      return const Center(child: Text('No coupons registered yet.', style: TextStyle(color: AppColors.textSecondary)));
     }
 
     return ListView.builder(
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
+        final isActive = item['isActive'] == true;
         return Card(
           margin: const EdgeInsets.only(bottom: AppSpacing.md),
           color: AppColors.surface,
           child: ListTile(
-            title: Text(item['code'] ?? item['name'] ?? item['id'] ?? 'Coupon', style: const TextStyle(color: AppColors.textPrimary)),
-            subtitle: Text('Discount: ${item['discountValue']} | Active: ${item['isActive']}', style: const TextStyle(color: AppColors.textSecondary)),
+            title: Row(
+              children: [
+                Text(item['code'] ?? 'COUPON', style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: (isActive ? AppColors.success : AppColors.textSecondary).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    isActive ? 'ACTIVE' : 'INACTIVE',
+                    style: TextStyle(
+                      color: isActive ? AppColors.success : AppColors.textSecondary,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            subtitle: Text('Title: ${item['title'] ?? 'N/A'} • Discount: ₹${item['discountValue']} (${item['discountType'] ?? 'FIXED'})', style: const TextStyle(color: AppColors.textSecondary)),
             trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
             onTap: () => context.push('/admin/coupons/${item['id']}'),
           ),

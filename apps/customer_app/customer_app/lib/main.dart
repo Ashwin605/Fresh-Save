@@ -10,11 +10,14 @@ import 'app/router/app_router.dart';
 import 'core/storage/shared_prefs_provider.dart';
 import 'core/storage/preferences_storage.dart';
 import 'core/error/global_error_boundary.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   FlutterError.onError = (details) {
     FlutterError.presentError(details);

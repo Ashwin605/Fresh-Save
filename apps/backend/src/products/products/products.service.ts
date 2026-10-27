@@ -154,6 +154,51 @@ export class ProductsService {
         category: {
           select: { id: true, name: true, slug: true, status: true },
         },
+        inventory: {
+          where: {
+            status: 'ACTIVE',
+            deletedAt: null,
+            expiryDate: { gt: new Date() },
+            stockQuantity: { gt: 0 },
+          },
+          select: {
+            id: true,
+            stockQuantity: true,
+            reservedQuantity: true,
+            sellingPrice: true,
+            originalPrice: true,
+            expiryDate: true,
+            store: {
+              select: {
+                id: true,
+                name: true,
+                logo: true,
+                address: true,
+              },
+            },
+            offers: {
+              where: {
+                status: 'ACTIVE',
+                deletedAt: null,
+                startsAt: { lte: new Date() },
+                endsAt: { gt: new Date() },
+              },
+              select: {
+                id: true,
+                title: true,
+                description: true,
+                discountType: true,
+                discountValue: true,
+                discountAmount: true,
+                discountedPrice: true,
+                originalPriceSnapshot: true,
+                startsAt: true,
+                endsAt: true,
+              },
+              take: 1,
+            },
+          },
+        },
       },
     });
 

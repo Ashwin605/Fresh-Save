@@ -51,8 +51,6 @@ class _AdminOfferDetailScreenState extends ConsumerState<AdminOfferDetailScreen>
       return const Center(child: Text('Offer not found.'));
     }
 
-    final isStatusActive = offer['status'] == 'ACTIVE';
-
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.xl),
       child: Column(

@@ -39,6 +39,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // Attach to req.user
     return {
       id: user.id,
+      userId: user.id,
       name: user.name,
       email: user.email,
       phone: user.phone,

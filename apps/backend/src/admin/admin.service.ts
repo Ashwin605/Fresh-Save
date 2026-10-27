@@ -59,6 +59,27 @@ export class AdminService {
     const fiveStar = await this.prisma.shopRating.count({ where: { status: 'VISIBLE', rating: 5 } });
     const oneStar = await this.prisma.shopRating.count({ where: { status: 'VISIBLE', rating: 1 } });
 
+    // 6. Stores
+    const [totalStores, activeStores, pendingStores] = await Promise.all([
+      this.prisma.store.count({ where: { deletedAt: null } }),
+      this.prisma.store.count({ where: { status: 'ACTIVE', deletedAt: null } }),
+      this.prisma.store.count({ where: { verificationStatus: 'PENDING', deletedAt: null } }),
+    ]);
+
+    // 7. Shopkeepers
+    const [totalShopkeepers, activeShopkeepers, suspendedShopkeepers] = await Promise.all([
+      this.prisma.user.count({ where: { role: UserRole.SHOP_OWNER, deletedAt: null } }),
+      this.prisma.user.count({ where: { role: UserRole.SHOP_OWNER, status: 'ACTIVE', deletedAt: null } }),
+      this.prisma.user.count({ where: { role: UserRole.SHOP_OWNER, status: 'SUSPENDED', deletedAt: null } }),
+    ]);
+
+    // 8. Products
+    const [totalProducts, activeProducts, inactiveProducts] = await Promise.all([
+      this.prisma.product.count({ where: { deletedAt: null } }),
+      this.prisma.product.count({ where: { status: 'ACTIVE', deletedAt: null } }),
+      this.prisma.product.count({ where: { status: 'INACTIVE', deletedAt: null } }),
+    ]);
+
     return {
       orders: {
         total: totalOrders,
@@ -84,7 +105,22 @@ export class AdminService {
         total: ratingAgg._count || 0,
         fiveStar,
         oneStar,
-      }
+      },
+      stores: {
+        total: totalStores,
+        active: activeStores,
+        pendingVerification: pendingStores,
+      },
+      shopkeepers: {
+        total: totalShopkeepers,
+        active: activeShopkeepers,
+        suspended: suspendedShopkeepers,
+      },
+      products: {
+        total: totalProducts,
+        active: activeProducts,
+        inactive: inactiveProducts,
+      },
     };
   }
 
@@ -110,27 +146,36 @@ export class AdminService {
     return { data: users, total, page, limit };
   }
 
-  async suspendUser(userId: string, adminId: string, reason: string) {
+  async updateUserStatus(userId: string, status: UserStatus, adminId: string, reason?: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
     if (user.role === UserRole.SUPER_ADMIN)
-      throw new ForbiddenException('Cannot suspend SUPER_ADMIN');
+      throw new ForbiddenException('Cannot modify SUPER_ADMIN');
 
     await this.prisma.user.update({
       where: { id: userId },
-      data: { status: UserStatus.SUSPENDED },
+      data: { status },
     });
 
     await this.prisma.auditLog.create({
       data: {
         actorId: adminId,
-        action: 'SUSPEND_USER',
+        action: `UPDATE_USER_STATUS_${status}`,
         entityType: 'User',
         entityId: userId,
+        newData: { status, reason },
       },
     });
 
-    return { success: true, message: 'User suspended' };
+    return { success: true, message: `User status updated to ${status}` };
+  }
+
+  async suspendUser(userId: string, adminId: string, reason: string) {
+    return this.updateUserStatus(userId, UserStatus.SUSPENDED, adminId, reason);
+  }
+
+  async reinstateUser(userId: string, adminId: string) {
+    return this.updateUserStatus(userId, UserStatus.ACTIVE, adminId, 'Reinstated by administrator');
   }
 
   async getStores(page = 1, limit = 20) {
@@ -151,10 +196,35 @@ export class AdminService {
   }
 
   async updateStoreStatus(storeId: string, status: string, adminId: string) {
+    const updateData: any = {};
+    if (status === 'VERIFIED') {
+      updateData.verificationStatus = 'VERIFIED';
+      updateData.status = 'ACTIVE';
+    } else if (status === 'REJECTED') {
+      updateData.verificationStatus = 'REJECTED';
+      updateData.status = 'INACTIVE';
+    } else if (status === 'SUSPENDED') {
+      updateData.verificationStatus = 'SUSPENDED';
+      updateData.status = 'SUSPENDED';
+    } else if (['ACTIVE', 'INACTIVE'].includes(status)) {
+      updateData.status = status;
+    } else if (status === 'PENDING') {
+      updateData.verificationStatus = 'PENDING';
+    } else {
+      updateData.status = status as any;
+    }
+
     const store = await this.prisma.store.update({
       where: { id: storeId },
-      data: { status: status as any },
+      data: updateData,
     });
+
+    if (store.businessId && updateData.verificationStatus) {
+      await this.prisma.business.update({
+        where: { id: store.businessId },
+        data: { verificationStatus: updateData.verificationStatus as any },
+      }).catch(() => {});
+    }
 
     await this.prisma.auditLog.create({
       data: {
@@ -162,6 +232,7 @@ export class AdminService {
         action: `UPDATE_STORE_STATUS_${status}`,
         entityType: 'Store',
         entityId: storeId,
+        newData: updateData,
       },
     });
 
@@ -315,7 +386,26 @@ export class AdminService {
   async getProducts(page = 1, limit = 20) {
     const skip = (page - 1) * limit;
     const [data, total] = await Promise.all([
-      this.prisma.product.findMany({ skip, take: limit, orderBy: { createdAt: 'desc' }, include: { category: true } }),
+      this.prisma.product.findMany({
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          category: true,
+          inventory: {
+            select: {
+              id: true,
+              sellingPrice: true,
+              originalPrice: true,
+              stockQuantity: true,
+              status: true,
+              store: {
+                select: { id: true, name: true },
+              },
+            },
+          },
+        },
+      }),
       this.prisma.product.count(),
     ]);
     return { data, total, page, limit };
@@ -394,8 +484,38 @@ export class AdminService {
     const [data, total] = await Promise.all([
       this.prisma.user.findMany({
         where: { role: UserRole.SHOP_OWNER },
-        skip, take: limit,
-        include: { businesses: { include: { stores: true } } },
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          role: true,
+          status: true,
+          profileImage: true,
+          createdAt: true,
+          updatedAt: true,
+          businesses: {
+            select: {
+              id: true,
+              businessName: true,
+              verificationStatus: true,
+              status: true,
+              stores: {
+                select: {
+                  id: true,
+                  name: true,
+                  address: true,
+                  phone: true,
+                  status: true,
+                  verificationStatus: true,
+                  createdAt: true,
+                },
+              },
+            },
+          },
+        },
         orderBy: { createdAt: 'desc' },
       }),
       this.prisma.user.count({ where: { role: UserRole.SHOP_OWNER } }),

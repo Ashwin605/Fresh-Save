@@ -14,6 +14,7 @@ class TokenStorage {
 
   static const String _accessTokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
+  static const String _userRoleKey = 'user_role';
 
   TokenStorage(this._storage);
 
@@ -27,17 +28,22 @@ class TokenStorage {
     await _storage.write(key: _refreshTokenKey, value: refreshToken);
   }
 
-  Future<String?> getAccessToken() async {
-    return await _storage.read(key: _accessTokenKey);
+  Future<void> saveUserRole(String role) async {
+    await _storage.write(key: _userRoleKey, value: role);
   }
 
-  Future<String?> getRefreshToken() async {
-    return await _storage.read(key: _refreshTokenKey);
+  Future<String?> getUserRole() async {
+    return await _storage.read(key: _userRoleKey);
+  }
+
+  Future<void> clearUserRole() async {
+    await _storage.delete(key: _userRoleKey);
   }
 
   Future<void> clearTokens() async {
     await _storage.delete(key: _accessTokenKey);
     await _storage.delete(key: _refreshTokenKey);
+    await _storage.delete(key: _userRoleKey);
     _clearedController.add(null);
   }
 

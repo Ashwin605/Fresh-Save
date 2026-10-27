@@ -74,6 +74,22 @@ class _CategoryDiscoveryScreenState
     final state = ref.watch(categoryProductsProvider);
     final notifier = ref.read(categoryProductsProvider.notifier);
 
+    final categoriesAsync = ref.watch(categoriesProvider);
+    Category? currentCategory;
+    for (final c in categoriesAsync.asData?.value ?? <Category>[]) {
+      if (c.id == widget.categoryId) {
+        currentCategory = c;
+        break;
+      }
+      for (final sub in c.children) {
+        if (sub.id == widget.categoryId) {
+          currentCategory = sub;
+          break;
+        }
+      }
+      if (currentCategory != null) break;
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -86,7 +102,7 @@ class _CategoryDiscoveryScreenState
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: Text('Products', style: AppTypography.title),
+        title: Text(currentCategory?.name ?? 'Products', style: AppTypography.title),
         centerTitle: false,
       ),
       body: RefreshIndicator(

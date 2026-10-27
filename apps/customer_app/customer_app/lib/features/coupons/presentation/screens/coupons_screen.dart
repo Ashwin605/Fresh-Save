@@ -9,7 +9,6 @@ import '../../../../core/widgets/buttons/app_button.dart';
 import '../../../../core/network/result.dart';
 import '../../data/repositories/coupon_repository.dart';
 import '../../domain/models/coupon.dart';
-import '../providers/coupon_providers.dart';
 import 'package:intl/intl.dart';
 
 class CouponsScreen extends ConsumerStatefulWidget {

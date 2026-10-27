@@ -18,3 +18,17 @@ final updateAdminCategoryProvider = FutureProvider.family.autoDispose<void, Map<
   );
   ref.invalidate(adminCategoriesProvider);
 });
+
+final createAdminCategoryProvider = FutureProvider.family.autoDispose<void, Map<String, dynamic>>((ref, args) async {
+  final repository = ref.watch(adminRepositoryProvider);
+  await repository.createCategory(
+    name: args['name'] as String,
+    description: args['description'] as String?,
+    icon: args['icon'] as String?,
+    image: args['image'] as String?,
+    parentId: args['parentId'] as String?,
+    sortOrder: args['sortOrder'] as int?,
+  );
+  ref.invalidate(adminCategoriesProvider);
+});
+

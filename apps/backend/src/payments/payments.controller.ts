@@ -19,19 +19,19 @@ export class PaymentsController {
 
   @Post('create')
   @ApiOperation({ summary: 'Create a new payment for an order' })
-  async createPayment(@CurrentUser() user: User, @Body() dto: CreatePaymentDto) {
-    const payment = await this.paymentsService.createPayment(user.id, dto.reservationId);
+  async createPayment(@CurrentUser('id') userId: string, @Body() dto: CreatePaymentDto) {
+    const payment = await this.paymentsService.createPayment(userId, dto.reservationId);
     return { success: true, data: { payment } };
   }
 
   @Post(':id/verify')
   @ApiOperation({ summary: 'Verify a payment' })
   async verifyPayment(
-    @CurrentUser() user: User, 
+    @CurrentUser('id') userId: string, 
     @Param('id') id: string,
     @Body() dto: VerifyPaymentDto
   ) {
-    const payment = await this.paymentsService.verifyPayment(user.id, id, dto.simulateStatus);
+    const payment = await this.paymentsService.verifyPayment(userId, id, dto.simulateStatus);
     return { success: true, data: { payment } };
   }
 }

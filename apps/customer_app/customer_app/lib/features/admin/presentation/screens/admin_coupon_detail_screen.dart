@@ -65,7 +65,7 @@ class _AdminCouponDetailScreenState extends ConsumerState<AdminCouponDetailScree
                       Text('Code: ${coupon['code']}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                       Switch(
                         value: coupon['isActive'] == true,
-                        activeColor: AppColors.primary,
+                        activeThumbColor: AppColors.primary,
                         onChanged: (val) async {
                           try {
                             final dio = ref.read(dioProvider);

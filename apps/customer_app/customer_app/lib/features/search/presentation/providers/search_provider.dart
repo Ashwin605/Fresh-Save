@@ -75,16 +75,20 @@ class SearchNotifier extends Notifier<SearchState> {
     });
   }
 
-  void executeSearch(String query) {
+  double? _activeMaxPrice;
+
+  void executeSearch(String query, {double? maxPrice}) {
     _debounceTimer?.cancel();
+    if (maxPrice != null) _activeMaxPrice = maxPrice;
     state = state.copyWith(query: query, status: SearchStatus.searching);
-    if (query.length >= 2) {
+    if (query.length >= 2 || _activeMaxPrice != null) {
       _performSearch();
     }
   }
 
   void clearSearch() {
     _debounceTimer?.cancel();
+    _activeMaxPrice = null;
     state = state.copyWith(
       query: '',
       status: SearchStatus.initial,
@@ -96,22 +100,37 @@ class SearchNotifier extends Notifier<SearchState> {
 
   Future<void> _performSearch() async {
     final locationState = ref.read(locationProvider);
-    if (locationState.status != LocationStatus.available ||
-        locationState.location == null) {
-      state = state.copyWith(
-        status: SearchStatus.error,
-        errorMessage: 'Location required for search.',
-      );
-      return;
-    }
-
     final requestId = ++_lastRequestId;
     final repo = ref.read(searchRepositoryProvider);
-    final lat = locationState.location!.latitude;
-    final lng = locationState.location!.longitude;
     final query = state.query;
 
     _saveRecentSearch(query);
+
+    // If location is not available, perform catalog-wide product search gracefully
+    if (locationState.status != LocationStatus.available ||
+        locationState.location == null) {
+      final productsResult = await repo.searchProducts(query: query, limit: 20);
+      if (requestId != _lastRequestId) return;
+
+      if (productsResult is Success<List<Product>>) {
+        final products = productsResult.data;
+        state = state.copyWith(
+          status: products.isEmpty ? SearchStatus.empty : SearchStatus.results,
+          deals: [],
+          stores: [],
+          products: products,
+        );
+      } else {
+        state = state.copyWith(
+          status: SearchStatus.error,
+          errorMessage: 'Could not complete your search.',
+        );
+      }
+      return;
+    }
+
+    final lat = locationState.location!.latitude;
+    final lng = locationState.location!.longitude;
 
     final dealsFuture = repo.searchDeals(
       lat: lat,
@@ -119,6 +138,7 @@ class SearchNotifier extends Notifier<SearchState> {
       query: query,
       filters: state.filters,
       sort: state.sort,
+      maxPrice: _activeMaxPrice,
       limit: 10,
     );
 

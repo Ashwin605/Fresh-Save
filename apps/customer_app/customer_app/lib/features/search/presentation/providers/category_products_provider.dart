@@ -57,12 +57,6 @@ class CategoryProductsNotifier extends Notifier<CategoryProductsState> {
   }
 
   Future<void> fetchInitial(String categoryId) async {
-    print('[3] API REQUEST');
-    print('endpoint: /api/v1/discovery/products');
-    print('HTTP method: GET');
-    print('category ID: $categoryId');
-    print('query parameters: {categoryId: $categoryId, page: 1, limit: 20}');
-
     if (state.isLoading) return;
 
     state = state.clearError().copyWith(isLoading: true);
@@ -75,38 +69,21 @@ class CategoryProductsNotifier extends Notifier<CategoryProductsState> {
 
       switch (result) {
         case Success(:final data):
-          print('[5] PARSING');
-          print('parsed response successfully: true');
-          print('number of products: ${data.length}');
-          
           state = state.copyWith(
             isLoading: false,
             products: data,
             currentPage: 1,
             hasMore: data.length == 20,
           );
-          print('[6] UI STATE');
-          print('loading: false, success: true, empty: ${data.isEmpty}, error: false');
           break;
         case Failure(:final error):
-          print('[4] API RESPONSE');
-          print('status code: error');
-          print('response body: ${error.message}');
-          print('[7] EXCEPTION');
-          print('exception: ${error.message}');
-          
           state = state.copyWith(
             isLoading: false,
             errorMessage: error.message,
           );
-          print('[6] UI STATE');
-          print('loading: false, success: false, empty: true, error: true');
           break;
       }
-    } catch (e, st) {
-      print('[7] EXCEPTION');
-      print('exception: $e');
-      print('stack trace: $st');
+    } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }

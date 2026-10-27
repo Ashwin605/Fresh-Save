@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { DatabaseService } from '../database/database.service';
+import { PrismaService } from '../database/prisma/prisma.service';
 import { MockPaymentGateway } from './services/mock-payment.gateway';
 import { PaymentStatus, ReservationStatus } from '@prisma/client';
 
 @Injectable()
 export class PaymentsService {
   constructor(
-    private readonly db: DatabaseService,
+    private readonly db: PrismaService,
     private readonly paymentGateway: MockPaymentGateway,
   ) {}
 
@@ -67,7 +67,7 @@ export class PaymentsService {
     // Call mock gateway
     const result = await this.paymentGateway.verifyPayment(payment.providerPaymentId || '');
     
-    let finalStatus = PaymentStatus.SUCCESS;
+    let finalStatus: PaymentStatus = PaymentStatus.SUCCESS;
     
     // Allow frontend to simulate failures for testing purposes
     if (simulateStatus === 'FAILED') finalStatus = PaymentStatus.FAILED;

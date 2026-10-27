@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../app/theme/app_spacing.dart';
@@ -44,7 +44,7 @@ class CouponsSection extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                 scrollDirection: Axis.horizontal,
                 itemCount: coupons.length > 3 ? 3 : coupons.length,
-                separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.md),
+                separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.md),
                 itemBuilder: (context, index) {
                   final coupon = coupons[index];
                   return Container(
@@ -71,9 +71,22 @@ class CouponsSection extends ConsumerWidget {
                         const Spacer(),
                         InkWell(
                           onTap: () {
-                            // Copy to clipboard or show details
+                            Clipboard.setData(ClipboardData(text: coupon.code));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Coupon code "${coupon.code}" copied to clipboard!'),
+                                duration: const Duration(seconds: 2),
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
                           },
-                          child: Text('Tap for details', style: AppTypography.caption.copyWith(color: AppColors.primary)),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.copy, size: 12, color: AppColors.primary),
+                              const SizedBox(width: 4),
+                              Text('Copy Code', style: AppTypography.caption.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -85,7 +98,7 @@ class CouponsSection extends ConsumerWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 }

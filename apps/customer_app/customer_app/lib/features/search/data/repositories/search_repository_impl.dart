@@ -12,6 +12,7 @@ abstract class SearchRepository {
     required String query,
     required DiscoveryFilters filters,
     required DiscoverySort sort,
+    double? maxPrice,
     int limit = 10,
   });
 
@@ -46,6 +47,7 @@ class SearchRepositoryImpl implements SearchRepository {
     required String query,
     required DiscoveryFilters filters,
     required DiscoverySort sort,
+    double? maxPrice,
     int limit = 10,
   }) async {
     try {
@@ -62,6 +64,7 @@ class SearchRepositoryImpl implements SearchRepository {
             : 'asc',
       };
 
+      if (maxPrice != null) queryParams['maxPrice'] = maxPrice;
       if (filters.radius != null) queryParams['radius'] = filters.radius;
       if (filters.categoryId != null) {
         queryParams['categoryId'] = filters.categoryId;

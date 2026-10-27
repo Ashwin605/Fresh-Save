@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import '../../../../core/network/result.dart';
 import '../../domain/models/auth_models.dart';
 import '../../data/repositories/auth_repository_impl.dart';
-import '../../../../core/storage/token_storage.dart';
 
 enum AuthStatus { unknown, unauthenticated, authenticated }
 
@@ -35,10 +34,21 @@ class AuthState {
 /// This Notifier handles restoring sessions on app startup,
 /// logging in/out, and responding to token expiration events.
 class AuthNotifier extends Notifier<AuthState> {
+  bool _isRegistering = false;
+
+  void setRegistering(bool value) {
+    _isRegistering = value;
+  }
+
   @override
   AuthState build() {
     // Listen to Firebase Auth state directly. This ensures synchronization.
     firebase.FirebaseAuth.instance.userChanges().listen((fbUser) {
+      if (_isRegistering) {
+        // Do not process auth state changes while registration is ongoing
+        return;
+      }
+
       if (fbUser == null) {
         state = state.copyWith(status: AuthStatus.unauthenticated, user: null);
       } else {
@@ -56,7 +66,11 @@ class AuthNotifier extends Notifier<AuthState> {
     );
 
     if (!fbUser.emailVerified && !isGoogleUser) {
-      await firebase.FirebaseAuth.instance.signOut();
+      // Do NOT call FirebaseAuth.instance.signOut() here!
+      // Calling signOut() inside the userChanges stream listener creates a critical race condition
+      // with registration flows where createUserWithEmailAndPassword triggers userChanges,
+      // causing an immediate signOut before user.sendEmailVerification() can finish,
+      // which produces [firebase_auth/no-current-user].
       state = state.copyWith(status: AuthStatus.unauthenticated, user: null);
       return;
     }
@@ -115,26 +129,31 @@ class AuthNotifier extends Notifier<AuthState> {
     double? longitude,
   }) async {
     state = state.copyWith(clearError: true);
-    final result = await ref.read(authRepositoryProvider).registerBusiness(
-          ownerName: ownerName,
-          email: email,
-          password: password,
-          phone: phone,
-          businessName: businessName,
-          storeName: storeName,
-          storeAddress: storeAddress,
-          latitude: latitude,
-          longitude: longitude,
-        );
+    _isRegistering = true;
+    try {
+      final result = await ref.read(authRepositoryProvider).registerBusiness(
+            ownerName: ownerName,
+            email: email,
+            password: password,
+            phone: phone,
+            businessName: businessName,
+            storeName: storeName,
+            storeAddress: storeAddress,
+            latitude: latitude,
+            longitude: longitude,
+          );
 
-    if (result is Success<User>) {
-      // Return true without logging in, user must sign in afterwards
-      return true;
-    } else if (result is Failure<User>) {
-      state = state.copyWith(error: result.error.message);
+      if (result is Success<User>) {
+        // Return true without logging in, user must sign in afterwards
+        return true;
+      } else if (result is Failure<User>) {
+        state = state.copyWith(error: result.error.message);
+        return false;
+      }
       return false;
+    } finally {
+      _isRegistering = false;
     }
-    return false;
   }
 }
 

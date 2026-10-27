@@ -41,6 +41,21 @@ export class AdminController {
     return this.adminService.suspendUser(id, req.user.userId, reason);
   }
 
+  @Patch('users/:id/reinstate')
+  reinstateUser(@Param('id') id: string, @Request() req: any) {
+    return this.adminService.reinstateUser(id, req.user.userId);
+  }
+
+  @Patch('users/:id/status')
+  updateUserStatus(
+    @Param('id') id: string,
+    @Body('status') status: any,
+    @Body('reason') reason: string,
+    @Request() req: any,
+  ) {
+    return this.adminService.updateUserStatus(id, status, req.user.userId, reason);
+  }
+
   @Get('stores')
   getStores(@Query('page') page: string, @Query('limit') limit: string) {
     return this.adminService.getStores(Number(page) || 1, Number(limit) || 20);

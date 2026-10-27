@@ -39,7 +39,7 @@ class OwnerAnalyticsScreen extends ConsumerWidget {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
-          activeStore != null ? '${activeStore.name} Analytics' : 'Analytics',
+          '${activeStore.name} Analytics',
           style: AppTypography.title,
         ),
         backgroundColor: AppColors.surface,

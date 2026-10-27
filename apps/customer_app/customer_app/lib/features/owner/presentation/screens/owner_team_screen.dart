@@ -71,11 +71,10 @@ class _OwnerTeamScreenState extends ConsumerState<OwnerTeamScreen>
         elevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle.dark,
         actions: [
-          if (activeStore != null)
-            IconButton(
-              icon: const Icon(Icons.person_add_alt_1_outlined),
-              onPressed: () => _showAddStaffSheet(context, ref),
-            ),
+          IconButton(
+            icon: const Icon(Icons.person_add_alt_1_outlined),
+            onPressed: () => _showAddStaffSheet(context, ref),
+          ),
         ],
       ),
       body: RefreshIndicator(

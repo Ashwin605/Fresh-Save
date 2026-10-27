@@ -1,72 +1,115 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import '../../../../app/theme/app_colors.dart';
-import '../../../../app/theme/app_typography.dart';
 import '../../../../app/theme/app_spacing.dart';
-import '../../../../app/theme/app_animations.dart';
-import '../../../../core/widgets/layout/interactive_container.dart';
 
-class SearchEntryBar extends StatelessWidget {
+/// Search bar matching the reference design: clean rounded input with cycling "Search for [Item]".
+class SearchEntryBar extends StatefulWidget {
   const SearchEntryBar({super.key});
 
   @override
+  State<SearchEntryBar> createState() => _SearchEntryBarState();
+}
+
+class _SearchEntryBarState extends State<SearchEntryBar> {
+  static const List<String> _searchKeywords = [
+    'Soap',
+    'Biscuits',
+    'Rice',
+    'Detergent',
+    'Tea & Coffee',
+    'Chocolates',
+    'Atta & Flour',
+  ];
+
+  int _currentIndex = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(milliseconds: 2800), (_) {
+      if (mounted) {
+        setState(() {
+          _currentIndex = (_currentIndex + 1) % _searchKeywords.length;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final currentKeyword = _searchKeywords[_currentIndex];
+
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
+        vertical: 4,
       ),
-      child: InteractiveContainer(
+      child: GestureDetector(
         onTap: () => context.push('/search'),
-        scaleDown: 0.98,
-        child: Hero(
-          tag: 'search_bar_hero',
-          child: Material(
-            color: Colors.transparent,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: 14,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border, width: 0.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.search_rounded, color: AppColors.primary, size: 24),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    'Search products, stores or deals',
-                    style: AppTypography.body.copyWith(
-                      color: AppColors.textSecondary,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                  const Spacer(),
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceVariant,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.tune_rounded, size: 16, color: AppColors.primary),
-                  ),
-                ],
-              ),
+        child: Container(
+          height: 48,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: const Color(0xFFD1D5DB), // Light grey matching reference
+              width: 1.0,
             ),
+          ),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.search,
+                color: Color(0xFF374151),
+                size: 22,
+              ),
+              const SizedBox(width: 10),
+              Row(
+                children: [
+                  const Text(
+                    'Search for ',
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      color: Color(0xFF1F2937),
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 350),
+                    transitionBuilder: (child, animation) {
+                      return SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0.0, 0.4),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: FadeTransition(opacity: animation, child: child),
+                      );
+                    },
+                    child: Text(
+                      currentKeyword,
+                      key: ValueKey<String>(currentKeyword),
+                      style: const TextStyle(
+                        fontSize: 14.5,
+                        color: Color(0xFF6B7280),
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
-    ).animate().fade(duration: AppAnimations.medium, delay: 350.ms).slideY(begin: 0.2, end: 0);
+    );
   }
 }

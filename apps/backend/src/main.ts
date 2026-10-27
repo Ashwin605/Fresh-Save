@@ -65,7 +65,10 @@ async function bootstrap(): Promise<void> {
   });
 
   // ── Static Assets ──────────────────────────────────────
-  app.useStaticAssets(join(__dirname, '..', 'public'), {
+  const publicDir = fs.existsSync(join(process.cwd(), 'public'))
+    ? join(process.cwd(), 'public')
+    : join(__dirname, '..', 'public');
+  app.useStaticAssets(publicDir, {
     prefix: '/public/',
   });
 

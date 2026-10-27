@@ -14,10 +14,10 @@ class AuthController extends Notifier<AsyncValue<void>> {
     return error.message ?? AppErrorMapper.getMessage(error);
   }
 
-  Future<void> login(String email, String password) async {
+  Future<void> login(String email, String password, {String? role}) async {
     state = const AsyncLoading();
     final repo = ref.read(authRepositoryProvider);
-    final result = await repo.login(email: email, password: password);
+    final result = await repo.login(email: email, password: password, role: role);
 
     switch (result) {
       case Success(:final data):
@@ -42,8 +42,13 @@ class AuthController extends Notifier<AsyncValue<void>> {
         ref.read(authStateProvider.notifier).login(data.user);
         state = const AsyncData(null);
       case Failure(:final error):
+        final msg = _errorMessage(error);
+        if (msg.contains('aborted') || msg.contains('cancelled') || msg.contains('canceled')) {
+          state = const AsyncData(null);
+          return;
+        }
         state = AsyncError(
-          _errorMessage(error),
+          msg,
           StackTrace.current,
         );
     }
@@ -57,28 +62,31 @@ class AuthController extends Notifier<AsyncValue<void>> {
   }) async {
     state = const AsyncLoading();
     final repo = ref.read(authRepositoryProvider);
-    final result = await repo.register(
-      name: name,
-      email: email,
-      password: password,
-      phone: phone,
-    );
+    ref.read(authStateProvider.notifier).setRegistering(true);
+    try {
+      final result = await repo.register(
+        name: name,
+        email: email,
+        password: password,
+        phone: phone,
+      );
 
-    switch (result) {
-      case Success():
-        // CRITICAL: Force the global auth state to unauthenticated.
-        // This ensures the router won't redirect to /home even if
-        // there was a stale authenticated state.
-        ref.read(authStateProvider.notifier).logout();
-        state = AsyncError(
-          'Registration successful! Please check your email to verify your account before logging in.',
-          StackTrace.empty,
-        );
-      case Failure(:final error):
-        state = AsyncError(
-          _errorMessage(error),
-          StackTrace.current,
-        );
+      switch (result) {
+        case Success():
+          // CRITICAL: Force the global auth state to unauthenticated.
+          ref.read(authStateProvider.notifier).logout();
+          state = AsyncError(
+            'Registration successful! Please check your email to verify your account before logging in.',
+            StackTrace.empty,
+          );
+        case Failure(:final error):
+          state = AsyncError(
+            _errorMessage(error),
+            StackTrace.current,
+          );
+      }
+    } finally {
+      ref.read(authStateProvider.notifier).setRegistering(false);
     }
   }
 }

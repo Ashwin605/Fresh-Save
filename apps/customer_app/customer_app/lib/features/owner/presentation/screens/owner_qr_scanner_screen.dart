@@ -62,14 +62,11 @@ class _OwnerQrScannerScreenState extends ConsumerState<OwnerQrScannerScreen> {
     final ownerState = ref.read(ownerStateProvider);
     final storeId = ownerState.activeStore?.id;
     if (storeId == null) {
-      AppSnackbar.show(context, message: 'No active store available.', variant: SnackbarVariant.error);
-      return;
-    }
-    if (storeId == null) {
       setState(() {
         _errorMessage = 'No active store selected.';
         _isProcessing = false;
       });
+      AppSnackbar.show(context, message: 'No active store available.', variant: SnackbarVariant.error);
       return;
     }
 

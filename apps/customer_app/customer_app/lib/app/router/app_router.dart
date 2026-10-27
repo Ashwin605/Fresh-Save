@@ -12,6 +12,7 @@ import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/home/presentation/screens/all_categories_screen.dart';
 import '../../features/home/presentation/screens/all_nearby_deals_screen.dart';
 import '../../features/home/presentation/screens/all_nearby_stores_screen.dart';
+import '../../features/home/presentation/screens/offers_screen.dart';
 import '../../features/home/presentation/screens/customer_shell_screen.dart';
 import '../../features/discovery/presentation/screens/discovery_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
@@ -58,6 +59,8 @@ import '../../features/owner/presentation/screens/owner_manage_store_screen.dart
 import '../../features/owner/presentation/screens/owner_inventory_detail_screen.dart';
 import '../../features/owner/presentation/screens/owner_product_list_screen.dart';
 import '../../features/owner/presentation/screens/owner_product_detail_screen.dart';
+import '../../features/owner/presentation/screens/owner_add_product_screen.dart';
+import '../../features/owner/presentation/screens/owner_edit_product_screen.dart';
 import '../../features/owner/presentation/screens/owner_offer_list_screen.dart';
 import '../../features/owner/presentation/screens/owner_offer_detail_screen.dart';
 import '../../features/owner/presentation/screens/create_offer_screen.dart';
@@ -144,7 +147,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isAuthenticated = authState.status == AuthStatus.authenticated;
       final userRole = authState.user?.role ?? 'CUSTOMER';
       final isAdmin = userRole == 'ADMIN' || userRole == 'SUPER_ADMIN';
-      final isOwner = userRole == 'SHOP_OWNER' || userRole == 'SHOP_STAFF';
+      final isOwner = userRole == 'SHOP_OWNER' ||
+          userRole == 'SHOP_STAFF' ||
+          userRole.toUpperCase() == 'OWNER';
 
       if (!isAuthenticated) {
         return isAuthRoute ? null : '/role-selection';
@@ -315,6 +320,18 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/owner/products',
             builder: (context, state) => const OwnerProductListScreen(),
             routes: [
+              GoRoute(
+                path: 'add',
+                name: 'owner_add_product',
+                builder: (context, state) => const OwnerAddProductScreen(),
+              ),
+              GoRoute(
+                path: ':id/edit',
+                name: 'owner_edit_product',
+                builder: (context, state) => OwnerEditProductScreen(
+                  productId: state.pathParameters['id'],
+                ),
+              ),
               GoRoute(
                 path: ':id',
                 builder: (context, state) => OwnerProductDetailScreen(
@@ -513,8 +530,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/search',
-                builder: (context, state) => const SearchScreen(),
+                path: '/offers',
+                builder: (context, state) => const OffersScreen(),
               ),
             ],
           ),
@@ -527,6 +544,14 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: '/search',
+        builder: (context, state) {
+          final query = state.uri.queryParameters['query'];
+          final maxPrice = double.tryParse(state.uri.queryParameters['maxPrice'] ?? '');
+          return SearchScreen(initialQuery: query, maxPrice: maxPrice);
+        },
       ),
       GoRoute(path: '/deals/nearby', builder: (context, state) => const AllNearbyDealsScreen()),
       GoRoute(path: '/stores/nearby', builder: (context, state) => const AllNearbyStoresScreen()),

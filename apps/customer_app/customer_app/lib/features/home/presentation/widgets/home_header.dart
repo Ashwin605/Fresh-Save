@@ -85,6 +85,60 @@ class HomeHeader extends ConsumerWidget {
       ),
       actions: [
         InteractiveContainer(
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Gift Offers & Loyalty Rewards'),
+                duration: Duration(seconds: 1),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          },
+          scaleDown: 0.9,
+          child: Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+              border: Border.all(color: const Color(0xFFD1D5DB), width: 1.2),
+            ),
+            child: const Icon(
+              Icons.card_giftcard_outlined,
+              color: Color(0xFF1F2937),
+              size: 19,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        InteractiveContainer(
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('FreshSave Coin Wallet: 24.5 Coins'),
+                duration: Duration(seconds: 1),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          },
+          scaleDown: 0.9,
+          child: Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+              border: Border.all(color: const Color(0xFFD1D5DB), width: 1.2),
+            ),
+            child: const Icon(
+              Icons.account_balance_wallet_outlined,
+              color: Color(0xFF1F2937),
+              size: 19,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        InteractiveContainer(
           onTap: () => context.push('/notifications'),
           scaleDown: 0.9,
           child: Stack(

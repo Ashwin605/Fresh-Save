@@ -3,6 +3,7 @@ import '../../../../core/network/result.dart';
 import '../../../location/presentation/providers/location_provider.dart';
 import '../../data/repositories/details_repository_impl.dart';
 import '../../domain/models/details_models.dart';
+import '../../domain/models/customer_product_detail.dart';
 
 final offerDetailsProvider = FutureProvider.family<DealDetail, String>((
   ref,
@@ -33,6 +34,22 @@ final productDetailsProvider = FutureProvider.family<ProductDetail, String>((
   if (result is Success<ProductDetail>) {
     return result.data;
   } else if (result is Failure<ProductDetail>) {
+    throw Exception(result.error.message ?? 'Failed to load product');
+  }
+  throw Exception('Unknown error');
+});
+
+final customerProductDetailsProvider =
+    FutureProvider.family<CustomerProductDetail, String>((
+  ref,
+  productId,
+) async {
+  final repo = ref.watch(detailsRepositoryProvider);
+
+  final result = await repo.getCustomerProductDetail(productId);
+  if (result is Success<CustomerProductDetail>) {
+    return result.data;
+  } else if (result is Failure<CustomerProductDetail>) {
     throw Exception(result.error.message ?? 'Failed to load product');
   }
   throw Exception('Unknown error');

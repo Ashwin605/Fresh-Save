@@ -4,6 +4,7 @@ import { PrismaService } from '../database/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { MailService } from '../mail/mail.service';
+import { RedisService } from '../redis/redis.service';
 import {
   ConflictException,
   UnauthorizedException,
@@ -55,6 +56,7 @@ describe('AuthService', () => {
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: MailService, useValue: { sendPasswordResetEmail: jest.fn() } },
+        { provide: RedisService, useValue: { get: jest.fn(), set: jest.fn(), del: jest.fn(), isBlacklisted: jest.fn().mockResolvedValue(false), blacklistToken: jest.fn().mockResolvedValue(undefined) } },
       ],
     }).compile();
 

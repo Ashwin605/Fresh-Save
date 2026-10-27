@@ -38,23 +38,52 @@ class AdminDiscountsScreen extends ConsumerWidget {
   }
 
   Widget _buildDataView(dynamic data) {
-    // Extract list based on response type (Stats is a List, others are Map with 'data' array)
     final List items = data is List ? data : (data['data'] as List? ?? []);
     
     if (items.isEmpty) {
-      return const Center(child: Text('No data found'));
+      return const Center(child: Text('No promotional offers found.', style: TextStyle(color: AppColors.textSecondary)));
     }
 
     return ListView.builder(
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
+        final status = (item['status'] ?? 'DRAFT').toString();
+        final isActive = status == 'ACTIVE';
+
         return Card(
           margin: const EdgeInsets.only(bottom: AppSpacing.md),
           color: AppColors.surface,
           child: ListTile(
-            title: Text(item['title'] ?? item['id'] ?? 'Offer', style: const TextStyle(color: AppColors.textPrimary)),
-            subtitle: Text('Status: ${item['status']} | Discount: ${item['discountValue']}', style: const TextStyle(color: AppColors.textSecondary)),
+            title: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    item['title'] ?? item['id'] ?? 'Promotional Offer',
+                    style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: (isActive ? AppColors.success : AppColors.textSecondary).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    status,
+                    style: TextStyle(
+                      color: isActive ? AppColors.success : AppColors.textSecondary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            subtitle: Text(
+              'Discount: ₹${item['discountValue']} (${item['discountType'] ?? 'PERCENTAGE'}) • Starts: ${item['startsAt'] != null ? item['startsAt'].toString().split('T')[0] : 'N/A'}',
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            ),
             trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
             onTap: () => context.push('/admin/offers/${item['id']}'),
           ),

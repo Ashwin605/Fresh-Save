@@ -165,6 +165,10 @@ class ApiErrorHandler {
           return const AppError.network(message: 'Network error occurred');
       }
     }
-    return AppError.unknown(message: error.toString());
+    final str = error.toString();
+    if (str.startsWith('Exception: ')) {
+      return AppError.unknown(message: str.replaceFirst('Exception: ', ''));
+    }
+    return AppError.unknown(message: str);
   }
 }

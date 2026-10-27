@@ -7,11 +7,37 @@ import '../widgets/search_header.dart';
 import '../widgets/search_initial_view.dart';
 import '../widgets/search_results_view.dart';
 
-class SearchScreen extends ConsumerWidget {
-  const SearchScreen({super.key});
+class SearchScreen extends ConsumerStatefulWidget {
+  final String? initialQuery;
+  final double? maxPrice;
+
+  const SearchScreen({
+    super.key,
+    this.initialQuery,
+    this.maxPrice,
+  });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SearchScreen> createState() => _SearchScreenState();
+}
+
+class _SearchScreenState extends ConsumerState<SearchScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if ((widget.initialQuery != null && widget.initialQuery!.trim().isNotEmpty) ||
+          widget.maxPrice != null) {
+        ref.read(searchProvider.notifier).executeSearch(
+          widget.initialQuery ?? '',
+          maxPrice: widget.maxPrice,
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final status = ref.watch(searchProvider.select((s) => s.status));
 
     return Scaffold(

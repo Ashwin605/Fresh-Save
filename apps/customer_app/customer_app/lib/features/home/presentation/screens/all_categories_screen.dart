@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../core/widgets/app_network_image.dart';
 import '../../../../core/widgets/feedback/app_skeleton.dart';
 import '../providers/home_providers.dart';
 
@@ -105,10 +106,12 @@ class AllCategoriesScreen extends ConsumerWidget {
         backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => context.pop(),
-        ),
+        leading: context.canPop()
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+                onPressed: () => context.pop(),
+              )
+            : null,
         title: Text('All Categories', style: AppTypography.title),
         centerTitle: false,
       ),
@@ -183,23 +186,30 @@ class AllCategoriesScreen extends ConsumerWidget {
                           flex: 3,
                           child: ClipRRect(
                             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                            child: assetPath != null
-                                ? Image.asset(
-                                    assetPath,
+                            child: category.image != null && category.image!.isNotEmpty
+                                ? AppNetworkImage(
+                                    imageUrl: category.image!,
                                     fit: BoxFit.cover,
                                     width: double.infinity,
                                     height: double.infinity,
                                   )
-                                : Container(
-                                    color: color.withValues(alpha: 0.1),
-                                    child: Center(
-                                      child: Icon(
-                                        icon,
-                                        size: 48,
-                                        color: color.withValues(alpha: 0.4),
+                                : assetPath != null
+                                    ? Image.asset(
+                                        assetPath,
+                                        fit: BoxFit.cover,
+                                        width: double.infinity,
+                                        height: double.infinity,
+                                      )
+                                    : Container(
+                                        color: color.withValues(alpha: 0.1),
+                                        child: Center(
+                                          child: Icon(
+                                            icon,
+                                            size: 48,
+                                            color: color.withValues(alpha: 0.4),
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                  ),
                           ),
                         ),
                         Expanded(

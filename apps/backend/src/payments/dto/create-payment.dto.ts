@@ -5,5 +5,5 @@ export class CreatePaymentDto {
   @ApiProperty({ description: 'Reservation (Order) ID' })
   @IsNotEmpty()
   @IsUUID()
-  reservationId: string;
+  reservationId!: string;
 }

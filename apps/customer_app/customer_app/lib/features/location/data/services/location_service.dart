@@ -11,8 +11,8 @@ final locationServiceProvider = Provider<LocationService>((ref) {
 });
 
 class LocationService {
-  final Dio _dio;
-  LocationService(this._dio);
+  final Dio dio;
+  LocationService(this.dio);
   Future<LocationStatus> checkPermissionStatus() async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {

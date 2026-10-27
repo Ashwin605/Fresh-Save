@@ -55,7 +55,7 @@ describe('CouponsService', () => {
         id: 'cart-1', customerId: 'cust-1', status: ReservationStatus.PENDING, subtotal: 100, storeId: 'shop-1'
       });
 
-      const res = await service.validateCoupon(' sAvE50 ', 'cart-1', 'cust-1');
+      const res = await service.validateCoupon(' sAvE50 ', 'shop-1', 100, 'cust-1');
       expect(mockPrisma.coupon.findUnique).toHaveBeenCalledWith({ where: { code: 'SAVE50' } });
       expect(res.valid).toBe(true);
     });
@@ -64,7 +64,7 @@ describe('CouponsService', () => {
       mockPrisma.coupon.findUnique.mockResolvedValue({
         id: '1', code: 'SAVE50', isActive: true, startDate: new Date('2020-01-01'), expiryDate: new Date('2021-01-01')
       });
-      const res = await service.validateCoupon('SAVE50', 'cart-1', 'cust-1');
+      const res = await service.validateCoupon('SAVE50', 'shop-1', 100, 'cust-1');
       expect(res.valid).toBe(false);
       expect(res.message).toBe('This coupon has expired.');
     });
@@ -76,7 +76,7 @@ describe('CouponsService', () => {
       mockPrisma.reservation.findUnique.mockResolvedValue({
         id: 'cart-1', customerId: 'cust-1', status: ReservationStatus.PENDING, subtotal: 100, storeId: 'shop-1'
       });
-      const res = await service.validateCoupon('SAVE50', 'cart-1', 'cust-1');
+      const res = await service.validateCoupon('SAVE50', 'shop-1', 100, 'cust-1');
       expect(res.valid).toBe(false);
       expect(res.message).toContain('Add ₹100.00 more to use this coupon.');
     });

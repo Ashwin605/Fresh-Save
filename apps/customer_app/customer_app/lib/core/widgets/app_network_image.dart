@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../app/theme/app_colors.dart';
+import '../network/image_url_resolver.dart';
 import 'feedback/app_skeleton.dart';
 
 class AppNetworkImage extends StatelessWidget {
@@ -20,10 +21,11 @@ class AppNetworkImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final resolvedUrl = resolveImageUrl(imageUrl);
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
       child: Image.network(
-        imageUrl,
+        resolvedUrl,
         width: width,
         height: height,
         fit: fit,

@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../core/network/dio_client.dart';
 import '../../../../core/network/result.dart';
+import '../../../../core/network/app_error.dart';
 import '../../domain/models/auth_models.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../../../core/storage/token_storage.dart';
@@ -13,7 +14,9 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
     dio: ref.watch(dioProvider),
     tokenStorage: ref.watch(tokenStorageProvider),
     firebaseAuth: firebase.FirebaseAuth.instance,
-    googleSignIn: GoogleSignIn(),
+    googleSignIn: GoogleSignIn(
+      serverClientId: '356215287106-76m4ug9alq8ek05e8fp7sk6d29lsngvi.apps.googleusercontent.com',
+    ),
   );
 });
 
@@ -30,12 +33,12 @@ class AuthRepositoryImpl implements AuthRepository {
     required this.googleSignIn,
   });
 
-  User _mapFirebaseUser(firebase.User user) {
+  User _mapFirebaseUser(firebase.User user, {String role = 'CUSTOMER'}) {
     return User(
       id: user.uid,
       email: user.email ?? '',
       name: user.displayName ?? 'User',
-      role: 'customer', // Default role
+      role: role,
       phone: user.phoneNumber,
     );
   }
@@ -44,6 +47,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Result<LoginResponse>> login({
     required String email,
     required String password,
+    String? role,
   }) async {
     try {
       final credential = await firebaseAuth.signInWithEmailAndPassword(
@@ -54,12 +58,18 @@ class AuthRepositoryImpl implements AuthRepository {
       if (user == null) throw Exception('Login failed');
 
       if (!user.emailVerified) {
+        try {
+          await user.sendEmailVerification();
+        } catch (_) {}
         await firebaseAuth.signOut();
-        throw Exception('Please verify your email address before logging in.');
+        throw Exception('Please verify your email address. A new verification link has been sent to your email.');
       }
 
+      final resolvedRole = role ?? await tokenStorage.getUserRole() ?? 'CUSTOMER';
+      await tokenStorage.saveUserRole(resolvedRole);
+
       final token = await user.getIdToken() ?? '';
-      final ourUser = _mapFirebaseUser(user);
+      final ourUser = _mapFirebaseUser(user, role: resolvedRole);
       
       final loginResponse = LoginResponse(
         user: ourUser,
@@ -81,9 +91,6 @@ class AuthRepositoryImpl implements AuthRepository {
     String? phone,
   }) async {
     try {
-      // Note: We don't need to manually clear tokens since Firebase is the source of truth.
-
-
       final credential = await firebaseAuth.createUserWithEmailAndPassword(
         email: email,
         password: password,
@@ -91,24 +98,70 @@ class AuthRepositoryImpl implements AuthRepository {
       final user = credential.user;
       if (user == null) throw Exception('Registration failed');
 
-      await user.updateDisplayName(name);
-      await user.sendEmailVerification();
+      try {
+        await user.updateDisplayName(name);
+      } catch (_) {}
 
-      // CRITICAL: Sign out IMMEDIATELY.
-      // This ensures no race condition can allow the unverified user through.
+      try {
+        await user.sendEmailVerification();
+      } catch (_) {}
+
+      await tokenStorage.saveUserRole('CUSTOMER');
+
+      // CRITICAL: Sign out immediately so state remains unauthenticated until verified
       await firebaseAuth.signOut();
-
 
       final ourUser = User(
         id: user.uid,
         email: user.email ?? email,
         name: name,
-        role: 'customer',
+        role: 'CUSTOMER',
         phone: phone,
       );
       
       return Result.success(ourUser);
+    } on firebase.FirebaseAuthException catch (e) {
+      if (e.code == 'email-already-in-use') {
+        try {
+          final cred = await firebaseAuth.signInWithEmailAndPassword(
+            email: email,
+            password: password,
+          );
+          final existingUser = cred.user;
+          if (existingUser != null) {
+            if (!existingUser.emailVerified) {
+              try {
+                await existingUser.updateDisplayName(name);
+              } catch (_) {}
+              await existingUser.sendEmailVerification();
+              await tokenStorage.saveUserRole('CUSTOMER');
+              await firebaseAuth.signOut();
+              return Result.success(User(
+                id: existingUser.uid,
+                email: existingUser.email ?? email,
+                name: name,
+                role: 'CUSTOMER',
+                phone: phone,
+              ));
+            } else {
+              await firebaseAuth.signOut();
+              return Result.failure(
+                const AppError.conflict(
+                  message: 'This email is already registered and verified. Please sign in.',
+                ),
+              );
+            }
+          }
+        } catch (_) {}
+      }
+      try {
+        await firebaseAuth.signOut();
+      } catch (_) {}
+      return Result.failure(ApiErrorHandler.handle(e));
     } catch (e) {
+      try {
+        await firebaseAuth.signOut();
+      } catch (_) {}
       return Result.failure(ApiErrorHandler.handle(e));
     }
   }
@@ -126,8 +179,6 @@ class AuthRepositoryImpl implements AuthRepository {
     double? longitude,
   }) async {
     try {
-      // Note: We don't need to manually clear tokens since Firebase is the source of truth.
-
       final credential = await firebaseAuth.createUserWithEmailAndPassword(
         email: email,
         password: password,
@@ -135,23 +186,70 @@ class AuthRepositoryImpl implements AuthRepository {
       final user = credential.user;
       if (user == null) throw Exception('Registration failed');
 
-      await user.updateDisplayName(ownerName);
-      await user.sendEmailVerification();
+      try {
+        await user.updateDisplayName(ownerName);
+      } catch (_) {}
+
+      try {
+        await user.sendEmailVerification();
+      } catch (_) {}
+
+      await tokenStorage.saveUserRole('SHOP_OWNER');
 
       // CRITICAL: Sign out immediately
       await firebaseAuth.signOut();
-
 
       final ourUser = User(
         id: user.uid,
         email: user.email ?? email,
         name: ownerName,
-        role: 'owner',
+        role: 'SHOP_OWNER',
         phone: phone,
       );
       
       return Result.success(ourUser);
+    } on firebase.FirebaseAuthException catch (e) {
+      if (e.code == 'email-already-in-use') {
+        try {
+          final cred = await firebaseAuth.signInWithEmailAndPassword(
+            email: email,
+            password: password,
+          );
+          final existingUser = cred.user;
+          if (existingUser != null) {
+            if (!existingUser.emailVerified) {
+              try {
+                await existingUser.updateDisplayName(ownerName);
+              } catch (_) {}
+              await existingUser.sendEmailVerification();
+              await tokenStorage.saveUserRole('SHOP_OWNER');
+              await firebaseAuth.signOut();
+              return Result.success(User(
+                id: existingUser.uid,
+                email: existingUser.email ?? email,
+                name: ownerName,
+                role: 'SHOP_OWNER',
+                phone: phone,
+              ));
+            } else {
+              await firebaseAuth.signOut();
+              return Result.failure(
+                const AppError.conflict(
+                  message: 'This email is already registered and verified. Please sign in to the Shopkeeper portal.',
+                ),
+              );
+            }
+          }
+        } catch (_) {}
+      }
+      try {
+        await firebaseAuth.signOut();
+      } catch (_) {}
+      return Result.failure(ApiErrorHandler.handle(e));
     } catch (e) {
+      try {
+        await firebaseAuth.signOut();
+      } catch (_) {}
       return Result.failure(ApiErrorHandler.handle(e));
     }
   }
@@ -171,7 +269,8 @@ class AuthRepositoryImpl implements AuthRepository {
         }
       }
       
-      return Result.success(_mapFirebaseUser(user));
+      final role = await tokenStorage.getUserRole() ?? 'CUSTOMER';
+      return Result.success(_mapFirebaseUser(user, role: role));
     } catch (e) {
       return Result.failure(ApiErrorHandler.handle(e));
     }
@@ -181,6 +280,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Result<void>> logout() async {
     try {
       await firebaseAuth.signOut();
+      await googleSignIn.signOut();
     } catch (e) {
       // Ignore
     }
@@ -234,6 +334,10 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Result<LoginResponse>> signInWithGoogle() async {
     try {
+      try {
+        await googleSignIn.signOut();
+      } catch (_) {}
+
       final googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
         throw Exception('Google Sign-In aborted by user.');

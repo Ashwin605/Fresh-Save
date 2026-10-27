@@ -45,7 +45,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
 
-    ref.read(authControllerProvider.notifier).login(email, password);
+    ref.read(authControllerProvider.notifier).login(
+          email,
+          password,
+          role: 'CUSTOMER',
+        );
   }
 
   @override

@@ -22,11 +22,14 @@ class _SearchHeaderState extends ConsumerState<SearchHeader> {
   @override
   void initState() {
     super.initState();
-    _controller.text = ref.read(searchProvider).query;
-    // Autofocus on init
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _focusNode.requestFocus();
-    });
+    final currentQuery = ref.read(searchProvider).query;
+    _controller.text = currentQuery;
+    // Autofocus only if no initial query
+    if (currentQuery.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _focusNode.requestFocus();
+      });
+    }
   }
 
   @override
@@ -38,6 +41,11 @@ class _SearchHeaderState extends ConsumerState<SearchHeader> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(searchProvider.select((s) => s.query), (_, next) {
+      if (_controller.text != next) {
+        _controller.text = next;
+      }
+    });
     final state = ref.watch(searchProvider);
     final notifier = ref.read(searchProvider.notifier);
 
@@ -101,7 +109,7 @@ class _SearchHeaderState extends ConsumerState<SearchHeader> {
                       style: AppTypography.body,
                       decoration: InputDecoration(
                         border: InputBorder.none,
-                        hintText: 'Search products, stores or deals',
+                        hintText: 'Search for products, brands or stores',
                         hintStyle: AppTypography.body.copyWith(
                           color: AppColors.textDisabled,
                         ),

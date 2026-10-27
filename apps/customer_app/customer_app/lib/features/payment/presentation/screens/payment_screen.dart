@@ -7,7 +7,6 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_radius.dart';
-import '../../../../app/theme/app_animations.dart';
 import '../../../../core/widgets/buttons/app_button.dart';
 import '../../../../core/network/result.dart';
 import '../../data/repositories/payment_repository.dart';
@@ -98,7 +97,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
           if (reservationResult is! Success) {
              return const Center(child: Text('Failed to load order'));
           }
-          final reservation = (reservationResult as Success).data;
+          final reservation = reservationResult.data;
           
           return Column(
             children: [

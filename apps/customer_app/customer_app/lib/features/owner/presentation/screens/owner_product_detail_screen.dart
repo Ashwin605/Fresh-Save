@@ -7,6 +7,8 @@ import '../../../../../app/theme/app_typography.dart';
 import '../../../../../core/widgets/buttons/app_button.dart';
 import '../providers/owner_product_detail_provider.dart';
 
+import '../widgets/products/edit_product_dialog.dart';
+
 class OwnerProductDetailScreen extends ConsumerWidget {
   final String productId;
 
@@ -33,6 +35,18 @@ class OwnerProductDetailScreen extends ConsumerWidget {
                   ),
                   onPressed: () => context.pop(),
                 ),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined, color: AppColors.primary),
+                    tooltip: 'Edit Product',
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (_) => EditProductDialog(product: product),
+                      );
+                    },
+                  ),
+                ],
                 flexibleSpace: FlexibleSpaceBar(
                   background: product.image != null && product.image!.isNotEmpty
                       ? Image.network(
@@ -112,6 +126,30 @@ class OwnerProductDetailScreen extends ConsumerWidget {
                       _buildDetailRow('SKU', product.sku ?? 'N/A'),
                       _buildDetailRow('Barcode', product.barcode ?? 'N/A'),
                       const SizedBox(height: AppSpacing.xl),
+                      OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(48),
+                          side: const BorderSide(color: AppColors.primary),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        icon: const Icon(Icons.edit_outlined, color: AppColors.primary),
+                        label: const Text(
+                          'Edit Product Details',
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (_) => EditProductDialog(product: product),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
                       AppButton(
                         label: 'Add to Inventory',
                         onPressed: () {

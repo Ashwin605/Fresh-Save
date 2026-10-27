@@ -55,6 +55,22 @@ class AdminRepository {
     }
   }
 
+  Future<void> reinstateUser(String id) async {
+    try {
+      await _dio.patch('/admin/users/$id/reinstate');
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Failed to reinstate user');
+    }
+  }
+
+  Future<void> updateUserStatus(String id, String status, {String? reason}) async {
+    try {
+      await _dio.patch('/admin/users/$id/status', data: {'status': status, 'reason': reason});
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Failed to update user status');
+    }
+  }
+
   Future<void> updateStoreStatus(String id, String status) async {
     try {
       await _dio.patch('/admin/stores/$id/status', data: {'status': status});
@@ -113,6 +129,28 @@ class AdminRepository {
       return response.data as List<dynamic>;
     } on DioException catch (e) {
       throw Exception(e.response?.data?['message'] ?? e.message ?? 'Failed to fetch categories');
+    }
+  }
+
+  Future<void> createCategory({
+    required String name,
+    String? description,
+    String? icon,
+    String? image,
+    String? parentId,
+    int? sortOrder,
+  }) async {
+    try {
+      await _dio.post('/categories', data: {
+        'name': name,
+        if (description != null && description.isNotEmpty) 'description': description,
+        if (icon != null && icon.isNotEmpty) 'icon': icon,
+        if (image != null && image.isNotEmpty) 'image': image,
+        if (parentId != null && parentId.isNotEmpty) 'parentId': parentId,
+        if (sortOrder != null) 'sortOrder': sortOrder,
+      });
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['message'] ?? e.message ?? 'Failed to create category');
     }
   }
 

@@ -1,5 +1,3 @@
-import '../../../../app/theme/app_colors.dart';
-import '../../../../app/theme/app_spacing.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,6 +21,8 @@ class AdminStoresScreen extends ConsumerStatefulWidget {
 
 class _AdminStoresScreenState extends ConsumerState<AdminStoresScreen> {
   int _currentPage = 1;
+  String _searchQuery = '';
+  String _filterVerification = 'ALL';
 
   void _updateStoreStatus(String id, String status) async {
     try {
@@ -66,6 +66,18 @@ class _AdminStoresScreenState extends ConsumerState<AdminStoresScreen> {
     }
   }
 
+  void _inspectStoreDetails(Map<String, dynamic> store) {
+    showDialog(
+      context: context,
+      builder: (context) => _StoreDetailsDialog(
+        store: store,
+        onStatusChange: (status) {
+          _updateStoreStatus(store['id'], status);
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final storesState = ref.watch(adminStoresProvider(_currentPage));
@@ -90,15 +102,66 @@ class _AdminStoresScreenState extends ConsumerState<AdminStoresScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Store Management',
-              style: AppTypography.headline.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
-                fontSize: 28,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Store Management',
+                  style: AppTypography.headline.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 28,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: AppSpacing.xxl),
+            const SizedBox(height: AppSpacing.lg),
+            // Search & Filter controls
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search by store name or owner email...',
+                      prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
+                    onChanged: (val) => setState(() => _searchQuery = val),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Wrap(
+                  spacing: 8,
+                  children: ['ALL', 'PENDING', 'VERIFIED', 'REJECTED', 'SUSPENDED'].map((filter) {
+                    final isSelected = _filterVerification == filter;
+                    return ChoiceChip(
+                      label: Text(filter, style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        color: isSelected ? Colors.white : AppColors.textSecondary,
+                      )),
+                      selected: isSelected,
+                      selectedColor: AppColors.primary,
+                      backgroundColor: Colors.white,
+                      onSelected: (selected) {
+                        if (selected) setState(() => _filterVerification = filter);
+                      },
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xl),
             GlassSurface(
               child: storesState.when(
                 loading: () => const SizedBox(
@@ -110,9 +173,28 @@ class _AdminStoresScreenState extends ConsumerState<AdminStoresScreen> {
                   child: Center(child: Text('Error: $err', style: TextStyle(color: AppColors.error))),
                 ),
                 data: (data) {
-                  final List stores = data['data'] ?? [];
+                  final List allStores = data['data'] ?? [];
                   final total = data['total'] as int? ?? 0;
                   final totalPages = (total / 20).ceil();
+
+                  final stores = allStores.where((store) {
+                    final name = (store['name'] ?? '').toString().toLowerCase();
+                    final email = (store['business']?['owner']?['email'] ?? '').toString().toLowerCase();
+                    final vStatus = (store['verificationStatus'] ?? 'PENDING').toString();
+
+                    final matchesSearch = _searchQuery.isEmpty ||
+                        name.contains(_searchQuery.toLowerCase()) ||
+                        email.contains(_searchQuery.toLowerCase());
+                    final matchesStatus = _filterVerification == 'ALL' || vStatus == _filterVerification;
+                    return matchesSearch && matchesStatus;
+                  }).toList();
+
+                  if (stores.isEmpty) {
+                    return const SizedBox(
+                      height: 300,
+                      child: Center(child: Text('No stores match the current filters.', style: TextStyle(color: AppColors.textSecondary))),
+                    );
+                  }
 
                   return AdminDataTable(
                     currentPage: _currentPage,
@@ -135,7 +217,15 @@ class _AdminStoresScreenState extends ConsumerState<AdminStoresScreen> {
 
                       return DataRow(
                         cells: [
-                          DataCell(Text(store['name'] ?? 'N/A')),
+                          DataCell(
+                            InkWell(
+                              onTap: () => _inspectStoreDetails(store),
+                              child: Text(
+                                store['name'] ?? 'N/A',
+                                style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.primary),
+                              ),
+                            ),
+                          ),
                           DataCell(Text(ownerEmail)),
                           DataCell(
                             Container(
@@ -159,7 +249,9 @@ class _AdminStoresScreenState extends ConsumerState<AdminStoresScreen> {
                             PopupMenuButton<String>(
                               icon: const Icon(Icons.more_vert, color: AppColors.textSecondary),
                               onSelected: (value) {
-                                if (value == 'EDIT') {
+                                if (value == 'DETAILS') {
+                                  _inspectStoreDetails(store);
+                                } else if (value == 'EDIT') {
                                   showDialog(
                                     context: context,
                                     builder: (context) => EditStoreDialog(
@@ -175,24 +267,74 @@ class _AdminStoresScreenState extends ConsumerState<AdminStoresScreen> {
                               },
                               itemBuilder: (context) => [
                                 const PopupMenuItem(
+                                  value: 'DETAILS',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.info_outline, size: 18, color: AppColors.primary),
+                                      SizedBox(width: 8),
+                                      Text('View Details'),
+                                    ],
+                                  ),
+                                ),
+                                const PopupMenuItem(
                                   value: 'EDIT',
-                                  child: Text('Edit Store'),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.edit_outlined, size: 18, color: AppColors.textSecondary),
+                                      SizedBox(width: 8),
+                                      Text('Edit Store'),
+                                    ],
+                                  ),
                                 ),
                                 const PopupMenuItem(
                                   value: 'VERIFIED',
-                                  child: Text('Approve (VERIFIED)', style: TextStyle(color: AppColors.success)),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.check_circle_outline, size: 18, color: AppColors.success),
+                                      SizedBox(width: 8),
+                                      Text('Approve (VERIFIED)', style: TextStyle(color: AppColors.success)),
+                                    ],
+                                  ),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'ACTIVE',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.play_circle_outline, size: 18, color: AppColors.primary),
+                                      SizedBox(width: 8),
+                                      Text('Activate (ACTIVE)', style: TextStyle(color: AppColors.primary)),
+                                    ],
+                                  ),
                                 ),
                                 const PopupMenuItem(
                                   value: 'REJECTED',
-                                  child: Text('Reject', style: TextStyle(color: AppColors.error)),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.cancel_outlined, size: 18, color: AppColors.error),
+                                      SizedBox(width: 8),
+                                      Text('Reject Application', style: TextStyle(color: AppColors.error)),
+                                    ],
+                                  ),
                                 ),
                                 const PopupMenuItem(
                                   value: 'SUSPENDED',
-                                  child: Text('Suspend', style: TextStyle(color: AppColors.error)),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.pause_circle_outline, size: 18, color: AppColors.error),
+                                      SizedBox(width: 8),
+                                      Text('Suspend', style: TextStyle(color: AppColors.error)),
+                                    ],
+                                  ),
                                 ),
                                 const PopupMenuItem(
                                   value: 'DELETE',
-                                  child: Text('Delete Store', style: TextStyle(color: AppColors.error)),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.delete_outline, size: 18, color: AppColors.error),
+                                      SizedBox(width: 8),
+                                      Text('Delete Store', style: TextStyle(color: AppColors.error)),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
@@ -206,6 +348,121 @@ class _AdminStoresScreenState extends ConsumerState<AdminStoresScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _StoreDetailsDialog extends StatelessWidget {
+  final Map<String, dynamic> store;
+  final ValueChanged<String> onStatusChange;
+
+  const _StoreDetailsDialog({required this.store, required this.onStatusChange});
+
+  @override
+  Widget build(BuildContext context) {
+    final owner = store['business']?['owner'];
+    final vStatus = store['verificationStatus'] ?? 'PENDING';
+    final status = store['status'] ?? 'ACTIVE';
+
+    Color vColor = AppColors.textSecondary;
+    if (vStatus == 'VERIFIED') vColor = AppColors.success;
+    if (vStatus == 'REJECTED' || vStatus == 'SUSPENDED') vColor = AppColors.error;
+
+    return AlertDialog(
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Text(
+              store['name'] ?? 'Store Details',
+              style: AppTypography.headline.copyWith(color: AppColors.textPrimary, fontSize: 20),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: vColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              vStatus,
+              style: TextStyle(color: vColor, fontWeight: FontWeight.bold, fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+      content: SizedBox(
+        width: 480,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _detailRow('Store ID', store['id'] ?? 'N/A'),
+              _detailRow('Operational Status', status),
+              _detailRow('Address', store['address'] ?? 'Not specified'),
+              _detailRow('Phone', store['phone'] ?? 'N/A'),
+              _detailRow('Email', store['email'] ?? 'N/A'),
+              _detailRow('Description', store['description'] ?? 'No description provided'),
+              const Divider(height: 24),
+              Text('Shopkeeper & Business Information', style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+              const SizedBox(height: 8),
+              _detailRow('Owner Name', owner?['name'] ?? 'N/A'),
+              _detailRow('Owner Email', owner?['email'] ?? 'N/A'),
+              _detailRow('Business Name', store['business']?['businessName'] ?? 'N/A'),
+              const Divider(height: 24),
+              _detailRow('Created At', store['createdAt'] != null ? DateFormat('MMMM d, yyyy h:mm a').format(DateTime.parse(store['createdAt'])) : 'N/A'),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        if (vStatus != 'VERIFIED')
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.success),
+            icon: const Icon(Icons.check, size: 16, color: Colors.white),
+            label: const Text('Approve', style: TextStyle(color: Colors.white)),
+            onPressed: () {
+              Navigator.pop(context);
+              onStatusChange('VERIFIED');
+            },
+          ),
+        if (vStatus != 'REJECTED')
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(foregroundColor: AppColors.error),
+            icon: const Icon(Icons.close, size: 16),
+            label: const Text('Reject'),
+            onPressed: () {
+              Navigator.pop(context);
+              onStatusChange('REJECTED');
+            },
+          ),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Close'),
+        ),
+      ],
+    );
+  }
+
+  Widget _detailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 140,
+            child: Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+          ),
+          Expanded(
+            child: Text(value, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w500, fontSize: 13)),
+          ),
+        ],
       ),
     );
   }

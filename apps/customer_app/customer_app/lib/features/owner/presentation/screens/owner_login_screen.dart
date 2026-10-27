@@ -45,7 +45,11 @@ class _OwnerLoginScreenState extends ConsumerState<OwnerLoginScreen> {
       return;
     }
 
-    ref.read(authControllerProvider.notifier).login(email, password);
+    ref.read(authControllerProvider.notifier).login(
+          email,
+          password,
+          role: 'SHOP_OWNER',
+        );
   }
 
   @override

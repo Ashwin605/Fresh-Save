@@ -76,6 +76,23 @@ class _OwnerAddInventoryScreenState extends ConsumerState<OwnerAddInventoryScree
       return;
     }
 
+    final originalPrice = double.tryParse(_originalPriceController.text) ?? 0;
+    final sellingPrice = double.tryParse(_sellingPriceController.text) ?? 0;
+    if (originalPrice <= 0 || sellingPrice <= 0) {
+      AppSnackbar.show(context, message: 'Prices must be positive values', variant: SnackbarVariant.warning);
+      return;
+    }
+    if (sellingPrice > originalPrice) {
+      AppSnackbar.show(context, message: 'Selling price cannot exceed original price (MRP)', variant: SnackbarVariant.warning);
+      return;
+    }
+
+    final stockQty = int.tryParse(_stockQuantityController.text) ?? 0;
+    if (stockQty <= 0) {
+      AppSnackbar.show(context, message: 'Stock quantity must be at least 1', variant: SnackbarVariant.warning);
+      return;
+    }
+
     final storeId = ref.read(ownerStateProvider).activeStore?.id;
     if (storeId == null) {
       AppSnackbar.show(context, message: 'No active store selected', variant: SnackbarVariant.error);

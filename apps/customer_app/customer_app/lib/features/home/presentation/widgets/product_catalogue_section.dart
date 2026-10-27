@@ -7,7 +7,7 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../app/theme/app_animations.dart';
 import '../../../../core/widgets/layout/interactive_container.dart';
-import '../../../../core/widgets/domain/product_card.dart';
+import '../../../../core/widgets/domain/reference_product_card.dart';
 import '../../../../core/widgets/feedback/app_skeleton.dart';
 import '../providers/home_providers.dart';
 
@@ -72,25 +72,22 @@ class ProductCatalogueSection extends ConsumerWidget {
                 crossAxisCount: 2,
                 mainAxisSpacing: AppSpacing.md,
                 crossAxisSpacing: AppSpacing.md,
-                childAspectRatio: 0.68,
+                childAspectRatio: 0.62,
               ),
               itemCount: displayDeals.length,
               itemBuilder: (context, index) {
                 final deal = displayDeals[index];
-                return ProductCard(
+                return ReferenceProductCard(
                   id: deal.id,
                   name: deal.productName,
-                  brand: null, 
-                  storeName: deal.storeName,
                   imageUrl: deal.imageUrl,
                   originalPrice: deal.originalPrice,
                   discountedPrice: deal.discountedPrice,
-                  offerBadge: '${deal.discountPercent.toStringAsFixed(0)}% OFF',
+                  discountPercent: deal.discountPercent,
+                  width: double.infinity,
                   onTap: () => context.push('/offer/${deal.id}'),
                   onAdd: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Added ${deal.productName} to cart')),
-                    );
+                    context.push('/reservation/review/${deal.id}');
                   },
                 ).animate().fade(
                   duration: AppAnimations.medium,
@@ -107,7 +104,7 @@ class ProductCatalogueSection extends ConsumerWidget {
               crossAxisCount: 2,
               mainAxisSpacing: AppSpacing.md,
               crossAxisSpacing: AppSpacing.md,
-              childAspectRatio: 0.68,
+              childAspectRatio: 0.62,
             ),
             itemCount: 4,
             itemBuilder: (context, index) => const AppSkeleton(
